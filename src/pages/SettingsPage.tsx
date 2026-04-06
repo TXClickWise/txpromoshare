@@ -1,13 +1,69 @@
-import { Building2, Palette, Globe, MapPin, Phone, Mail, Save } from "lucide-react";
+import { Building2, Palette, MapPin, Phone, Mail, Save } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { t } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { useTenant } from "@/hooks/useTenant";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function SettingsPage() {
+  const { tenant, refetch } = useTenant();
+
+  const [orgName, setOrgName] = useState("");
+  const [website, setWebsite] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("#E86C2C");
+  const [secondaryColor, setSecondaryColor] = useState("#2A9D8F");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (tenant) {
+      setOrgName(tenant.name || "");
+      setWebsite(tenant.website_url || "");
+      setEmail(tenant.email || "");
+      setPhone(tenant.phone || "");
+      setPrimaryColor(tenant.primary_color || "#E86C2C");
+      setSecondaryColor(tenant.secondary_color || "#2A9D8F");
+    }
+  }, [tenant]);
+
+  async function saveOrganization() {
+    if (!tenant) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("tenants")
+      .update({ name: orgName, website_url: website, email, phone })
+      .eq("id", tenant.id);
+    setSaving(false);
+    if (error) {
+      toast.error("Opslaan mislukt: " + error.message);
+    } else {
+      toast.success("Instellingen opgeslagen");
+      refetch();
+    }
+  }
+
+  async function saveBranding() {
+    if (!tenant) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("tenants")
+      .update({ primary_color: primaryColor, secondary_color: secondaryColor })
+      .eq("id", tenant.id);
+    setSaving(false);
+    if (error) {
+      toast.error("Opslaan mislukt: " + error.message);
+    } else {
+      toast.success("Branding opgeslagen");
+      refetch();
+    }
+  }
+
   return (
     <div className="space-y-6 max-w-3xl">
       <h1 className="text-2xl font-display font-bold text-foreground">{t.nav.settings}</h1>
@@ -24,25 +80,25 @@ export default function SettingsPage() {
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Bedrijfsnaam</Label>
-                <Input defaultValue="Café De Kroeg" />
+                <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Website</Label>
-                <Input defaultValue="https://cafedekroeg.nl" />
+                <Input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://" />
               </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Mail className="w-3 h-3" />E-mail</Label>
-                <Input defaultValue="info@cafedekroeg.nl" />
+                <Input value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Phone className="w-3 h-3" />Telefoon</Label>
-                <Input defaultValue="+31 20 123 4567" />
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+31..." />
               </div>
             </div>
-            <Button size="sm" onClick={() => toast.success("Instellingen opgeslagen")} className="gap-2">
-              <Save className="w-4 h-4" />{t.common.save}
+            <Button size="sm" onClick={saveOrganization} disabled={saving} className="gap-2">
+              <Save className="w-4 h-4" />{saving ? "Opslaan..." : t.common.save}
             </Button>
           </motion.div>
         </TabsContent>
@@ -63,16 +119,16 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Primaire kleur</Label>
                 <div className="flex gap-2 items-center">
-                  <Input type="color" defaultValue="#E86C2C" className="w-12 h-10 p-1 cursor-pointer" />
-                  <Input defaultValue="#E86C2C" className="flex-1 font-mono text-sm" />
+                  <Input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-12 h-10 p-1 cursor-pointer" />
+                  <Input value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="flex-1 font-mono text-sm" />
                 </div>
                 <p className="text-[11px] text-muted-foreground">Wordt gebruikt op eventpagina's en widgets</p>
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Secundaire kleur</Label>
                 <div className="flex gap-2 items-center">
-                  <Input type="color" defaultValue="#2A9D8F" className="w-12 h-10 p-1 cursor-pointer" />
-                  <Input defaultValue="#2A9D8F" className="flex-1 font-mono text-sm" />
+                  <Input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-12 h-10 p-1 cursor-pointer" />
+                  <Input value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="flex-1 font-mono text-sm" />
                 </div>
               </div>
             </div>
@@ -81,13 +137,13 @@ export default function SettingsPage() {
             <div className="rounded-xl bg-secondary/30 border border-border p-4">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Preview</p>
               <div className="flex gap-3">
-                <div className="w-full py-2.5 rounded-lg gradient-hero text-primary-foreground text-xs font-semibold text-center">Reserveer nu</div>
-                <div className="w-full py-2.5 rounded-lg gradient-accent text-accent-foreground text-xs font-semibold text-center">Deel event</div>
+                <div className="w-full py-2.5 rounded-lg text-xs font-semibold text-center text-white" style={{ backgroundColor: primaryColor }}>Reserveer nu</div>
+                <div className="w-full py-2.5 rounded-lg text-xs font-semibold text-center text-white" style={{ backgroundColor: secondaryColor }}>Deel event</div>
               </div>
             </div>
 
-            <Button size="sm" onClick={() => toast.success("Branding opgeslagen")} className="gap-2">
-              <Save className="w-4 h-4" />{t.common.save}
+            <Button size="sm" onClick={saveBranding} disabled={saving} className="gap-2">
+              <Save className="w-4 h-4" />{saving ? "Opslaan..." : t.common.save}
             </Button>
           </motion.div>
         </TabsContent>
@@ -97,21 +153,21 @@ export default function SettingsPage() {
             <p className="text-xs text-muted-foreground">Je standaard locatie wordt automatisch ingevuld bij nieuwe evenementen.</p>
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Locatienaam</Label>
-              <Input defaultValue="Café De Kroeg" />
+              <Input placeholder="Naam van je locatie" />
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Adres</Label>
-                <Input defaultValue="Kerkstraat 12" />
+                <Input placeholder="Straat en huisnummer" />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Stad</Label>
-                <Input defaultValue="Amsterdam" />
+                <Input placeholder="Stad" />
               </div>
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Postcode</Label>
-              <Input defaultValue="1017 GR" className="max-w-[200px]" />
+              <Input placeholder="1234 AB" className="max-w-[200px]" />
             </div>
             <Button size="sm" onClick={() => toast.success("Locatie opgeslagen")} className="gap-2">
               <Save className="w-4 h-4" />{t.common.save}

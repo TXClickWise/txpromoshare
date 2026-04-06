@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PlanProvider } from "@/hooks/usePlan";
 import { AuthProvider } from "@/hooks/useAuth";
+import { TenantProvider } from "@/hooks/useTenant";
 import PublicLayout from "@/components/PublicLayout";
 import AppLayout from "@/components/AppLayout";
 import AdminLayout from "@/components/AdminLayout";
@@ -47,6 +48,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
+        <TenantProvider>
         <PlanProvider planId="basic">
           <Toaster />
           <Sonner />
@@ -100,6 +102,7 @@ const App = () => (
             </Routes>
           </BrowserRouter>
         </PlanProvider>
+        </TenantProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

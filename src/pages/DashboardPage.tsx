@@ -9,12 +9,8 @@ import { QuickActionCard } from "@/components/QuickActionCard";
 import { EventActionMenu } from "@/components/EventActionMenu";
 import { UsageMeter } from "@/components/UsageMeter";
 import { usePlan } from "@/hooks/usePlan";
-
-const statCards = [
-  { label: t.dashboard.activeEvents, value: "3", icon: Calendar, color: "gradient-hero", change: "+1 deze week" },
-  { label: t.dashboard.upcomingEvents, value: "2", icon: TrendingUp, color: "gradient-accent", change: "Volgende: 18 apr" },
-  { label: t.dashboard.totalViews, value: "1.247", icon: Eye, color: "gradient-dark", change: "+23% vs vorige maand" },
-];
+import { useAuth } from "@/hooks/useAuth";
+import { useTenant } from "@/hooks/useTenant";
 
 const quickActions = [
   { icon: Plus, title: "Nieuw evenement", description: "Begin blanco of kies een sjabloon", to: "/app/events/new", gradient: "gradient-hero" },
@@ -25,15 +21,26 @@ const quickActions = [
 
 export default function DashboardPage() {
   const { planId, upgradePlan } = usePlan();
+  const { user } = useAuth();
+  const { tenant } = useTenant();
   const planLabel = planId.charAt(0).toUpperCase() + planId.slice(1);
+
+  const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "daar";
+  const orgName = tenant?.name || "Mijn organisatie";
+
+  const statCards = [
+    { label: t.dashboard.activeEvents, value: "0", icon: Calendar, color: "gradient-hero", change: "Maak je eerste event" },
+    { label: t.dashboard.upcomingEvents, value: "0", icon: TrendingUp, color: "gradient-accent", change: "Nog geen events" },
+    { label: t.dashboard.totalViews, value: "0", icon: Eye, color: "gradient-dark", change: "Wordt bijgehouden" },
+  ];
 
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">{t.dashboard.welcome}, Jan 👋</h1>
-          <p className="text-muted-foreground text-sm mt-1">Café De Kroeg · {planLabel} plan</p>
+          <h1 className="text-2xl font-display font-bold text-foreground">{t.dashboard.welcome}, {firstName} 👋</h1>
+          <p className="text-muted-foreground text-sm mt-1">{orgName} · {planLabel} plan</p>
         </div>
         <Link to="/app/events/new" className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity shadow-glow">
           <Plus className="w-4 h-4" />
@@ -121,29 +128,9 @@ export default function DashboardPage() {
           {/* Usage meters */}
           <div className="rounded-xl bg-card border border-border shadow-card p-4 space-y-4">
             <h3 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider">Gebruik</h3>
-            <UsageMeter metric="events" current={3} label="Actieve evenementen" />
-            <UsageMeter metric="widgets" current={1} label="Widgets" />
-            <UsageMeter metric="team" current={2} label="Teamleden" />
-          </div>
-
-          {/* Activity feed */}
-          <div className="rounded-xl bg-card border border-border shadow-card p-4">
-            <h3 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider mb-3">Recente activiteit</h3>
-            <div className="space-y-3">
-              {[
-                { text: "Live Jazz Avond gepubliceerd", time: "2 uur geleden", color: "bg-accent" },
-                { text: "Wijnproeverij concept opgeslagen", time: "5 uur geleden", color: "bg-primary" },
-                { text: "Lisa Bakker uitgenodigd", time: "Gisteren", color: "bg-highlight" },
-              ].map((a, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className={`w-2 h-2 rounded-full ${a.color} mt-1.5 shrink-0`} />
-                  <div>
-                    <p className="text-xs text-foreground">{a.text}</p>
-                    <p className="text-[11px] text-muted-foreground">{a.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <UsageMeter metric="events" current={0} label="Actieve evenementen" />
+            <UsageMeter metric="widgets" current={0} label="Widgets" />
+            <UsageMeter metric="team" current={1} label="Teamleden" />
           </div>
 
           {/* Upgrade prompt - only if not on pro */}
