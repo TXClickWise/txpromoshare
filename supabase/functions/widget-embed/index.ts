@@ -134,9 +134,11 @@ function generateEmbedScript(payload: any): string {
     const subtitleHtml = e.subtitle ? '<div style="font-size:13px;color:#6b7280;margin-top:2px;">' + escapeHtml(e.subtitle) + '</div>' : "";
     const descHtml = e.short_description ? '<div style="font-size:13px;color:#374151;margin-top:6px;">' + escapeHtml(e.short_description) + '</div>' : "";
 
-    // Featured image – small thumbnail, right-aligned
+    // Featured image – idiot-proof scaling: never taller than 100px, width follows aspect ratio
     const imageHtml = e.featured_image_url
-      ? '<img src="' + escapeHtml(e.featured_image_url) + '" alt="' + escapeHtml(e.title) + '" style="width:100px;height:100px;object-fit:cover;border-radius:8px;flex-shrink:0;" />'
+      ? '<div style="display:flex;align-items:center;justify-content:flex-end;flex:0 0 auto;max-height:100px;max-width:220px;margin-left:auto;">' +
+        '<img src="' + escapeHtml(e.featured_image_url) + '" alt="' + escapeHtml(e.title) + '" loading="lazy" style="display:block;width:auto;height:auto;max-height:100px;max-width:220px;object-fit:contain;border-radius:8px;flex-shrink:0;" />' +
+        '</div>'
       : "";
 
     // Share buttons
