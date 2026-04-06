@@ -30,18 +30,18 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const { tenantId } = useTenant();
 
-  useEffect(() => {
+  async function fetchEvents() {
     if (!tenantId) return;
-    supabase
+    const { data } = await supabase
       .from("events")
       .select("*")
       .eq("tenant_id", tenantId)
-      .order("start_date", { ascending: false })
-      .then(({ data }) => {
-        setEvents(data || []);
-        setLoading(false);
-      });
-  }, [tenantId]);
+      .order("start_date", { ascending: false });
+    setEvents(data || []);
+    setLoading(false);
+  }
+
+  useEffect(() => { fetchEvents(); }, [tenantId]);
 
   const filtered = events
     .filter((e) => e.title.toLowerCase().includes(search.toLowerCase()))
@@ -114,7 +114,7 @@ export default function EventsPage() {
                 <div className="h-36 bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center relative">
                   <Calendar className="w-8 h-8 text-muted-foreground/20" />
                   <div className="absolute top-3 right-3">
-                    <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} />
+                    <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} onRefresh={fetchEvents} />
                   </div>
                 </div>
                 <div className="p-4">
@@ -155,7 +155,7 @@ export default function EventsPage() {
                   </p>
                 </div>
                 <EventStatusBadge status={event.status} />
-                <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} />
+                <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} onRefresh={fetchEvents} />
               </Link>
             </motion.div>
           ))}

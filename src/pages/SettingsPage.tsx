@@ -1,4 +1,4 @@
-import { Building2, Palette, MapPin, Phone, Mail, Save } from "lucide-react";
+import { Building2, Palette, MapPin, Phone, Mail, Save, Plus, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { t } from "@/lib/i18n";
@@ -9,9 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useTenant } from "@/hooks/useTenant";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 export default function SettingsPage() {
-  const { tenant, refetch } = useTenant();
+  const { tenant, tenantId, refetch } = useTenant();
 
   const [orgName, setOrgName] = useState("");
   const [website, setWebsite] = useState("");
@@ -20,6 +21,15 @@ export default function SettingsPage() {
   const [primaryColor, setPrimaryColor] = useState("#E86C2C");
   const [secondaryColor, setSecondaryColor] = useState("#2A9D8F");
   const [saving, setSaving] = useState(false);
+
+  // Venue state
+  const [venues, setVenues] = useState<Tables<"venues">[]>([]);
+  const [venueName, setVenueName] = useState("");
+  const [venueAddress, setVenueAddress] = useState("");
+  const [venueCity, setVenueCity] = useState("");
+  const [venuePostal, setVenuePostal] = useState("");
+  const [editingVenueId, setEditingVenueId] = useState<string | null>(null);
+  const [venueLoading, setVenueLoading] = useState(false);
 
   useEffect(() => {
     if (tenant) {
@@ -31,6 +41,18 @@ export default function SettingsPage() {
       setSecondaryColor(tenant.secondary_color || "#2A9D8F");
     }
   }, [tenant]);
+
+  useEffect(() => { fetchVenues(); }, [tenantId]);
+
+  async function fetchVenues() {
+    if (!tenantId) return;
+    const { data } = await supabase
+      .from("venues")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("is_primary", { ascending: false });
+    setVenues(data || []);
+  }
 
   async function saveOrganization() {
     if (!tenant) return;
@@ -64,6 +86,64 @@ export default function SettingsPage() {
     }
   }
 
+  async function saveVenue() {
+    if (!tenantId || !venueName.trim()) {
+      toast.error("Vul minimaal een naam in");
+      return;
+    }
+    setVenueLoading(true);
+
+    if (editingVenueId) {
+      const { error } = await supabase
+        .from("venues")
+        .update({ name: venueName.trim(), address: venueAddress, city: venueCity, postal_code: venuePostal })
+        .eq("id", editingVenueId);
+      setVenueLoading(false);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Locatie bijgewerkt");
+    } else {
+      const isPrimary = venues.length === 0;
+      const { error } = await supabase.from("venues").insert({
+        tenant_id: tenantId,
+        name: venueName.trim(),
+        address: venueAddress || null,
+        city: venueCity || null,
+        postal_code: venuePostal || null,
+        is_primary: isPrimary,
+      });
+      setVenueLoading(false);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Locatie toegevoegd");
+    }
+
+    resetVenueForm();
+    fetchVenues();
+  }
+
+  async function deleteVenue(id: string) {
+    const { error } = await supabase.from("venues").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Locatie verwijderd");
+    if (editingVenueId === id) resetVenueForm();
+    fetchVenues();
+  }
+
+  function editVenue(v: Tables<"venues">) {
+    setEditingVenueId(v.id);
+    setVenueName(v.name);
+    setVenueAddress(v.address || "");
+    setVenueCity(v.city || "");
+    setVenuePostal(v.postal_code || "");
+  }
+
+  function resetVenueForm() {
+    setEditingVenueId(null);
+    setVenueName("");
+    setVenueAddress("");
+    setVenueCity("");
+    setVenuePostal("");
+  }
+
   return (
     <div className="space-y-6 max-w-3xl">
       <h1 className="text-2xl font-display font-bold text-foreground">{t.nav.settings}</h1>
@@ -72,7 +152,7 @@ export default function SettingsPage() {
         <TabsList className="mb-6">
           <TabsTrigger value="organization" className="gap-1.5"><Building2 className="w-3.5 h-3.5" />Organisatie</TabsTrigger>
           <TabsTrigger value="branding" className="gap-1.5"><Palette className="w-3.5 h-3.5" />Branding</TabsTrigger>
-          <TabsTrigger value="venue" className="gap-1.5"><MapPin className="w-3.5 h-3.5" />Locatie</TabsTrigger>
+          <TabsTrigger value="venue" className="gap-1.5"><MapPin className="w-3.5 h-3.5" />Locaties</TabsTrigger>
         </TabsList>
 
         <TabsContent value="organization">
@@ -133,7 +213,6 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Live preview */}
             <div className="rounded-xl bg-secondary/30 border border-border p-4">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Preview</p>
               <div className="flex gap-3">
@@ -149,29 +228,69 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="venue">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card border border-border shadow-card p-6 space-y-5">
-            <p className="text-xs text-muted-foreground">Je standaard locatie wordt automatisch ingevuld bij nieuwe evenementen.</p>
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Locatienaam</Label>
-              <Input placeholder="Naam van je locatie" />
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
+            {/* Existing venues */}
+            {venues.length > 0 && (
+              <div className="space-y-3">
+                {venues.map((v) => (
+                  <div key={v.id} className="rounded-xl bg-card border border-border shadow-card p-4 flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-foreground text-sm truncate">{v.name}</p>
+                        {v.is_primary && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent font-medium">Standaard</span>
+                        )}
+                      </div>
+                      {(v.address || v.city) && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {[v.address, v.postal_code, v.city].filter(Boolean).join(", ")}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Button variant="ghost" size="sm" onClick={() => editVenue(v)} className="text-xs h-7 px-2">Bewerk</Button>
+                      <Button variant="ghost" size="sm" onClick={() => deleteVenue(v.id)} className="text-destructive hover:text-destructive h-7 px-2">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add/edit form */}
+            <div className="rounded-xl bg-card border border-border shadow-card p-6 space-y-5">
+              <p className="text-sm font-medium text-foreground">
+                {editingVenueId ? "Locatie bewerken" : "Nieuwe locatie toevoegen"}
+              </p>
+              <p className="text-xs text-muted-foreground">Je standaard locatie wordt automatisch ingevuld bij nieuwe evenementen.</p>
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Adres</Label>
-                <Input placeholder="Straat en huisnummer" />
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Locatienaam *</Label>
+                <Input value={venueName} onChange={(e) => setVenueName(e.target.value)} placeholder="Naam van je locatie" />
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Adres</Label>
+                  <Input value={venueAddress} onChange={(e) => setVenueAddress(e.target.value)} placeholder="Straat en huisnummer" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Stad</Label>
+                  <Input value={venueCity} onChange={(e) => setVenueCity(e.target.value)} placeholder="Stad" />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Stad</Label>
-                <Input placeholder="Stad" />
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Postcode</Label>
+                <Input value={venuePostal} onChange={(e) => setVenuePostal(e.target.value)} placeholder="1234 AB" className="max-w-[200px]" />
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={saveVenue} disabled={venueLoading} className="gap-2">
+                  <Save className="w-4 h-4" />{venueLoading ? "Opslaan..." : editingVenueId ? "Bijwerken" : "Toevoegen"}
+                </Button>
+                {editingVenueId && (
+                  <Button size="sm" variant="outline" onClick={resetVenueForm}>Annuleren</Button>
+                )}
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Postcode</Label>
-              <Input placeholder="1234 AB" className="max-w-[200px]" />
-            </div>
-            <Button size="sm" onClick={() => toast.success("Locatie opgeslagen")} className="gap-2">
-              <Save className="w-4 h-4" />{t.common.save}
-            </Button>
           </motion.div>
         </TabsContent>
       </Tabs>
