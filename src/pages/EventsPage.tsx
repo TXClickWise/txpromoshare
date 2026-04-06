@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Search, LayoutGrid, List, Calendar, Filter, Clock, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
-import { mockEvents } from "@/lib/mock-data";
 import { EventStatusBadge } from "@/components/EventStatusBadge";
 import { EventActionMenu } from "@/components/EventActionMenu";
 import { EmptyState } from "@/components/EmptyState";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/hooks/useTenant";
+import type { Tables } from "@/integrations/supabase/types";
 
 const statusFilters = [
   { value: "all", label: "Alle statussen" },
@@ -24,18 +26,43 @@ export default function EventsPage() {
   const [view, setView] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [events, setEvents] = useState<Tables<"events">[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { tenantId } = useTenant();
 
-  const filtered = mockEvents
+  useEffect(() => {
+    if (!tenantId) return;
+    supabase
+      .from("events")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("start_date", { ascending: false })
+      .then(({ data }) => {
+        setEvents(data || []);
+        setLoading(false);
+      });
+  }, [tenantId]);
+
+  const filtered = events
     .filter((e) => e.title.toLowerCase().includes(search.toLowerCase()))
     .filter((e) => statusFilter === "all" || e.status === statusFilter);
 
+  const publishedCount = events.filter(e => e.status === "published").length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground">{t.events.title}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{mockEvents.length} evenementen · {mockEvents.filter(e => e.status === "published").length} gepubliceerd</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{events.length} evenementen · {publishedCount} gepubliceerd</p>
         </div>
         <Link to="/app/events/new" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold hover:opacity-90 shadow-glow">
           <Plus className="w-4 h-4" />
@@ -43,11 +70,10 @@ export default function EventsPage() {
         </Link>
       </div>
 
-      {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Zoek op naam, categorie of locatie..." className="pl-9" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Zoek op naam..." className="pl-9" />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[160px]">
@@ -70,12 +96,11 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {/* Content */}
       {filtered.length === 0 ? (
         <EmptyState
           icon={Calendar}
           title={search ? "Geen resultaten gevonden" : t.events.noEvents}
-          description={search ? `Geen evenementen gevonden voor "${search}". Probeer een andere zoekterm.` : t.events.noEventsDesc}
+          description={search ? `Geen evenementen gevonden voor "${search}".` : t.events.noEventsDesc}
           actionLabel={search ? undefined : "Eerste evenement aanmaken"}
           actionTo={search ? undefined : "/app/events/new"}
           secondaryLabel={search ? undefined : "Sjabloon kiezen"}
@@ -84,12 +109,7 @@ export default function EventsPage() {
       ) : view === "grid" ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((event, i) => (
-            <motion.div
-              key={event.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-            >
+            <motion.div key={event.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
               <Link to={`/app/events/${event.id}`} className="block rounded-xl bg-card border border-border shadow-card hover:shadow-elevated hover:border-primary/20 transition-all overflow-hidden group">
                 <div className="h-36 bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center relative">
                   <Calendar className="w-8 h-8 text-muted-foreground/20" />
@@ -100,23 +120,17 @@ export default function EventsPage() {
                 <div className="p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <EventStatusBadge status={event.status} />
-                    {event.isRecurring && <span className="text-[10px] font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full">♻ Wekelijks</span>}
+                    {event.is_recurring && <span className="text-[10px] font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full">♻ Terugkerend</span>}
                   </div>
                   <h3 className="font-display font-semibold text-foreground mb-1.5 truncate group-hover:text-primary transition-colors">{event.title}</h3>
-                  {event.shortDescription && (
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{event.shortDescription}</p>
+                  {event.short_description && (
+                    <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{event.short_description}</p>
                   )}
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      {new Date(event.startDate).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.startTime}
+                      {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.start_time?.slice(0, 5)}
                     </span>
-                    {event.venue && (
-                      <span className="flex items-center gap-1 truncate">
-                        <MapPin className="w-3 h-3 shrink-0" />
-                        {event.venue}
-                      </span>
-                    )}
                   </div>
                 </div>
               </Link>
@@ -126,24 +140,18 @@ export default function EventsPage() {
       ) : (
         <div className="space-y-2">
           {filtered.map((event, i) => (
-            <motion.div
-              key={event.id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.03 }}
-            >
+            <motion.div key={event.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}>
               <Link to={`/app/events/${event.id}`} className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border shadow-card hover:shadow-elevated hover:border-primary/20 transition-all group">
                 <div className="w-11 h-11 rounded-lg bg-secondary flex items-center justify-center shrink-0">
                   <Calendar className="w-5 h-5 text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-foreground truncate group-hover:text-primary transition-colors">{event.title}</p>
-                    {event.isRecurring && <span className="text-[10px] font-medium text-accent bg-accent/10 px-1.5 py-0.5 rounded-full shrink-0">♻</span>}
-                  </div>
+                  <p className="font-medium text-foreground truncate group-hover:text-primary transition-colors">{event.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
-                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(event.startDate).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.startTime}</span>
-                    {event.venue && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{event.venue}</span>}
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.start_time?.slice(0, 5)}
+                    </span>
                   </p>
                 </div>
                 <EventStatusBadge status={event.status} />

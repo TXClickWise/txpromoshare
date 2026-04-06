@@ -1,5 +1,7 @@
-import { createContext, useContext, ReactNode, useMemo } from "react";
+import { createContext, useContext, ReactNode, useMemo, useEffect, useState } from "react";
 import { PlanId, planLimits, PlanLimits } from "@/lib/plans";
+import { useTenant } from "@/hooks/useTenant";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PlanContextValue {
   planId: PlanId;
@@ -7,7 +9,7 @@ interface PlanContextValue {
   canUse: (feature: keyof PlanLimits) => boolean;
   isAtLimit: (metric: "events" | "widgets" | "team", current: number) => boolean;
   usagePercent: (metric: "events" | "widgets" | "team", current: number) => number;
-  upgradePlan: PlanId | null; // next plan up, null if already pro
+  upgradePlan: PlanId | null;
 }
 
 const PlanContext = createContext<PlanContextValue | null>(null);
@@ -24,7 +26,25 @@ function getNextPlan(current: PlanId): PlanId | null {
   return null;
 }
 
-export function PlanProvider({ children, planId = "free" }: { children: ReactNode; planId?: PlanId }) {
+export function PlanProvider({ children, planId: defaultPlanId = "free" }: { children: ReactNode; planId?: PlanId }) {
+  const { tenantId } = useTenant();
+  const [planId, setPlanId] = useState<PlanId>(defaultPlanId);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    supabase
+      .from("subscriptions")
+      .select("plan_id")
+      .eq("tenant_id", tenantId)
+      .eq("status", "active")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.plan_id) {
+          setPlanId(data.plan_id as PlanId);
+        }
+      });
+  }, [tenantId]);
+
   const value = useMemo<PlanContextValue>(() => {
     const limits = planLimits[planId];
     return {

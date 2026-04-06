@@ -49,7 +49,7 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <TenantProvider>
-        <PlanProvider planId="basic">
+        <PlanProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>

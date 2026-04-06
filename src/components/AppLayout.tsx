@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate, Navigate } from "react-router-dom";
 import {
   LayoutDashboard, Calendar, Layers, Share2, Code2, Tags,
   Image, Users, Plug, Settings, CreditCard, Shield, Menu, X, LogOut
@@ -28,9 +28,16 @@ export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut, isPlatformAdmin } = useAuth();
+  const { user, loading, signOut, isPlatformAdmin } = useAuth();
   const { tenant } = useTenant();
   const { planId } = usePlan();
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen bg-background"><div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
+  }
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   const fullName = user?.user_metadata?.full_name || "Gebruiker";
   const initials = fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
