@@ -444,6 +444,41 @@ export default function CreateEventPage() {
           </div>
         </div>
       </div>
+      {/* Media Picker Dialog */}
+      <Dialog open={mediaPickerOpen} onOpenChange={setMediaPickerOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Kies een afbeelding</DialogTitle>
+          </DialogHeader>
+          {mediaItems.length === 0 ? (
+            <div className="text-center py-8">
+              <Image className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Nog geen media. Upload eerst afbeeldingen via de Media pagina.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {mediaItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setFeaturedImageId(item.id);
+                    setFeaturedImageUrl(item.original_url);
+                    setMediaPickerOpen(false);
+                  }}
+                  className={`relative rounded-lg border-2 overflow-hidden aspect-square transition-colors ${featuredImageId === item.id ? "border-primary" : "border-border hover:border-primary/50"}`}
+                >
+                  <img src={item.original_url || ""} alt={item.alt_text || item.filename} className="w-full h-full object-cover" />
+                  {featuredImageId === item.id && (
+                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                      <Check className="w-6 h-6 text-primary" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
