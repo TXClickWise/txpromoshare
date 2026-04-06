@@ -1,7 +1,7 @@
-import { Building2, Palette, MapPin, Phone, Mail, Save, Plus, Trash2 } from "lucide-react";
+import { Building2, Palette, MapPin, Phone, Mail, Save, Plus, Trash2, Upload, X } from "lucide-react";
 import { logAudit } from "@/lib/audit";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { t } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
