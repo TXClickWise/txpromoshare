@@ -77,7 +77,7 @@ export default function WidgetsPage() {
   function getEmbedCode(widget: Tables<"widgets">) {
     const baseUrl = import.meta.env.VITE_SUPABASE_URL || "";
     const scriptUrl = `${baseUrl}/functions/v1/widget-embed?widget_id=${widget.id}&format=js`;
-    return `<div id="txpromoshare-widget-${widget.id}"></div>\n<script src="${scriptUrl}" data-widget-id="${widget.id}" async></script>`;
+    return `<div id="txeventshare-widget-${widget.id}"></div>\n<script src="${scriptUrl}" data-widget-id="${widget.id}" async></script>`;
   }
 
   const copy = (key: string, text: string) => {

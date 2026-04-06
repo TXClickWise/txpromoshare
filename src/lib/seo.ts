@@ -12,7 +12,7 @@ interface SEOProps {
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
-const BASE_URL = "https://txpromoshare.nl";
+const BASE_URL = "https://txeventshare.nl";
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-default.png`;
 const SITE_NAME = "TX EventShare";
 

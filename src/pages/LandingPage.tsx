@@ -181,7 +181,7 @@ export default function LandingPage() {
               <div className="rounded-2xl border border-border bg-card shadow-elevated overflow-hidden">
                 <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-secondary/30">
                   <div className="flex gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-destructive/40" /><div className="w-2.5 h-2.5 rounded-full bg-highlight/40" /><div className="w-2.5 h-2.5 rounded-full bg-accent/40" /></div>
-                  <div className="flex-1 text-center"><span className="text-[10px] text-muted-foreground font-mono">app.txpromoshare.nl</span></div>
+                  <div className="flex-1 text-center"><span className="text-[10px] text-muted-foreground font-mono">app.txeventshare.nl</span></div>
                 </div>
                 <div className="p-5 bg-gradient-to-br from-surface-cool to-card">
                   {/* Mini dashboard mockup */}
@@ -743,9 +743,9 @@ export default function LandingPage() {
             <div>
               <p className="font-display font-semibold text-foreground text-sm mb-3">Contact</p>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2"><Mail className="w-4 h-4 shrink-0" />info@txpromoshare.nl</li>
+                <li className="flex items-center gap-2"><Mail className="w-4 h-4 shrink-0" />info@txeventshare.nl</li>
                 <li className="flex items-center gap-2"><Phone className="w-4 h-4 shrink-0" />+31 (0)222 - 000 000</li>
-                <li className="flex items-center gap-2"><Globe className="w-4 h-4 shrink-0" /><a href="#" className="hover:text-foreground transition-colors">txpromoshare.nl</a></li>
+                <li className="flex items-center gap-2"><Globe className="w-4 h-4 shrink-0" /><a href="#" className="hover:text-foreground transition-colors">txeventshare.nl</a></li>
               </ul>
             </div>
           </div>

@@ -55,7 +55,7 @@ export default function DemoPage() {
               </div>
 
               <div className="space-y-3 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2"><Mail className="w-4 h-4" /> info@txpromoshare.nl</div>
+                <div className="flex items-center gap-2"><Mail className="w-4 h-4" /> info@txeventshare.nl</div>
                 <div className="flex items-center gap-2"><Phone className="w-4 h-4" /> +31 (0)222 123 456</div>
                 <div className="flex items-center gap-2"><MapPin className="w-4 h-4" /> Texel, Nederland</div>
               </div>
