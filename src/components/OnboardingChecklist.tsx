@@ -1,8 +1,10 @@
 import { Check, Circle, ArrowRight, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/hooks/useTenant";
 
 interface ChecklistItem {
   id: string;
@@ -12,23 +14,60 @@ interface ChecklistItem {
   to: string;
 }
 
-const defaultItems: ChecklistItem[] = [
-  { id: "profile", label: "Organisatie instellen", description: "Naam, locatie en contactgegevens", done: true, to: "/app/settings" },
-  { id: "branding", label: "Logo & huisstijl toevoegen", description: "Upload je logo en kies je kleuren", done: false, to: "/app/settings" },
-  { id: "event", label: "Eerste evenement aanmaken", description: "Gebruik een sjabloon of begin blanco", done: false, to: "/app/events/new" },
-  { id: "distribution", label: "Evenement delen", description: "Verspreid via WhatsApp, link of embed", done: false, to: "/app/distribution" },
-  { id: "widget", label: "Widget op je website plaatsen", description: "Toon je agenda automatisch op je site", done: false, to: "/app/widgets" },
-];
-
 export function OnboardingChecklist() {
-  const [dismissed, setDismissed] = useState(false);
-  const [items] = useState(defaultItems);
+  const [dismissed, setDismissed] = useState(() => {
+    return localStorage.getItem("onboarding_dismissed") === "true";
+  });
+  const { tenant, tenantId } = useTenant();
+  const [items, setItems] = useState<ChecklistItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  if (dismissed) return null;
+  useEffect(() => {
+    if (!tenantId || dismissed) return;
+    async function check() {
+      // Check branding: logo or primary_color changed from default
+      const hasBranding = !!(tenant?.logo_url || (tenant?.primary_color && tenant.primary_color !== "#E86C2C"));
+
+      // Check if at least one event exists
+      const { count: eventCount } = await supabase
+        .from("events")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenantId!);
+
+      // Check if at least one distribution action exists
+      const { count: distCount } = await supabase
+        .from("distribution_actions")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenantId!);
+
+      // Check if at least one widget exists
+      const { count: widgetCount } = await supabase
+        .from("widgets")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenantId!);
+
+      setItems([
+        { id: "profile", label: "Organisatie instellen", description: "Naam, locatie en contactgegevens", done: true, to: "/app/settings" },
+        { id: "branding", label: "Logo & huisstijl toevoegen", description: "Upload je logo en kies je kleuren", done: hasBranding, to: "/app/settings" },
+        { id: "event", label: "Eerste evenement aanmaken", description: "Gebruik een sjabloon of begin blanco", done: (eventCount || 0) > 0, to: "/app/events/new" },
+        { id: "distribution", label: "Evenement delen", description: "Verspreid via WhatsApp, link of embed", done: (distCount || 0) > 0, to: "/app/distribution" },
+        { id: "widget", label: "Widget op je website plaatsen", description: "Toon je agenda automatisch op je site", done: (widgetCount || 0) > 0, to: "/app/widgets" },
+      ]);
+      setLoading(false);
+    }
+    check();
+  }, [tenantId, tenant, dismissed]);
+
+  function handleDismiss() {
+    setDismissed(true);
+    localStorage.setItem("onboarding_dismissed", "true");
+  }
+
+  if (dismissed || loading) return null;
 
   const completed = items.filter((i) => i.done).length;
+  if (completed === items.length) return null; // All done — hide
   const progress = (completed / items.length) * 100;
-  const nextItem = items.find((i) => !i.done);
 
   return (
     <AnimatePresence>
@@ -43,12 +82,11 @@ export function OnboardingChecklist() {
             <h3 className="font-display font-bold text-foreground text-sm">Welkom bij TX PromoShare! 🎉</h3>
             <p className="text-xs text-muted-foreground mt-1">Voltooi deze stappen om alles klaar te zetten</p>
           </div>
-          <button onClick={() => setDismissed(true)} className="p-1 rounded-lg hover:bg-secondary text-muted-foreground">
+          <button onClick={handleDismiss} className="p-1 rounded-lg hover:bg-secondary text-muted-foreground">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Progress bar */}
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
             <motion.div
@@ -61,7 +99,6 @@ export function OnboardingChecklist() {
           <span className="text-xs font-medium text-muted-foreground">{completed}/{items.length}</span>
         </div>
 
-        {/* Items */}
         <div className="space-y-1">
           {items.map((item) => (
             <Link
