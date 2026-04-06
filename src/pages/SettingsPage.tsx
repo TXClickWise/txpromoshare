@@ -1,4 +1,4 @@
-import { Building2, Palette, MapPin, Phone, Mail, Save, Plus, Trash2, Upload, X } from "lucide-react";
+import { Building2, Palette, MapPin, Phone, Mail, Save, Plus, Trash2, Upload, X, Globe } from "lucide-react";
 import { logAudit } from "@/lib/audit";
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useTenant } from "@/hooks/useTenant";
 import { supabase } from "@/integrations/supabase/client";
