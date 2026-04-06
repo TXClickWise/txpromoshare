@@ -136,15 +136,15 @@ function generateEmbedScript(payload: any): string {
     '</div>' +
     innerHtml +
     '<div style="text-align:center;margin-top:12px;">' +
-    '<a href="https://txpromoshare.lovable.app" target="_blank" rel="noopener" style="font-size:11px;color:#9ca3af;text-decoration:none;">Powered by TX EventShare</a>' +
+    '<a href="https://txeventshare.nl" target="_blank" rel="noopener" style="font-size:11px;color:#9ca3af;text-decoration:none;">Powered by TX EventShare</a>' +
     '</div></div>';
 
   const escapedHtml = JSON.stringify(html);
 
   return '(function(){' +
-    'var c=document.getElementById("txpromoshare-widget-' + widget.id + '");' +
+    'var c=document.getElementById("txeventshare-widget-' + widget.id + '");' +
     'if(!c){var s=document.querySelectorAll(\'script[data-widget-id="' + widget.id + '"]\');' +
-    'if(s.length>0){c=document.createElement("div");c.id="txpromoshare-widget-' + widget.id + '";' +
+    'if(s.length>0){c=document.createElement("div");c.id="txeventshare-widget-' + widget.id + '";' +
     's[s.length-1].parentNode.insertBefore(c,s[s.length-1]);}}' +
     'if(c){c.innerHTML=' + escapedHtml + ';}' +
     '})();';
