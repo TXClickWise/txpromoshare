@@ -36,6 +36,7 @@ export const planLimits: Record<PlanId, PlanLimits> = {
     singleEventWidget: false,
     allTemplates: false,
     distributionCenter: false,
+    freeBoostsPerMonth: 0,
   },
   basic: {
     maxActiveEvents: 15,
@@ -70,8 +71,8 @@ export const planLimits: Record<PlanId, PlanLimits> = {
     singleEventWidget: true,
     allTemplates: true,
     distributionCenter: true,
+    freeBoostsPerMonth: 2,
   },
-};
 
 // Future ticketing module types (architecture only)
 export interface TicketType {
