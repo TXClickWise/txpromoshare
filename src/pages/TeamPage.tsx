@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { logAudit } from "@/lib/audit";
 import { Users, Plus, Shield, Mail, MoreHorizontal, Crown, Pencil, UserMinus } from "lucide-react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
@@ -92,6 +93,7 @@ export default function TeamPage() {
         },
       }).catch(() => {});
       toast.success(`Uitnodiging verstuurd naar ${inviteEmail}`);
+      if (tenantId) logAudit({ tenantId, entityType: "team", action: "invited", metadata: { email: inviteEmail, role: inviteRole } });
       setInviteEmail("");
       setInviteOpen(false);
     }

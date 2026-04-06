@@ -1,4 +1,5 @@
 import { Building2, Palette, MapPin, Phone, Mail, Save, Plus, Trash2 } from "lucide-react";
+import { logAudit } from "@/lib/audit";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { t } from "@/lib/i18n";
@@ -66,6 +67,7 @@ export default function SettingsPage() {
       toast.error("Opslaan mislukt: " + error.message);
     } else {
       toast.success("Instellingen opgeslagen");
+      if (tenant) logAudit({ tenantId: tenant.id, entityType: "tenant", action: "settings_updated", entityId: tenant.id });
       refetch();
     }
   }
@@ -82,6 +84,7 @@ export default function SettingsPage() {
       toast.error("Opslaan mislukt: " + error.message);
     } else {
       toast.success("Branding opgeslagen");
+      if (tenant) logAudit({ tenantId: tenant.id, entityType: "tenant", action: "branding_updated", entityId: tenant.id });
       refetch();
     }
   }
