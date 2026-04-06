@@ -1,10 +1,20 @@
-import { CreditCard, Check, ArrowRight, Sparkles, Shield } from "lucide-react";
+import { CreditCard, Check, ArrowRight, Sparkles, Shield, ExternalLink, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { UsageMeter } from "@/components/UsageMeter";
 import { usePlan } from "@/hooks/usePlan";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useSearchParams } from "react-router-dom";
+
+// Stripe price IDs
+const STRIPE_PRICES: Record<string, string> = {
+  basic: "price_1TJHeSL34Z8Db3WQsjW9RWzZ",
+  pro: "price_1TJHeTL34Z8Db3WQN5z3zG6m",
+};
 
 const plans = [
   { ...t.plans.free, id: "free" as const },
@@ -14,6 +24,59 @@ const plans = [
 
 export default function BillingPage() {
   const { planId } = usePlan();
+  const [loading, setLoading] = useState<string | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("success") === "true") {
+      toast.success("Abonnement succesvol geactiveerd! Je plan wordt bijgewerkt.");
+      // Trigger subscription check to sync
+      supabase.functions.invoke("check-subscription").then(({ data }) => {
+        if (data?.plan_id) {
+          window.location.reload();
+        }
+      });
+    }
+    if (searchParams.get("canceled") === "true") {
+      toast.info("Checkout geannuleerd.");
+    }
+  }, [searchParams]);
+
+  async function handleCheckout(targetPlanId: string) {
+    const priceId = STRIPE_PRICES[targetPlanId];
+    if (!priceId) return;
+
+    setLoading(targetPlanId);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { priceId },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch (err: any) {
+      toast.error("Checkout kon niet worden gestart: " + (err.message || "Onbekende fout"));
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function handleManageSubscription() {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch (err: any) {
+      toast.error("Portal kon niet worden geopend: " + (err.message || "Onbekende fout"));
+    } finally {
+      setPortalLoading(false);
+    }
+  }
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -32,11 +95,16 @@ export default function BillingPage() {
             <div>
               <h3 className="font-display font-bold text-foreground">{planId.charAt(0).toUpperCase() + planId.slice(1)} plan</h3>
               <p className="text-sm text-muted-foreground">
-                {planId === "free" ? "Gratis · Geen factuurperiode" : planId === "basic" ? "€29/maand · Verlengd op 1 mei 2026" : "€79/maand · Verlengd op 1 mei 2026"}
+                {planId === "free" ? "Gratis · Geen factuurperiode" : planId === "basic" ? "€29/maand" : "€79/maand"}
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm">Beheer abonnement</Button>
+          {planId !== "free" && (
+            <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
+              {portalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <ExternalLink className="w-3 h-3 mr-1" />}
+              Beheer abonnement
+            </Button>
+          )}
         </div>
       </motion.div>
 
@@ -58,6 +126,7 @@ export default function BillingPage() {
             const isCurrent = plan.id === planId;
             const isUpgrade = (planId === "free" && plan.id !== "free") || (planId === "basic" && plan.id === "pro");
             const isDowngrade = (planId === "pro" && plan.id !== "pro") || (planId === "basic" && plan.id === "free");
+            const isLoading = loading === plan.id;
             return (
               <motion.div
                 key={plan.id}
@@ -94,10 +163,26 @@ export default function BillingPage() {
                   variant={isCurrent ? "outline" : "default"}
                   size="sm"
                   className={cn("mt-4", isUpgrade && plan.id === "pro" && "gradient-hero text-primary-foreground border-0")}
-                  disabled={isCurrent}
+                  disabled={isCurrent || plan.id === "free" || !!loading}
+                  onClick={() => {
+                    if (isUpgrade) {
+                      handleCheckout(plan.id);
+                    } else if (isDowngrade) {
+                      handleManageSubscription();
+                    }
+                  }}
                 >
-                  {isCurrent ? "Huidig plan" : isDowngrade ? "Downgraden" : "Upgraden"}
-                  {!isCurrent && <ArrowRight className="w-3 h-3 ml-1" />}
+                  {isLoading ? (
+                    <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Even geduld...</>
+                  ) : isCurrent ? (
+                    "Huidig plan"
+                  ) : isDowngrade ? (
+                    <>Beheer abonnement<ExternalLink className="w-3 h-3 ml-1" /></>
+                  ) : plan.id === "free" ? (
+                    "Gratis plan"
+                  ) : (
+                    <>Upgraden<ArrowRight className="w-3 h-3 ml-1" /></>
+                  )}
                 </Button>
               </motion.div>
             );
@@ -121,8 +206,7 @@ export default function BillingPage() {
       <div className="rounded-xl border border-dashed border-border p-4 flex items-start gap-3">
         <Shield className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
         <p className="text-xs text-muted-foreground">
-          💳 Stripe betalingsintegratie wordt binnenkort toegevoegd voor automatische facturatie.
-          Je kunt nu upgraden door contact op te nemen.
+          💳 Betalingen worden veilig afgehandeld via Stripe. Je creditcard- of betaalgegevens worden nooit op ons platform opgeslagen.
         </p>
       </div>
     </div>
