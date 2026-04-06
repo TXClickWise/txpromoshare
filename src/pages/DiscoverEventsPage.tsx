@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { setSEO } from "@/lib/seo";
+import { useSEO } from "@/lib/seo";
 import { format, isToday, isThisWeek, addDays, startOfDay } from "date-fns";
 import { nl } from "date-fns/locale";
 
