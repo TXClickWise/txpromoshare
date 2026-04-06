@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Send, Sparkles, Clock, MapPin, CalendarDays, Image, Share2, Search as SearchIcon, Repeat, CalendarClock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Save, Eye, Send, Sparkles, Clock, MapPin, CalendarDays, Image, Share2, Repeat, CalendarClock, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
@@ -11,27 +11,177 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/hooks/useTenant";
+import { useAuth } from "@/hooks/useAuth";
 
 const categories = Object.entries(t.events.categories);
 
+function generateSlug(title: string) {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 export default function CreateEventPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [searchParams] = useSearchParams();
   const template = searchParams.get("template");
+  const { tenantId } = useTenant();
+  const { user } = useAuth();
+  const isEditing = !!id;
+
   const [title, setTitle] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [shortDescription, setShortDescription] = useState("");
+  const [fullDescription, setFullDescription] = useState("");
+  const [category, setCategory] = useState(template || "");
+  const [organizer, setOrganizer] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [startTime, setStartTime] = useState("20:00");
+  const [endTime, setEndTime] = useState("23:00");
+  const [venue, setVenue] = useState("");
+  const [address, setAddress] = useState("");
+  const [ctaButtonText, setCtaButtonText] = useState("Reserveer nu");
+  const [ctaLink, setCtaLink] = useState("");
+  const [tags, setTags] = useState("");
+  const [slug, setSlug] = useState("");
+  const [seoTitle, setSeoTitle] = useState("");
+  const [seoDescription, setSeoDescription] = useState("");
+  const [whatsappText, setWhatsappText] = useState("");
+  const [socialText, setSocialText] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
+  const [publishAt, setPublishAt] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(isEditing);
 
-  const handlePublish = () => {
-    toast.success("Evenement gepubliceerd! 🎉", { description: "Je kunt het nu verspreiden via het Distributie Centrum." });
-  };
+  // Load existing event when editing
+  useEffect(() => {
+    if (!id) return;
+    supabase.from("events").select("*").eq("id", id).maybeSingle().then(({ data }) => {
+      if (data) {
+        setTitle(data.title);
+        setSubtitle(data.subtitle || "");
+        setShortDescription(data.short_description || "");
+        setFullDescription(data.full_description || "");
+        setOrganizer(data.organizer_name || "");
+        setStartDate(data.start_date);
+        setEndDate(data.end_date || "");
+        setStartTime(data.start_time);
+        setEndTime(data.end_time || "");
+        setCtaButtonText(data.cta_button_text || "");
+        setCtaLink(data.cta_link || "");
+        setTags(data.tags?.join(", ") || "");
+        setSlug(data.slug);
+        setSeoTitle(data.seo_title || "");
+        setSeoDescription(data.seo_description || "");
+        setWhatsappText(data.whatsapp_share_text || "");
+        setSocialText(data.social_share_text || "");
+        setIsRecurring(data.is_recurring);
+        setPublishAt(data.publish_at || "");
+      }
+      setLoading(false);
+    });
+  }, [id]);
 
-  const handleSave = () => {
-    toast.success("Concept opgeslagen");
-  };
+  // Auto-generate slug from title
+  useEffect(() => {
+    if (!isEditing && title) {
+      setSlug(generateSlug(title));
+    }
+  }, [title, isEditing]);
+
+  function buildEventData(status: "draft" | "published" | "scheduled") {
+    return {
+      title,
+      subtitle: subtitle || null,
+      short_description: shortDescription || null,
+      full_description: fullDescription || null,
+      organizer_name: organizer || null,
+      start_date: startDate,
+      end_date: endDate || null,
+      start_time: startTime,
+      end_time: endTime || null,
+      cta_button_text: ctaButtonText || null,
+      cta_link: ctaLink || null,
+      tags: tags ? tags.split(",").map(t => t.trim()).filter(Boolean) : null,
+      slug: slug || generateSlug(title),
+      seo_title: seoTitle || null,
+      seo_description: seoDescription || null,
+      whatsapp_share_text: whatsappText || null,
+      social_share_text: socialText || null,
+      is_recurring: isRecurring,
+      publish_at: publishAt || null,
+      status,
+      tenant_id: tenantId!,
+      created_by: user?.id || null,
+    };
+  }
+
+  async function handleSave() {
+    if (!tenantId || !title || !startDate || !startTime) {
+      toast.error("Vul minimaal titel, datum en tijd in");
+      return;
+    }
+    setSaving(true);
+    const data = buildEventData("draft");
+    let error;
+    if (isEditing) {
+      const { tenant_id, created_by, ...updateData } = data;
+      ({ error } = await supabase.from("events").update(updateData).eq("id", id!));
+    } else {
+      ({ error } = await supabase.from("events").insert(data));
+    }
+    setSaving(false);
+    if (error) {
+      toast.error("Opslaan mislukt: " + error.message);
+    } else {
+      toast.success("Concept opgeslagen");
+      if (!isEditing) navigate("/app/events");
+    }
+  }
+
+  async function handlePublish() {
+    if (!tenantId || !title || !startDate || !startTime) {
+      toast.error("Vul minimaal titel, datum en tijd in");
+      return;
+    }
+    setSaving(true);
+    const status = publishAt ? "scheduled" : "published";
+    const data = buildEventData(status);
+    let error;
+    if (isEditing) {
+      const { tenant_id, created_by, ...updateData } = data;
+      ({ error } = await supabase.from("events").update(updateData).eq("id", id!));
+    } else {
+      ({ error } = await supabase.from("events").insert(data));
+    }
+    setSaving(false);
+    if (error) {
+      toast.error("Publiceren mislukt: " + error.message);
+    } else {
+      toast.success(status === "scheduled" ? "Evenement ingepland! 📅" : "Evenement gepubliceerd! 🎉");
+      navigate("/app/events");
+    }
+  }
+
+  async function handleDelete() {
+    if (!id || !confirm("Weet je zeker dat je dit evenement wilt verwijderen?")) return;
+    const { error } = await supabase.from("events").delete().eq("id", id);
+    if (error) {
+      toast.error("Verwijderen mislukt: " + error.message);
+    } else {
+      toast.success("Evenement verwijderd");
+      navigate("/app/events");
+    }
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
+  }
 
   return (
     <div className="max-w-4xl">
-      {/* Sticky header */}
       <div className="sticky top-0 z-20 bg-background/90 backdrop-blur-sm -mx-4 lg:-mx-6 px-4 lg:px-6 py-3 border-b border-border mb-6">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors">
@@ -39,19 +189,20 @@ export default function CreateEventPage() {
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-lg font-display font-bold text-foreground truncate">
-              {title || t.events.create}
+              {isEditing ? (title || "Evenement bewerken") : (title || t.events.create)}
             </h1>
-            {template && <p className="text-xs text-accent font-medium">Sjabloon: {t.events.categories[template as keyof typeof t.events.categories] || template}</p>}
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-2 hidden sm:inline-flex">
-              <Eye className="w-4 h-4" />{t.common.preview}
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleSave} className="gap-2">
+            {isEditing && (
+              <Button variant="outline" size="sm" onClick={handleDelete} className="gap-2 text-destructive hover:text-destructive">
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={handleSave} disabled={saving} className="gap-2">
               <Save className="w-4 h-4" />
-              <span className="hidden sm:inline">{t.common.save}</span>
+              <span className="hidden sm:inline">{saving ? "Opslaan..." : t.common.save}</span>
             </Button>
-            <Button size="sm" onClick={handlePublish} className="gap-2 gradient-hero text-primary-foreground border-0 hover:opacity-90">
+            <Button size="sm" onClick={handlePublish} disabled={saving} className="gap-2 gradient-hero text-primary-foreground border-0 hover:opacity-90">
               <Send className="w-4 h-4" />
               <span className="hidden sm:inline">{t.common.publish}</span>
             </Button>
@@ -60,7 +211,6 @@ export default function CreateEventPage() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main form */}
         <div className="lg:col-span-2">
           <Tabs defaultValue="details">
             <TabsList className="mb-6 w-full justify-start">
@@ -72,26 +222,18 @@ export default function CreateEventPage() {
 
             <TabsContent value="details" className="space-y-5">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
-                {/* Title - hero-sized input */}
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.title} *</Label>
-                  <Input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Bijv. Live Jazz Avond"
-                    className="text-lg font-display font-semibold h-12 border-primary/20 focus:border-primary"
-                  />
+                  <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Bijv. Live Jazz Avond" className="text-lg font-display font-semibold h-12 border-primary/20 focus:border-primary" />
                 </div>
-
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.subtitle}</Label>
-                  <Input placeholder="Optionele ondertitel, bijv. 'Met het Amsterdam Jazz Quartet'" />
+                  <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="Optionele ondertitel" />
                 </div>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.category}</Label>
-                    <Select defaultValue={template || undefined}>
+                    <Select value={category} onValueChange={setCategory}>
                       <SelectTrigger><SelectValue placeholder="Kies categorie" /></SelectTrigger>
                       <SelectContent>
                         {categories.map(([key, label]) => (
@@ -102,82 +244,66 @@ export default function CreateEventPage() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.organizer}</Label>
-                    <Input placeholder="Bijv. Café De Kroeg" defaultValue="Café De Kroeg" />
+                    <Input value={organizer} onChange={(e) => setOrganizer(e.target.value)} placeholder="Naam organisator" />
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.shortDescription}</Label>
-                  <Textarea placeholder="Korte beschrijving voor overzichten (max 160 tekens)" rows={2} maxLength={160} />
-                  <p className="text-[11px] text-muted-foreground">Wordt getoond in agenda-overzichten en social media previews</p>
+                  <Textarea value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} placeholder="Korte beschrijving (max 160 tekens)" rows={2} maxLength={160} />
                 </div>
-
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.fullDescription}</Label>
-                  <Textarea placeholder="Volledige beschrijving van het evenement. Beschrijf wat bezoekers kunnen verwachten..." rows={5} />
+                  <Textarea value={fullDescription} onChange={(e) => setFullDescription(e.target.value)} placeholder="Volledige beschrijving..." rows={5} />
                 </div>
-
-                {/* Date/time section */}
                 <div className="rounded-xl bg-secondary/30 border border-border p-4 space-y-4">
-                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                    <CalendarDays className="w-4 h-4 text-primary" />
-                    Datum & tijd
-                  </div>
+                  <div className="flex items-center gap-2 text-sm font-medium text-foreground"><CalendarDays className="w-4 h-4 text-primary" />Datum & tijd</div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground">{t.events.fields.startDate} *</Label>
-                      <Input type="date" />
+                      <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground">{t.events.fields.endDate}</Label>
-                      <Input type="date" />
+                      <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground">{t.events.fields.startTime} *</Label>
-                      <Input type="time" defaultValue="20:00" />
+                      <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground">{t.events.fields.endTime}</Label>
-                      <Input type="time" defaultValue="23:00" />
+                      <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
                     </div>
                   </div>
                 </div>
-
-                {/* Location section */}
                 <div className="rounded-xl bg-secondary/30 border border-border p-4 space-y-4">
-                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                    <MapPin className="w-4 h-4 text-primary" />
-                    Locatie
-                  </div>
+                  <div className="flex items-center gap-2 text-sm font-medium text-foreground"><MapPin className="w-4 h-4 text-primary" />Locatie</div>
                   <div className="space-y-3">
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground">{t.events.fields.venue}</Label>
-                      <Input placeholder="Bijv. Café De Kroeg" defaultValue="Café De Kroeg" />
+                      <Input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="Locatienaam" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground">{t.events.fields.address}</Label>
-                      <Input placeholder="Bijv. Kerkstraat 12, Amsterdam" />
+                      <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Adres" />
                     </div>
                   </div>
                 </div>
-
-                {/* CTA */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.ctaButton}</Label>
-                    <Input placeholder="Bijv. Reserveer nu" defaultValue="Reserveer nu" />
+                    <Input value={ctaButtonText} onChange={(e) => setCtaButtonText(e.target.value)} placeholder="Reserveer nu" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.ctaLink}</Label>
-                    <Input placeholder="https://..." />
+                    <Input value={ctaLink} onChange={(e) => setCtaLink(e.target.value)} placeholder="https://..." />
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.tags}</Label>
-                  <Input placeholder="Tags gescheiden door komma's, bijv. jazz, live muziek" />
+                  <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="Tags gescheiden door komma's" />
                 </div>
               </motion.div>
             </TabsContent>
@@ -192,58 +318,39 @@ export default function CreateEventPage() {
                     <p className="text-xs text-muted-foreground">of klik om te uploaden · JPG, PNG tot 5MB</p>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.gallery}</Label>
-                  <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer bg-secondary/20">
-                    <p className="text-sm text-muted-foreground">Voeg meerdere afbeeldingen toe voor de galerij</p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.sponsors}</Label>
-                  <Input placeholder="Sponsor namen (komma-gescheiden)" />
-                  <p className="text-[11px] text-muted-foreground">Sponsors worden getoond op de publieke eventpagina</p>
-                </div>
               </motion.div>
             </TabsContent>
 
             <TabsContent value="seo" className="space-y-5">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
-                <div className="rounded-xl bg-secondary/30 border border-border p-4 mb-2">
-                  <p className="text-xs text-muted-foreground flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-primary" />
-                    SEO en deelteksten worden automatisch ingevuld op basis van je eventinformatie. Je kunt ze hier aanpassen.
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.seoTitle}</Label>
-                  <Input placeholder="SEO titel (max 60 tekens)" maxLength={60} defaultValue={title} />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.seoDescription}</Label>
-                  <Textarea placeholder="SEO beschrijving (max 160 tekens)" rows={3} maxLength={160} />
-                </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.slug}</Label>
                   <div className="flex items-center gap-0">
                     <span className="text-xs text-muted-foreground bg-secondary px-3 py-2.5 rounded-l-lg border border-r-0 border-border">txpromoshare.nl/e/</span>
-                    <Input placeholder="live-jazz-avond" className="rounded-l-none" />
+                    <Input value={slug} onChange={(e) => setSlug(e.target.value)} className="rounded-l-none" />
                   </div>
                 </div>
                 <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.seoTitle}</Label>
+                  <Input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} placeholder="SEO titel (max 60 tekens)" maxLength={60} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.seoDescription}</Label>
+                  <Textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} placeholder="SEO beschrijving" rows={3} maxLength={160} />
+                </div>
+                <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.whatsappShareText}</Label>
-                  <Textarea placeholder="Tekst voor WhatsApp delen" rows={3} />
-                  <p className="text-[11px] text-muted-foreground">Wordt voorgevuld met evenementnaam, datum en link</p>
+                  <Textarea value={whatsappText} onChange={(e) => setWhatsappText(e.target.value)} placeholder="Tekst voor WhatsApp" rows={3} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.socialShareText}</Label>
-                  <Textarea placeholder="Tekst voor social media" rows={3} />
+                  <Textarea value={socialText} onChange={(e) => setSocialText(e.target.value)} placeholder="Tekst voor social media" rows={3} />
                 </div>
               </motion.div>
             </TabsContent>
 
             <TabsContent value="advanced" className="space-y-5">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
-                {/* Recurring */}
                 <div className="rounded-xl bg-card border border-border p-5 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -257,31 +364,7 @@ export default function CreateEventPage() {
                     </div>
                     <Switch checked={isRecurring} onCheckedChange={setIsRecurring} />
                   </div>
-                  {isRecurring && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="space-y-3 pt-3 border-t border-border">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-2">
-                          <Label className="text-xs text-muted-foreground">Frequentie</Label>
-                          <Select defaultValue="weekly">
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="daily">Dagelijks</SelectItem>
-                              <SelectItem value="weekly">Wekelijks</SelectItem>
-                              <SelectItem value="biweekly">Tweewekelijks</SelectItem>
-                              <SelectItem value="monthly">Maandelijks</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs text-muted-foreground">Eindigt na</Label>
-                          <Input type="number" placeholder="bijv. 12" defaultValue="12" />
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
                 </div>
-
-                {/* Scheduled publish */}
                 <div className="rounded-xl bg-card border border-border p-5 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg gradient-hero flex items-center justify-center">
@@ -292,21 +375,14 @@ export default function CreateEventPage() {
                       <p className="text-xs text-muted-foreground">Plan wanneer dit evenement automatisch live gaat</p>
                     </div>
                   </div>
-                  <Input type="datetime-local" className="max-w-xs" />
+                  <Input type="datetime-local" value={publishAt} onChange={(e) => setPublishAt(e.target.value)} className="max-w-xs" />
                 </div>
-
-                {/* Ticketing teaser */}
                 <div className="rounded-xl border border-dashed border-border p-5 opacity-60">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center">
-                      <span className="text-lg">🎟️</span>
-                    </div>
+                    <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center"><span className="text-lg">🎟️</span></div>
                     <div>
-                      <p className="text-sm font-medium text-foreground flex items-center gap-2">
-                        Ticketing
-                        <span className="text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">{t.common.futureModule}</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">Verkoop tickets via Mollie of Stripe. Binnenkort beschikbaar.</p>
+                      <p className="text-sm font-medium text-foreground flex items-center gap-2">Ticketing<span className="text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">{t.common.futureModule}</span></p>
+                      <p className="text-xs text-muted-foreground">Ticketverkoop, QR-scanning & betalingen — binnenkort beschikbaar</p>
                     </div>
                   </div>
                 </div>
@@ -315,41 +391,21 @@ export default function CreateEventPage() {
           </Tabs>
         </div>
 
-        {/* Sidebar - Live preview card */}
-        <div className="hidden lg:block">
-          <div className="sticky top-20 space-y-4">
-            <div className="rounded-xl bg-card border border-border shadow-card overflow-hidden">
-              <div className="h-32 bg-gradient-to-br from-primary/20 via-primary/10 to-secondary flex items-center justify-center">
-                <Image className="w-8 h-8 text-muted-foreground/30" />
+        {/* Sidebar */}
+        <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+          <div className="rounded-xl bg-card border border-border shadow-card p-5 space-y-3">
+            <h3 className="text-sm font-display font-semibold text-foreground">Status</h3>
+            <p className="text-xs text-muted-foreground">
+              {isEditing ? "Bewerk dit evenement en sla op of publiceer." : "Maak je event aan als concept of publiceer direct."}
+            </p>
+          </div>
+          <div className="rounded-xl bg-secondary/50 border border-border p-4">
+            <div className="flex items-start gap-2">
+              <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-medium text-foreground">💡 Tip</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Gebruik de SEO tab om je WhatsApp en social media teksten aan te passen voor maximale impact.</p>
               </div>
-              <div className="p-4">
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Preview</p>
-                <h3 className="font-display font-bold text-foreground text-sm mb-1">{title || "Evenementnaam"}</h3>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
-                  <Clock className="w-3 h-3" />
-                  <span>Datum & tijd</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <MapPin className="w-3 h-3" />
-                  <span>Locatie</span>
-                </div>
-              </div>
-              <div className="px-4 pb-4">
-                <div className="w-full py-2 rounded-lg gradient-hero text-primary-foreground text-xs font-semibold text-center">
-                  Reserveer nu
-                </div>
-              </div>
-            </div>
-
-            {/* Tips sidebar */}
-            <div className="rounded-xl bg-secondary/30 border border-border p-4">
-              <p className="text-xs font-medium text-foreground mb-2">💡 Tips</p>
-              <ul className="space-y-2 text-xs text-muted-foreground">
-                <li>• Gebruik een pakkende titel van max 50 tekens</li>
-                <li>• Voeg altijd een uitgelichte afbeelding toe</li>
-                <li>• Vul de korte beschrijving in voor betere previews</li>
-                <li>• Stel een CTA in als je reserveringen wilt</li>
-              </ul>
             </div>
           </div>
         </div>
