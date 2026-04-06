@@ -364,6 +364,42 @@ export default function SettingsPage() {
             </div>
           </motion.div>
         </TabsContent>
+
+        <TabsContent value="visibility">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card border border-border shadow-card p-6 space-y-5">
+            <div>
+              <p className="text-sm font-medium text-foreground mb-1">Publieke evenementenpagina</p>
+              <p className="text-xs text-muted-foreground mb-4">
+                Bepaal of jouw evenementen zichtbaar zijn op de publieke ontdekkingspagina van TX EventShare. Je kunt dit per evenement nog overschrijven.
+              </p>
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-secondary/30 border border-border p-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">Toon evenementen op ontdekkingspagina</p>
+                <p className="text-xs text-muted-foreground">Als dit uit staat, worden je evenementen standaard niet getoond op /evenementen</p>
+              </div>
+              <Switch checked={showOnDiscovery} onCheckedChange={setShowOnDiscovery} />
+            </div>
+            <Button size="sm" onClick={async () => {
+              if (!tenant) return;
+              setSaving(true);
+              const { error } = await supabase
+                .from("tenants")
+                .update({ show_on_discovery: showOnDiscovery } as any)
+                .eq("id", tenant.id);
+              setSaving(false);
+              if (error) {
+                toast.error("Opslaan mislukt: " + error.message);
+              } else {
+                toast.success("Zichtbaarheid opgeslagen");
+                logAudit({ tenantId: tenant.id, entityType: "tenant", action: "visibility_updated", entityId: tenant.id });
+                refetch();
+              }
+            }} disabled={saving} className="gap-2">
+              <Save className="w-4 h-4" />{saving ? "Opslaan..." : "Opslaan"}
+            </Button>
+          </motion.div>
+        </TabsContent>
       </Tabs>
     </div>
   );
