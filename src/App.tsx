@@ -46,51 +46,61 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <PlanProvider planId="basic">
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Public routes */}
-            <Route element={<PublicLayout />}>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/pricing" element={<PricingPage />} />
-              <Route path="/demo" element={<DemoPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
+      <AuthProvider>
+        <PlanProvider planId="basic">
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Public routes */}
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/demo" element={<DemoPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
 
-              {/* SEO landing pages */}
-              <Route path="/event-agenda-software" element={<EventAgendaSoftwarePage />} />
-              <Route path="/agenda-widget-website" element={<AgendaWidgetWebsitePage />} />
-              <Route path="/event-promotie-horeca" element={<EventPromotieHorecaPage />} />
-              <Route path="/software-voor-kleine-evenementen" element={<SoftwareVoorKleineEvenementenPage />} />
-              <Route path="/clickwise-integratie" element={<ClickWiseIntegratiePage />} />
-            </Route>
+                {/* SEO landing pages */}
+                <Route path="/event-agenda-software" element={<EventAgendaSoftwarePage />} />
+                <Route path="/agenda-widget-website" element={<AgendaWidgetWebsitePage />} />
+                <Route path="/event-promotie-horeca" element={<EventPromotieHorecaPage />} />
+                <Route path="/software-voor-kleine-evenementen" element={<SoftwareVoorKleineEvenementenPage />} />
+                <Route path="/clickwise-integratie" element={<ClickWiseIntegratiePage />} />
+              </Route>
 
-            {/* Public event pages */}
-            <Route path="/e/:slug" element={<PublicEventPage />} />
+              {/* Public event pages */}
+              <Route path="/e/:slug" element={<PublicEventPage />} />
 
-            {/* App routes */}
-            <Route path="/app" element={<AppLayout />}>
-              <Route index element={<DashboardPage />} />
-              <Route path="events" element={<EventsPage />} />
-              <Route path="events/new" element={<CreateEventPage />} />
-              <Route path="events/:id" element={<CreateEventPage />} />
-              <Route path="templates" element={<TemplatesPage />} />
-              <Route path="distribution" element={<DistributionPage />} />
-              <Route path="widgets" element={<WidgetsPage />} />
-              <Route path="categories" element={<CategoriesPage />} />
-              <Route path="media" element={<MediaPage />} />
-              <Route path="team" element={<TeamPage />} />
-              <Route path="integrations" element={<IntegrationsPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-              <Route path="billing" element={<BillingPage />} />
-            </Route>
+              {/* App routes */}
+              <Route path="/app" element={<AppLayout />}>
+                <Route index element={<DashboardPage />} />
+                <Route path="events" element={<EventsPage />} />
+                <Route path="events/new" element={<CreateEventPage />} />
+                <Route path="events/:id" element={<CreateEventPage />} />
+                <Route path="templates" element={<TemplatesPage />} />
+                <Route path="distribution" element={<DistributionPage />} />
+                <Route path="widgets" element={<WidgetsPage />} />
+                <Route path="categories" element={<CategoriesPage />} />
+                <Route path="media" element={<MediaPage />} />
+                <Route path="team" element={<TeamPage />} />
+                <Route path="integrations" element={<IntegrationsPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="billing" element={<BillingPage />} />
+              </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </PlanProvider>
+              {/* Admin routes */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboardPage />} />
+                <Route path="tenants" element={<AdminTenantsPage />} />
+                <Route path="users" element={<AdminUsersPage />} />
+                <Route path="subscriptions" element={<AdminSubscriptionsPage />} />
+              </Route>
+
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </PlanProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
