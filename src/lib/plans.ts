@@ -54,6 +54,7 @@ export const planLimits: Record<PlanId, PlanLimits> = {
     singleEventWidget: true,
     allTemplates: true,
     distributionCenter: true,
+    freeBoostsPerMonth: 0,
   },
   pro: {
     maxActiveEvents: Infinity,
