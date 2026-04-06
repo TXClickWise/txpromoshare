@@ -33,8 +33,12 @@ import UnsubscribePage from "@/pages/UnsubscribePage";
 // Admin pages
 import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
 import AdminTenantsPage from "@/pages/admin/AdminTenantsPage";
+import AdminTenantDetailPage from "@/pages/admin/AdminTenantDetailPage";
 import AdminUsersPage from "@/pages/admin/AdminUsersPage";
 import AdminSubscriptionsPage from "@/pages/admin/AdminSubscriptionsPage";
+import AdminPlansPage from "@/pages/admin/AdminPlansPage";
+import AdminOverridesPage from "@/pages/admin/AdminOverridesPage";
+import AdminAuditPage from "@/pages/admin/AdminAuditPage";
 
 // SEO landing pages
 import EventAgendaSoftwarePage from "@/pages/seo/EventAgendaSoftwarePage";
