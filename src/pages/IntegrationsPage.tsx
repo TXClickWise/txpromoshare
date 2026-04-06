@@ -1,4 +1,5 @@
-import { Plug, Zap, ExternalLink, Check, AlertCircle, ArrowRight } from "lucide-react";
+import { Plug, Zap, ExternalLink, Check, AlertCircle, ArrowRight, Calendar } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
