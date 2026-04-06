@@ -43,6 +43,7 @@ export default function SettingsPage() {
       setPhone(tenant.phone || "");
       setPrimaryColor(tenant.primary_color || "#E86C2C");
       setSecondaryColor(tenant.secondary_color || "#2A9D8F");
+      setLogoUrl(tenant.logo_url || null);
     }
   }, [tenant]);
 
