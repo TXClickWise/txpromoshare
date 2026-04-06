@@ -328,11 +328,29 @@ export default function CreateEventPage() {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.featuredImage}</Label>
-                  <div className="border-2 border-dashed border-border rounded-xl p-10 text-center hover:border-primary/50 transition-colors cursor-pointer bg-secondary/20">
-                    <Image className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-foreground mb-1">Sleep een afbeelding hierheen</p>
-                    <p className="text-xs text-muted-foreground">of klik om te uploaden · JPG, PNG tot 5MB</p>
-                  </div>
+                  {featuredImageUrl ? (
+                    <div className="relative rounded-xl border border-border overflow-hidden">
+                      <img src={featuredImageUrl} alt="Featured" className="w-full h-48 object-cover" />
+                      <div className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-colors flex items-center justify-center gap-2 opacity-0 hover:opacity-100">
+                        <Button size="sm" variant="secondary" onClick={() => setMediaPickerOpen(true)}>Wijzigen</Button>
+                        <Button size="sm" variant="destructive" onClick={() => { setFeaturedImageId(null); setFeaturedImageUrl(null); }}>Verwijderen</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="border-2 border-dashed border-border rounded-xl p-10 text-center hover:border-primary/50 transition-colors cursor-pointer bg-secondary/20"
+                      onClick={async () => {
+                        if (!tenantId) return;
+                        const { data } = await supabase.from("media").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false });
+                        setMediaItems((data as Tables<"media">[]) || []);
+                        setMediaPickerOpen(true);
+                      }}
+                    >
+                      <Image className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                      <p className="text-sm font-medium text-foreground mb-1">Kies een afbeelding uit je media</p>
+                      <p className="text-xs text-muted-foreground">of upload eerst via de Media pagina</p>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             </TabsContent>
