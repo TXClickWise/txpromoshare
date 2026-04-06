@@ -134,7 +134,24 @@ function generateEmbedScript(payload: any): string {
     const subtitleHtml = e.subtitle ? '<div style="font-size:13px;color:#6b7280;margin-top:2px;">' + escapeHtml(e.subtitle) + '</div>' : "";
     const descHtml = e.short_description ? '<div style="font-size:13px;color:#374151;margin-top:6px;">' + escapeHtml(e.short_description) + '</div>' : "";
 
+    // Featured image
+    const imageHtml = e.featured_image_url
+      ? '<div style="margin-bottom:12px;border-radius:8px;overflow:hidden;"><img src="' + escapeHtml(e.featured_image_url) + '" alt="' + escapeHtml(e.title) + '" style="width:100%;height:180px;object-fit:cover;display:block;" /></div>'
+      : "";
+
+    // Share buttons
+    const eventUrl = e.cta_link || ("https://txeventshare.nl/event/" + escapeHtml(e.slug));
+    const shareText = encodeURIComponent(e.title + " — " + dateStr + " " + time);
+    const shareUrl = encodeURIComponent(eventUrl);
+    const shareHtml = '<div style="display:flex;gap:6px;margin-top:10px;">' +
+      '<a href="https://wa.me/?text=' + shareText + "%20" + shareUrl + '" target="_blank" rel="noopener" title="Deel via WhatsApp" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:#25D366;color:#fff;text-decoration:none;font-size:16px;">&#9993;</a>' +
+      '<a href="https://www.facebook.com/sharer/sharer.php?u=' + shareUrl + '" target="_blank" rel="noopener" title="Deel op Facebook" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:#1877F2;color:#fff;text-decoration:none;font-size:14px;font-weight:700;">f</a>' +
+      '<a href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener" title="Deel op X" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:#000;color:#fff;text-decoration:none;font-size:14px;font-weight:700;">𝕏</a>' +
+      '<a href="mailto:?subject=' + shareText + '&body=' + shareText + "%20" + shareUrl + '" title="Deel via e-mail" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:#6b7280;color:#fff;text-decoration:none;font-size:16px;">✉</a>' +
+      '</div>';
+
     return '<div style="border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:12px;background:#fff;">' +
+      imageHtml +
       '<div style="display:flex;gap:12px;align-items:flex-start;">' +
       '<div style="min-width:56px;text-align:center;background:' + pc + '10;border-radius:8px;padding:8px;">' +
       '<div style="font-size:11px;color:' + pc + ';font-weight:600;">' + dateStr + '</div>' +
@@ -142,7 +159,7 @@ function generateEmbedScript(payload: any): string {
       '</div>' +
       '<div style="flex:1;">' +
       '<div style="font-weight:600;font-size:15px;color:#111827;">' + escapeHtml(e.title) + '</div>' +
-      subtitleHtml + descHtml + ctaHtml +
+      subtitleHtml + descHtml + ctaHtml + shareHtml +
       '</div></div></div>';
   }).join("");
 
