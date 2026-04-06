@@ -4,10 +4,10 @@ import { useSEO, breadcrumbSchema, faqSchema } from "@/lib/seo";
 import { motion } from "framer-motion";
 
 const faqs = [
-  { question: "Wat is de ClickWise integratie?", answer: "TX PromoShare verbindt direct met je ClickWise / HighLevel subaccount. Events worden automatisch gesynchroniseerd zodat je ze kunt gebruiken in CRM workflows, automatiseringen en follow-up campagnes." },
+  { question: "Wat is de ClickWise integratie?", answer: "TX EventShare verbindt direct met je ClickWise / HighLevel subaccount. Events worden automatisch gesynchroniseerd zodat je ze kunt gebruiken in CRM workflows, automatiseringen en follow-up campagnes." },
   { question: "Heb ik een ClickWise account nodig?", answer: "Ja, de integratie werkt met een bestaand ClickWise / HighLevel subaccount. De koppeling is beschikbaar in het Pro plan." },
   { question: "Welke data wordt gesynchroniseerd?", answer: "Event titels, data, beschrijvingen, locaties en links worden gesynchroniseerd. Dit maakt het mogelijk om automatische e-mails, herinneringen en opvolgingen te triggeren." },
-  { question: "Kan ik automatisch workflows starten bij een nieuw event?", answer: "Ja. Wanneer je een event publiceert in TX PromoShare, kan dit automatisch een workflow triggeren in ClickWise voor promotie, herinneringen of follow-up." },
+  { question: "Kan ik automatisch workflows starten bij een nieuw event?", answer: "Ja. Wanneer je een event publiceert in TX EventShare, kan dit automatisch een workflow triggeren in ClickWise voor promotie, herinneringen of follow-up." },
   { question: "Is de integratie veilig?", answer: "Ja. De verbinding gebruikt versleutelde API keys en alle data wordt veilig uitgewisseld via beveiligde kanalen." },
 ];
 
@@ -44,7 +44,7 @@ export default function ClickWiseIntegratiePage() {
             Event promotie verbonden met je CRM en marketing automation
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            TX PromoShare integreert native met ClickWise / HighLevel. Synchroniseer events, trigger workflows en volg bezoekers op — allemaal vanuit één ecosysteem.
+            TX EventShare integreert native met ClickWise / HighLevel. Synchroniseer events, trigger workflows en volg bezoekers op — allemaal vanuit één ecosysteem.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/register" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg gradient-hero text-primary-foreground font-semibold hover:opacity-90">
@@ -122,7 +122,7 @@ export default function ClickWiseIntegratiePage() {
 
         {/* Internal links */}
         <section className="max-w-3xl mx-auto mb-20">
-          <h2 className="text-xl font-display font-bold text-foreground mb-6 text-center">Ontdek meer over TX PromoShare</h2>
+          <h2 className="text-xl font-display font-bold text-foreground mb-6 text-center">Ontdek meer over TX EventShare</h2>
           <div className="grid sm:grid-cols-2 gap-4">
             {[
               { to: "/event-agenda-software", label: "Event agenda software", desc: "Centraal je events beheren" },
@@ -156,7 +156,7 @@ export default function ClickWiseIntegratiePage() {
 
         <section className="text-center max-w-xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-3">Klaar om events en marketing te verbinden?</h2>
-          <p className="text-muted-foreground mb-6">Start met het Pro plan en verbind TX PromoShare met je ClickWise account.</p>
+          <p className="text-muted-foreground mb-6">Start met het Pro plan en verbind TX EventShare met je ClickWise account.</p>
           <Link to="/register" className="inline-flex items-center gap-2 px-8 py-3 rounded-lg gradient-hero text-primary-foreground font-semibold hover:opacity-90 shadow-glow">
             Pro plan starten <ArrowRight className="w-4 h-4" />
           </Link>

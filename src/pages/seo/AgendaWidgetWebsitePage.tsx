@@ -4,10 +4,10 @@ import { ArrowRight, Check, Code, Palette, RefreshCw, Smartphone, Monitor, Zap }
 import { useSEO, breadcrumbSchema, faqSchema } from "@/lib/seo";
 
 const faqs = [
-  { question: "Hoe werkt een embedded agenda widget?", answer: "Je plaatst een klein stukje code op je website. De widget toont automatisch je actuele evenementen en past zich aan je huisstijl aan. Alle wijzigingen in TX PromoShare verschijnen direct op je site." },
+  { question: "Hoe werkt een embedded agenda widget?", answer: "Je plaatst een klein stukje code op je website. De widget toont automatisch je actuele evenementen en past zich aan je huisstijl aan. Alle wijzigingen in TX EventShare verschijnen direct op je site." },
   { question: "Moet ik een developer hebben om de widget te installeren?", answer: "Nee. Je kopieert de embed code en plakt deze in je website. Werkt met WordPress, Wix, Squarespace, custom HTML en de meeste website builders." },
   { question: "Past de widget bij mijn website design?", answer: "Ja, de widget is volledig aanpasbaar qua kleuren, lettertypen en lay-out zodat deze naadloos past bij je huisstijl." },
-  { question: "Wordt de widget automatisch bijgewerkt?", answer: "Ja. Zodra je een event aanmaakt, wijzigt of archiveert in TX PromoShare, is de widget op je website direct actueel. Geen handmatige updates nodig." },
+  { question: "Wordt de widget automatisch bijgewerkt?", answer: "Ja. Zodra je een event aanmaakt, wijzigt of archiveert in TX EventShare, is de widget op je website direct actueel. Geen handmatige updates nodig." },
   { question: "Is de widget geschikt voor mobiel?", answer: "Absoluut. De agenda widget en single event widget zijn volledig responsive en werken perfect op desktop, tablet en mobiel." },
 ];
 
@@ -59,7 +59,7 @@ export default function AgendaWidgetWebsitePage() {
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { icon: RefreshCw, title: "Altijd actueel", desc: "Wijzigingen in TX PromoShare verschijnen direct op je website. Nooit meer een verouderde agenda." },
+              { icon: RefreshCw, title: "Altijd actueel", desc: "Wijzigingen in TX EventShare verschijnen direct op je website. Nooit meer een verouderde agenda." },
               { icon: Palette, title: "Eigen huisstijl", desc: "Kleuren, lettertypen en lay-out passen naadloos bij je website design." },
               { icon: Code, title: "Simpele installatie", desc: "Kopieer en plak de embed code. Werkt met WordPress, Wix, Squarespace en custom sites." },
               { icon: Smartphone, title: "Volledig responsive", desc: "Ziet er perfect uit op desktop, tablet en mobiel. Altijd." },
@@ -81,7 +81,7 @@ export default function AgendaWidgetWebsitePage() {
           <h2 className="text-2xl font-display font-bold text-foreground mb-8 text-center">Zo werkt het</h2>
           <div className="space-y-6">
             {[
-              { step: "1", title: "Maak je events aan in TX PromoShare", desc: "Voer je evenementen in, kies een template en publiceer." },
+              { step: "1", title: "Maak je events aan in TX EventShare", desc: "Voer je evenementen in, kies een template en publiceer." },
               { step: "2", title: "Kopieer de widget code", desc: "Ga naar Widgets, kies agenda of single event en kopieer de embed code." },
               { step: "3", title: "Plak op je website", desc: "Voeg de code toe aan je website. De widget verschijnt direct met je actuele evenementen." },
             ].map((s) => (

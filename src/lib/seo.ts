@@ -14,7 +14,7 @@ interface SEOProps {
 
 const BASE_URL = "https://txpromoshare.nl";
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-default.png`;
-const SITE_NAME = "TX PromoShare";
+const SITE_NAME = "TX EventShare";
 
 export function useSEO({
   title,
@@ -93,7 +93,7 @@ function setMeta(name: string, content: string, attr: "name" | "property" = "nam
 export const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "TX PromoShare",
+  name: "TX EventShare",
   url: BASE_URL,
   logo: `${BASE_URL}/logo.png`,
   description: "Event promotie software voor horeca, venues en eventorganisaties in Nederland.",
@@ -108,7 +108,7 @@ export const organizationSchema = {
 export const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "TX PromoShare",
+  name: "TX EventShare",
   url: BASE_URL,
   description: "Het slimste event promotie platform voor kleinere evenementen.",
   inLanguage: "nl",
@@ -122,7 +122,7 @@ export const websiteSchema = {
 export const softwareSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "TX PromoShare",
+  name: "TX EventShare",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   description: "Event promotie en agenda software voor horeca, venues, eventorganisaties en festivalorganisaties. Maak je event één keer aan en verspreid het overal.",

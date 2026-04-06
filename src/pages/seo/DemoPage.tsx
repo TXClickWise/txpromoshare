@@ -4,8 +4,8 @@ import { useSEO, breadcrumbSchema } from "@/lib/seo";
 
 export default function DemoPage() {
   useSEO({
-    title: "Gratis Demo Aanvragen — Zie TX PromoShare in Actie",
-    description: "Plan een vrijblijvende demo en ontdek hoe TX PromoShare je event promotie vereenvoudigt. Agenda software, widgets, distributie en ClickWise integratie — in één platform.",
+    title: "Gratis Demo Aanvragen — Zie TX EventShare in Actie",
+    description: "Plan een vrijblijvende demo en ontdek hoe TX EventShare je event promotie vereenvoudigt. Agenda software, widgets, distributie en ClickWise integratie — in één platform.",
     canonical: "/demo",
     jsonLd: [
       breadcrumbSchema([
@@ -30,10 +30,10 @@ export default function DemoPage() {
           <div className="grid md:grid-cols-2 gap-12">
             <div>
               <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-                Ontdek TX PromoShare in een persoonlijke demo
+                Ontdek TX EventShare in een persoonlijke demo
               </h1>
               <p className="text-muted-foreground mb-8">
-                Wil je zien hoe TX PromoShare werkt voor jouw bedrijf? Plan een vrijblijvende demo en ontdek hoe je evenementen sneller en professioneler kunt promoten.
+                Wil je zien hoe TX EventShare werkt voor jouw bedrijf? Plan een vrijblijvende demo en ontdek hoe je evenementen sneller en professioneler kunt promoten.
               </p>
 
               <div className="space-y-6 mb-8">

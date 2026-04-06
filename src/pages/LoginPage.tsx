@@ -15,8 +15,8 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
   useSEO({
-    title: "Inloggen — TX PromoShare",
-    description: "Log in op je TX PromoShare account. Beheer je evenementen, widgets en distributie vanuit één dashboard.",
+    title: "Inloggen — TX EventShare",
+    description: "Log in op je TX EventShare account. Beheer je evenementen, widgets en distributie vanuit één dashboard.",
     canonical: "/login",
     noindex: true,
   });
@@ -46,7 +46,7 @@ export default function LoginPage() {
             <span className="text-primary-foreground font-display font-bold">TX</span>
           </div>
           <h1 className="text-2xl font-display font-bold text-foreground">{t.auth.login}</h1>
-          <p className="text-sm text-muted-foreground mt-1">Welkom terug bij TX PromoShare</p>
+          <p className="text-sm text-muted-foreground mt-1">Welkom terug bij TX EventShare</p>
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
