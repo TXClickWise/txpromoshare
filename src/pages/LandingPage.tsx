@@ -8,7 +8,7 @@ const features = [
   { icon: Share2, title: "Eén-klik distributie", desc: "Verspreid naar je website, WhatsApp, social media en CRM — vanuit één scherm." },
   { icon: Code2, title: "Embeddable widgets", desc: "Plak een agenda of event widget op je website. Responsive, snel en volledig in jouw huisstijl." },
   { icon: Palette, title: "Jouw branding", desc: "Geen generieke eventpagina's meer. Pas kleuren, logo en stijl aan. Jouw merk, altijd." },
-  { icon: Zap, title: "ClickWise / HighLevel", desc: "Native integratie met je CRM. Automatiseer opvolging, campagnes en promotie." },
+  { icon: Zap, title: "ClickWise CRM", desc: "Native integratie met je CRM. Automatiseer opvolging, campagnes en promotie." },
   { icon: Users, title: "Teamsamenwerking", desc: "Nodig collega's uit met de juiste rechten. Eigenaar, redacteur, marketeer of bekijker." },
 ];
 
