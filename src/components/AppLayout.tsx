@@ -64,7 +64,7 @@ export default function AppLayout() {
           <div className="w-8 h-8 rounded-lg gradient-hero flex items-center justify-center">
             <span className="text-primary-foreground font-display font-bold text-sm">TX</span>
           </div>
-          <span className="font-display font-bold text-lg text-foreground">PromoShare</span>
+          <span className="font-display font-bold text-lg text-foreground">EventShare</span>
           <button onClick={() => setSidebarOpen(false)} className="ml-auto lg:hidden text-muted-foreground">
             <X className="w-5 h-5" />
           </button>
