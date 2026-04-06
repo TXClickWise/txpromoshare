@@ -4,12 +4,19 @@ import { t } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useSEO } from "@/lib/seo";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
   const [orgName, setOrgName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  useSEO({
+    title: "Gratis Account Aanmaken — Start met TX PromoShare",
+    description: "Maak gratis een TX PromoShare account aan. Begin direct met het beheren en promoten van je evenementen. Geen creditcard nodig.",
+    canonical: "/register",
+  });
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-10">

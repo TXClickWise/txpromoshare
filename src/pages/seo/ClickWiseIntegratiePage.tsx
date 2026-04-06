@@ -13,8 +13,8 @@ const faqs = [
 
 export default function ClickWiseIntegratiePage() {
   useSEO({
-    title: "ClickWise Integratie — Event Promotie met CRM & Marketing Automation",
-    description: "Verbind TX PromoShare met ClickWise / HighLevel. Synchroniseer events met je CRM, trigger automatische workflows en volg bezoekers op. Event promotie software met native CRM integratie.",
+    title: "ClickWise Integratie — Events Koppelen aan CRM & Automation",
+    description: "Verbind je events direct met ClickWise / HighLevel. Automatische workflows, CRM synchronisatie en slimmere opvolging. Event promotie software met native CRM koppeling.",
     canonical: "/clickwise-integratie",
     jsonLd: [
       breadcrumbSchema([

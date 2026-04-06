@@ -13,8 +13,8 @@ const faqs = [
 
 export default function AgendaWidgetWebsitePage() {
   useSEO({
-    title: "Agenda Widget voor je Website — Embedded Evenementenkalender",
-    description: "Plaats een altijd actuele, branded agenda widget op je website. Automatisch gesynchroniseerd met je evenementen. Geen developer nodig. Ideaal voor horeca en venues.",
+    title: "Agenda Widget voor je Website — Altijd Actueel, Geen Developer Nodig",
+    description: "Embed een professionele evenementenkalender op je website. Automatisch gesynchroniseerd, volledig branded en responsive. Kopieer de code en je agenda staat live.",
     canonical: "/agenda-widget-website",
     jsonLd: [
       breadcrumbSchema([

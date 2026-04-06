@@ -13,8 +13,8 @@ const faqs = [
 
 export default function SoftwareVoorKleineEvenementenPage() {
   useSEO({
-    title: "Software voor Kleine Evenementen — Event Promotie van 10 tot 3000 Bezoekers",
-    description: "Professionele event promotie software speciaal voor kleine en middelgrote evenementen. TX PromoShare biedt agenda beheer, embedded widgets, distributie en branded eventpagina's voor events van 10 tot 3000 bezoekers.",
+    title: "Software voor Kleine Evenementen — 10 tot 3000 Bezoekers",
+    description: "Het professionele event systeem dat kleinere events verdienen. Agenda, widgets, distributie en branded pagina's — zonder enterprise complexiteit. Gratis starten.",
     canonical: "/software-voor-kleine-evenementen",
     jsonLd: [
       breadcrumbSchema([

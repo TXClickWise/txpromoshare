@@ -120,8 +120,8 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useSEO({
-    title: "TX PromoShare — Event Promotie Software voor Horeca & Organisatoren",
-    description: "Maak je event één keer aan en verspreid het overal. Event agenda software, embedded widgets, WhatsApp distributie en ClickWise integratie. Het perfecte systeem voor kleinere evenementen.",
+    title: "Event Promotie Software voor Horeca & Organisatoren | TX PromoShare",
+    description: "Maak je event één keer aan en verspreid het direct naar je website, socials en WhatsApp. Agenda software met embedded widgets, branded eventpagina's en ClickWise integratie. Gratis starten.",
     canonical: "/",
     jsonLd: [
       organizationSchema,

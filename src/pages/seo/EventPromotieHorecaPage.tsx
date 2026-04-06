@@ -22,8 +22,8 @@ const useCases = [
 
 export default function EventPromotieHorecaPage() {
   useSEO({
-    title: "Event Promotie voor Horeca — Software voor Cafés, Restaurants & Venues",
-    description: "Promoot je horeca evenementen professioneel via je website, WhatsApp en social media. Event promotie software speciaal voor cafés, restaurants, bars en venues. Start gratis.",
+    title: "Event Promotie voor Horeca — Cafés, Restaurants & Venues",
+    description: "Promoot je horeca events professioneel via website, WhatsApp en socials. Embedded agenda, branded pagina's en snelle distributie. Gebouwd voor cafés, bars en venues.",
     canonical: "/event-promotie-horeca",
     jsonLd: [
       breadcrumbSchema([

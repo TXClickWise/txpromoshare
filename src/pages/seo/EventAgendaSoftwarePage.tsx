@@ -13,8 +13,8 @@ const faqs = [
 
 export default function EventAgendaSoftwarePage() {
   useSEO({
-    title: "Event Agenda Software — Evenementenkalender voor je Website",
-    description: "Beheer je evenementen centraal en plaats een altijd actuele agenda op je website. Event agenda software speciaal voor horeca, venues en organisatoren. Probeer gratis.",
+    title: "Event Agenda Software — Beheer & Publiceer Events Centraal",
+    description: "Beheer al je evenementen op één plek en toon ze automatisch op je website met een embedded agenda. Speciaal voor horeca, venues en organisatoren. Start gratis.",
     canonical: "/event-agenda-software",
     jsonLd: [
       softwareSchema,

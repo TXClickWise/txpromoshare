@@ -48,8 +48,8 @@ export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useSEO({
-    title: "Prijzen — Event Promotie Software Abonnementen | TX PromoShare",
-    description: "Bekijk de prijzen van TX PromoShare. Gratis starten met event promotie. Upgrade naar Basic of Pro voor meer events, widgets, team samenwerking en ClickWise integratie.",
+    title: "Prijzen & Abonnementen — Gratis Starten | TX PromoShare",
+    description: "Vergelijk de Free, Basic en Pro plannen van TX PromoShare. Event promotie software vanaf €0. Meer events, widgets, teamleden en ClickWise integratie naarmate je groeit.",
     canonical: "/pricing",
     jsonLd: [
       breadcrumbSchema([
