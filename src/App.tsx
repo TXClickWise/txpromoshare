@@ -30,41 +30,43 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Public routes */}
-          <Route element={<PublicLayout />}>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-          </Route>
+      <PlanProvider planId="basic">
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* Public routes */}
+            <Route element={<PublicLayout />}>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+            </Route>
 
-          {/* Public event pages */}
-          <Route path="/e/:slug" element={<PublicEventPage />} />
+            {/* Public event pages */}
+            <Route path="/e/:slug" element={<PublicEventPage />} />
 
-          {/* App routes */}
-          <Route path="/app" element={<AppLayout />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="events" element={<EventsPage />} />
-            <Route path="events/new" element={<CreateEventPage />} />
-            <Route path="events/:id" element={<CreateEventPage />} />
-            <Route path="templates" element={<TemplatesPage />} />
-            <Route path="distribution" element={<DistributionPage />} />
-            <Route path="widgets" element={<WidgetsPage />} />
-            <Route path="categories" element={<CategoriesPage />} />
-            <Route path="media" element={<MediaPage />} />
-            <Route path="team" element={<TeamPage />} />
-            <Route path="integrations" element={<IntegrationsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="billing" element={<BillingPage />} />
-          </Route>
+            {/* App routes */}
+            <Route path="/app" element={<AppLayout />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="events" element={<EventsPage />} />
+              <Route path="events/new" element={<CreateEventPage />} />
+              <Route path="events/:id" element={<CreateEventPage />} />
+              <Route path="templates" element={<TemplatesPage />} />
+              <Route path="distribution" element={<DistributionPage />} />
+              <Route path="widgets" element={<WidgetsPage />} />
+              <Route path="categories" element={<CategoriesPage />} />
+              <Route path="media" element={<MediaPage />} />
+              <Route path="team" element={<TeamPage />} />
+              <Route path="integrations" element={<IntegrationsPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="billing" element={<BillingPage />} />
+            </Route>
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </PlanProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
