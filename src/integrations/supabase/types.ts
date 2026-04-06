@@ -1187,7 +1187,7 @@ export type Database = {
         | "thema-avond"
         | "overig"
       event_status: "draft" | "published" | "scheduled" | "archived" | "ended"
-      integration_provider: "clickwise" | "highlevel"
+      integration_provider: "clickwise"
       integration_status: "connected" | "disconnected" | "error"
       media_source: "upload" | "url" | "stock"
       subscription_plan: "free" | "basic" | "pro"
@@ -1329,7 +1329,7 @@ export const Constants = {
         "overig",
       ],
       event_status: ["draft", "published", "scheduled", "archived", "ended"],
-      integration_provider: ["clickwise", "highlevel"],
+      integration_provider: ["clickwise"],
       integration_status: ["connected", "disconnected", "error"],
       media_source: ["upload", "url", "stock"],
       subscription_plan: ["free", "basic", "pro"],
