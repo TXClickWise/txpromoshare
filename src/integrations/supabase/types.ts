@@ -1177,6 +1177,7 @@ export type Database = {
     }
     Functions: {
       auto_end_past_events: { Args: never; Returns: undefined }
+      auto_publish_scheduled_events: { Args: never; Returns: undefined }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
