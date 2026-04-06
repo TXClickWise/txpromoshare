@@ -84,12 +84,10 @@ export default function DiscoverEventsPage() {
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
   const [categories, setCategories] = useState<{ slug: string; name: string; color: string | null }[]>([]);
 
-  useEffect(() => {
-    setSEO({
-      title: "Evenementen ontdekken — TX EventShare",
-      description: "Ontdek evenementen bij jou in de buurt. Zoek op categorie, stad of datum en vind de leukste events in de horeca.",
-    });
-  }, []);
+  useSEO({
+    title: "Evenementen ontdekken — TX EventShare",
+    description: "Ontdek evenementen bij jou in de buurt. Zoek op categorie, stad of datum en vind de leukste events in de horeca.",
+  });
 
   // Debounce search
   useEffect(() => {
