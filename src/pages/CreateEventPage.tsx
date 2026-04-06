@@ -66,6 +66,10 @@ export default function CreateEventPage() {
   const [whatsappText, setWhatsappText] = useState("");
   const [socialText, setSocialText] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringFreq, setRecurringFreq] = useState("weekly");
+  const [recurringInterval, setRecurringInterval] = useState(1);
+  const [recurringDays, setRecurringDays] = useState<number[]>([]);
+  const [recurringEndDate, setRecurringEndDate] = useState("");
   const [publishAt, setPublishAt] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEditing);
@@ -76,6 +80,8 @@ export default function CreateEventPage() {
   const [mediaLoading, setMediaLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [sponsors, setSponsors] = useState<{ name: string; logo_url: string; website_url: string }[]>([]);
+  const [sponsorsLoading, setSponsorsLoading] = useState(false);
 
   // Load existing event when editing
   useEffect(() => {
