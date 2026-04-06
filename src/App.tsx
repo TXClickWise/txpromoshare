@@ -47,6 +47,7 @@ import EventPromotieHorecaPage from "@/pages/seo/EventPromotieHorecaPage";
 import SoftwareVoorKleineEvenementenPage from "@/pages/seo/SoftwareVoorKleineEvenementenPage";
 import ClickWiseIntegratiePage from "@/pages/seo/ClickWiseIntegratiePage";
 import DemoPage from "@/pages/seo/DemoPage";
+import DiscoverEventsPage from "@/pages/DiscoverEventsPage";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const App = () => (
               <Route element={<PublicLayout />}>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/evenementen" element={<DiscoverEventsPage />} />
                 <Route path="/demo" element={<DemoPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />

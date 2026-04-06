@@ -16,6 +16,7 @@ export interface PlanLimits {
   singleEventWidget: boolean;
   allTemplates: boolean;
   distributionCenter: boolean;
+  freeBoostsPerMonth: number;
 }
 
 export const planLimits: Record<PlanId, PlanLimits> = {
