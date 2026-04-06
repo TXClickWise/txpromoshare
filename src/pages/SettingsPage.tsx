@@ -26,6 +26,7 @@ export default function SettingsPage() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoUploading, setLogoUploading] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const [showOnDiscovery, setShowOnDiscovery] = useState(true);
 
   // Venue state
   const [venues, setVenues] = useState<Tables<"venues">[]>([]);
@@ -45,6 +46,7 @@ export default function SettingsPage() {
       setPrimaryColor(tenant.primary_color || "#E86C2C");
       setSecondaryColor(tenant.secondary_color || "#2A9D8F");
       setLogoUrl(tenant.logo_url || null);
+      setShowOnDiscovery((tenant as any).show_on_discovery !== false);
     }
   }, [tenant]);
 
