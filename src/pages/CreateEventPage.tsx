@@ -65,7 +65,7 @@ export default function CreateEventPage() {
   // Load existing event when editing
   useEffect(() => {
     if (!id) return;
-    supabase.from("events").select("*").eq("id", id).maybeSingle().then(({ data }) => {
+    supabase.from("events").select("*").eq("id", id).maybeSingle().then(async ({ data }) => {
       if (data) {
         setTitle(data.title);
         setSubtitle(data.subtitle || "");
@@ -86,6 +86,12 @@ export default function CreateEventPage() {
         setSocialText(data.social_share_text || "");
         setIsRecurring(data.is_recurring);
         setPublishAt(data.publish_at || "");
+        setFeaturedImageId(data.featured_image_id);
+        // Load featured image URL
+        if (data.featured_image_id) {
+          const { data: img } = await supabase.from("media").select("original_url").eq("id", data.featured_image_id).maybeSingle();
+          if (img) setFeaturedImageUrl(img.original_url);
+        }
       }
       setLoading(false);
     });
