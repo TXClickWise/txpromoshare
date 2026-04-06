@@ -138,7 +138,7 @@ export default function WidgetsPage() {
               </div>
               <div className="space-y-2">
                 <Label>Type</Label>
-                <Select value={newType} onValueChange={(v) => setNewType(v as WidgetType)}>
+                <Select value={newType} onValueChange={(v) => { setNewType(v as WidgetType); setNewEventId(""); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="agenda">{t.widgets.agenda}</SelectItem>
@@ -146,6 +146,19 @@ export default function WidgetsPage() {
                   </SelectContent>
                 </Select>
               </div>
+              {newType === "single_event" && (
+                <div className="space-y-2">
+                  <Label>Welk evenement?</Label>
+                  <Select value={newEventId} onValueChange={setNewEventId}>
+                    <SelectTrigger><SelectValue placeholder="Kies een evenement" /></SelectTrigger>
+                    <SelectContent>
+                      {events.map((ev) => (
+                        <SelectItem key={ev.id} value={ev.id}>{ev.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <Button onClick={createWidget} disabled={creating || !newName.trim()} className="w-full">
                 {creating ? "Aanmaken..." : "Aanmaken"}
               </Button>
