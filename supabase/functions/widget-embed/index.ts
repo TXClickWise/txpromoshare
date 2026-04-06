@@ -134,9 +134,9 @@ function generateEmbedScript(payload: any): string {
     const subtitleHtml = e.subtitle ? '<div style="font-size:13px;color:#6b7280;margin-top:2px;">' + escapeHtml(e.subtitle) + '</div>' : "";
     const descHtml = e.short_description ? '<div style="font-size:13px;color:#374151;margin-top:6px;">' + escapeHtml(e.short_description) + '</div>' : "";
 
-    // Featured image
+    // Featured image – small thumbnail, right-aligned
     const imageHtml = e.featured_image_url
-      ? '<div style="margin-bottom:12px;border-radius:8px;overflow:hidden;"><img src="' + escapeHtml(e.featured_image_url) + '" alt="' + escapeHtml(e.title) + '" style="width:100%;height:180px;object-fit:cover;display:block;" /></div>'
+      ? '<img src="' + escapeHtml(e.featured_image_url) + '" alt="' + escapeHtml(e.title) + '" style="width:100px;height:100px;object-fit:cover;border-radius:8px;flex-shrink:0;" />'
       : "";
 
     // Share buttons
@@ -150,17 +150,17 @@ function generateEmbedScript(payload: any): string {
       '<a href="mailto:?subject=' + shareText + '&body=' + shareText + "%20" + shareUrl + '" title="Deel via e-mail" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:#6b7280;color:#fff;text-decoration:none;font-size:16px;">✉</a>' +
       '</div>';
 
-    return '<div style="border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:12px;background:#fff;">' +
-      imageHtml +
-      '<div style="display:flex;gap:12px;align-items:flex-start;">' +
+    return '<div style="border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:12px;background:#fff;display:flex;gap:12px;align-items:flex-start;">' +
       '<div style="min-width:56px;text-align:center;background:' + pc + '10;border-radius:8px;padding:8px;">' +
       '<div style="font-size:11px;color:' + pc + ';font-weight:600;">' + dateStr + '</div>' +
       '<div style="font-size:11px;color:#6b7280;">' + time + '</div>' +
       '</div>' +
-      '<div style="flex:1;">' +
+      '<div style="flex:1;min-width:0;">' +
       '<div style="font-weight:600;font-size:15px;color:#111827;">' + escapeHtml(e.title) + '</div>' +
       subtitleHtml + descHtml + ctaHtml + shareHtml +
-      '</div></div></div>';
+      '</div>' +
+      imageHtml +
+      '</div>';
   }).join("");
 
   const noEventsHtml = '<p style="color:#6b7280;font-size:14px;">Geen aankomende evenementen.</p>';
