@@ -203,7 +203,7 @@ export default function IntegrationsPage() {
             </div>
             <p className="text-xs text-muted-foreground">Inkomende webhooks van ClickWise worden automatisch verwerkt via het platform.</p>
             <code className="block text-[11px] font-mono bg-muted/50 p-2 rounded text-muted-foreground break-all">
-              https://api.txpromoshare.nl/webhooks/clickwise/{tenant?.id ?? "{tenant_id}"}
+              https://api.txeventshare.nl/webhooks/clickwise/{tenant?.id ?? "{tenant_id}"}
             </code>
           </div>
         </TabsContent>

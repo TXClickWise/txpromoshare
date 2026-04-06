@@ -360,7 +360,7 @@ export default function CreateEventPage() {
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.slug}</Label>
                   <div className="flex items-center gap-0">
-                    <span className="text-xs text-muted-foreground bg-secondary px-3 py-2.5 rounded-l-lg border border-r-0 border-border">txpromoshare.nl/e/</span>
+                    <span className="text-xs text-muted-foreground bg-secondary px-3 py-2.5 rounded-l-lg border border-r-0 border-border">txeventshare.nl/e/</span>
                     <Input value={slug} onChange={(e) => setSlug(e.target.value)} className="rounded-l-none" />
                   </div>
                 </div>
