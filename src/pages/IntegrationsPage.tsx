@@ -10,7 +10,7 @@ const integrations = [
     id: "clickwise",
     title: t.integrations.clickwise.title,
     description: t.integrations.clickwise.description,
-    icon: Zap,
+    icon: Zap as LucideIcon,
     gradient: "gradient-hero",
     status: "disconnected" as "disconnected" | "connected" | "coming_soon",
     features: [
