@@ -1,16 +1,15 @@
 import { useParams, Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Calendar, Clock, MapPin, User, Share2, ExternalLink, ChevronLeft,
-  Tag, CalendarPlus, MessageCircle, Facebook, Twitter, Copy, Check, Heart
+  Tag, CalendarPlus, MessageCircle, Facebook, Twitter, Copy, Check
 } from "lucide-react";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mockEvents } from "@/lib/mock-data";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
-/* ── helpers ─────────────────────────────────────────── */
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 }
@@ -18,7 +17,6 @@ function formatTime(t: string) {
   return t.replace(/^(\d{2}):(\d{2}).*/, "$1:$2");
 }
 
-/* ── SEO head helper (set document title + meta) ─────── */
 function useSEO(title: string, description: string) {
   useEffect(() => {
     document.title = `${title} | TX PromoShare`;
@@ -29,34 +27,67 @@ function useSEO(title: string, description: string) {
   }, [title, description]);
 }
 
-/* ── mock gallery images ─────────────────────────────── */
-const galleryImages = [
-  "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&h=400&fit=crop",
-  "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&h=400&fit=crop",
-  "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&h=400&fit=crop",
-  "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=600&h=400&fit=crop",
-];
-
-const mockSponsors = [
-  { name: "Heineken", logo: "https://placehold.co/120x50/e8e8e8/666?text=Heineken" },
-  { name: "Local Brew Co", logo: "https://placehold.co/120x50/e8e8e8/666?text=Local+Brew" },
-  { name: "Sound Systems NL", logo: "https://placehold.co/120x50/e8e8e8/666?text=Sound+NL" },
-];
-
 export default function PublicEventPage() {
   const { slug } = useParams<{ slug: string }>();
   const [copied, setCopied] = useState(false);
+  const [event, setEvent] = useState<Tables<"events"> | null>(null);
+  const [venue, setVenue] = useState<Tables<"venues"> | null>(null);
+  const [relatedEvents, setRelatedEvents] = useState<Tables<"events">[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sponsors, setSponsors] = useState<Tables<"event_sponsors">[]>([]);
 
-  const event = mockEvents.find((e) => e.slug === slug) ?? mockEvents[0];
-  const relatedEvents = mockEvents.filter((e) => e.id !== event.id && e.status === "published").slice(0, 3);
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      // Fetch event by slug (anon can see published events)
+      const { data: ev } = await supabase
+        .from("events")
+        .select("*")
+        .eq("slug", slug || "")
+        .eq("status", "published")
+        .maybeSingle();
+
+      if (!ev) { setLoading(false); return; }
+      setEvent(ev);
+
+      // Fetch venue, sponsors, related in parallel
+      const [venueRes, sponsorsRes, relatedRes] = await Promise.all([
+        ev.venue_id ? supabase.from("venues").select("*").eq("id", ev.venue_id).maybeSingle() : { data: null },
+        supabase.from("event_sponsors").select("*").eq("event_id", ev.id).order("sort_order"),
+        supabase.from("events").select("*").eq("tenant_id", ev.tenant_id).eq("status", "published").neq("id", ev.id).limit(3),
+      ]);
+      setVenue(venueRes.data);
+      setSponsors(sponsorsRes.data ?? []);
+      setRelatedEvents(relatedRes.data ?? []);
+      setLoading(false);
+    }
+    load();
+  }, [slug]);
 
   useSEO(
-    event.seoTitle || event.title,
-    event.seoDescription || event.shortDescription || event.title,
+    event?.seo_title || event?.title || "Evenement",
+    event?.seo_description || event?.short_description || "",
   );
 
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Laden...</div>;
+  }
+  if (!event) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <h1 className="text-2xl font-display font-bold text-foreground">Evenement niet gevonden</h1>
+          <p className="text-muted-foreground">Dit evenement bestaat niet of is niet meer beschikbaar.</p>
+          <Link to="/" className="text-primary hover:underline text-sm">Terug naar home</Link>
+        </div>
+      </div>
+    );
+  }
+
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
-  const shareText = event.socialShareText || `${event.title} — ${formatDate(event.startDate)} bij ${event.venue}`;
+  const shareText = event.social_share_text || `${event.title} — ${formatDate(event.start_date)}`;
+  const venueName = venue?.name || "Locatie volgt";
+  const venueAddress = venue ? [venue.address, venue.city].filter(Boolean).join(", ") : "";
 
   const copyLink = () => {
     navigator.clipboard.writeText(shareUrl);
@@ -64,23 +95,19 @@ export default function PublicEventPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const heroImg = event.featuredImage || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop";
+  const heroImg = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop";
 
   return (
     <div className="min-h-screen bg-background">
-      {/* ── HERO ──────────────────────────────────────── */}
+      {/* HERO */}
       <section className="relative w-full overflow-hidden" style={{ minHeight: "min(60vh, 480px)" }}>
         <img src={heroImg} alt={event.title} className="absolute inset-0 w-full h-full object-cover" loading="eager" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
-
-        {/* Back */}
         <div className="relative z-10 max-w-5xl mx-auto px-4 pt-5">
           <Link to="/" className="inline-flex items-center gap-1 text-white/80 hover:text-white text-sm transition-colors">
             <ChevronLeft className="w-4 h-4" />Terug
           </Link>
         </div>
-
-        {/* Hero content */}
         <div className="relative z-10 max-w-5xl mx-auto px-4 flex flex-col justify-end" style={{ minHeight: "min(60vh, 480px)", paddingBottom: "2.5rem" }}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             {event.tags && event.tags.length > 0 && (
@@ -98,12 +125,11 @@ export default function PublicEventPage() {
         </div>
       </section>
 
-      {/* ── MAIN CONTENT ─────────────────────────────── */}
+      {/* MAIN CONTENT */}
       <main className="max-w-5xl mx-auto px-4 -mt-6 relative z-20">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: details */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Quick info bar */}
+            {/* Quick info */}
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
               className="rounded-xl bg-card border border-border shadow-elevated p-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="flex items-start gap-3">
@@ -112,9 +138,9 @@ export default function PublicEventPage() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Datum</p>
-                  <p className="text-sm font-semibold text-foreground capitalize">{formatDate(event.startDate)}</p>
-                  {event.endDate && event.endDate !== event.startDate && (
-                    <p className="text-xs text-muted-foreground">t/m {formatDate(event.endDate)}</p>
+                  <p className="text-sm font-semibold text-foreground capitalize">{formatDate(event.start_date)}</p>
+                  {event.end_date && event.end_date !== event.start_date && (
+                    <p className="text-xs text-muted-foreground">t/m {formatDate(event.end_date)}</p>
                   )}
                 </div>
               </div>
@@ -124,7 +150,7 @@ export default function PublicEventPage() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Tijd</p>
-                  <p className="text-sm font-semibold text-foreground">{formatTime(event.startTime)}{event.endTime ? ` – ${formatTime(event.endTime)}` : ""}</p>
+                  <p className="text-sm font-semibold text-foreground">{formatTime(event.start_time)}{event.end_time ? ` – ${formatTime(event.end_time)}` : ""}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -133,8 +159,8 @@ export default function PublicEventPage() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Locatie</p>
-                  <p className="text-sm font-semibold text-foreground">{event.venue || "Locatie volgt"}</p>
-                  {event.address && <p className="text-xs text-muted-foreground">{event.address}</p>}
+                  <p className="text-sm font-semibold text-foreground">{venueName}</p>
+                  {venueAddress && <p className="text-xs text-muted-foreground">{venueAddress}</p>}
                 </div>
               </div>
             </motion.div>
@@ -144,31 +170,17 @@ export default function PublicEventPage() {
               className="rounded-xl bg-card border border-border shadow-card p-6">
               <h2 className="font-display text-xl font-bold text-foreground mb-3">Over dit evenement</h2>
               <div className="prose prose-sm max-w-none text-muted-foreground leading-relaxed">
-                <p>{event.fullDescription || event.shortDescription || "Meer informatie volgt binnenkort."}</p>
+                <p>{event.full_description || event.short_description || "Meer informatie volgt binnenkort."}</p>
               </div>
-              {event.isRecurring && (
+              {event.is_recurring && (
                 <div className="mt-4 flex items-center gap-2 text-xs text-primary font-medium bg-primary/5 rounded-lg px-3 py-2">
-                  <Calendar className="w-3.5 h-3.5" />
-                  Terugkerend evenement — {event.recurringPattern === "weekly" ? "wekelijks" : event.recurringPattern}
+                  <Calendar className="w-3.5 h-3.5" />Terugkerend evenement
                 </div>
               )}
             </motion.div>
 
-            {/* Gallery */}
-            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-              className="rounded-xl bg-card border border-border shadow-card p-6">
-              <h2 className="font-display text-lg font-bold text-foreground mb-3">Sfeerimpressie</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {galleryImages.map((img, i) => (
-                  <div key={i} className="relative aspect-[4/3] rounded-lg overflow-hidden group cursor-pointer">
-                    <img src={img} alt={`Sfeerbeeld ${i + 1}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
             {/* Organizer */}
-            {event.organizer && (
+            {event.organizer_name && (
               <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
                 className="rounded-xl bg-card border border-border shadow-card p-6">
                 <h2 className="font-display text-lg font-bold text-foreground mb-3">Organisator</h2>
@@ -177,23 +189,29 @@ export default function PublicEventPage() {
                     <User className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground">{event.organizer}</p>
-                    <p className="text-xs text-muted-foreground">{event.address}</p>
+                    <p className="font-semibold text-foreground">{event.organizer_name}</p>
+                    {venueAddress && <p className="text-xs text-muted-foreground">{venueAddress}</p>}
                   </div>
                 </div>
               </motion.div>
             )}
 
             {/* Sponsors */}
-            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
-              className="rounded-xl bg-card border border-border shadow-card p-6">
-              <h2 className="font-display text-lg font-bold text-foreground mb-4">Sponsoren & Partners</h2>
-              <div className="flex flex-wrap items-center gap-6">
-                {mockSponsors.map((s) => (
-                  <img key={s.name} src={s.logo} alt={s.name} className="h-8 opacity-60 hover:opacity-100 transition-opacity grayscale hover:grayscale-0" loading="lazy" />
-                ))}
-              </div>
-            </motion.div>
+            {sponsors.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
+                className="rounded-xl bg-card border border-border shadow-card p-6">
+                <h2 className="font-display text-lg font-bold text-foreground mb-4">Sponsoren & Partners</h2>
+                <div className="flex flex-wrap items-center gap-6">
+                  {sponsors.map((s) => s.logo_url ? (
+                    <a key={s.id} href={s.website_url || "#"} target="_blank" rel="noopener noreferrer">
+                      <img src={s.logo_url} alt={s.name} className="h-8 opacity-60 hover:opacity-100 transition-opacity grayscale hover:grayscale-0" loading="lazy" />
+                    </a>
+                  ) : (
+                    <span key={s.id} className="text-sm text-muted-foreground font-medium">{s.name}</span>
+                  ))}
+                </div>
+              </motion.div>
+            )}
 
             {/* Related events */}
             {relatedEvents.length > 0 && (
@@ -204,8 +222,7 @@ export default function PublicEventPage() {
                     <Link to={`/e/${re.slug}`} key={re.id}
                       className="rounded-xl border border-border bg-card p-4 hover:shadow-elevated transition-shadow group">
                       <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{re.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1 capitalize">{formatDate(re.startDate)}</p>
-                      <p className="text-xs text-muted-foreground">{re.venue}</p>
+                      <p className="text-xs text-muted-foreground mt-1 capitalize">{formatDate(re.start_date)}</p>
                     </Link>
                   ))}
                 </div>
@@ -213,7 +230,7 @@ export default function PublicEventPage() {
             )}
           </div>
 
-          {/* Right sidebar: sticky CTA + share + calendar */}
+          {/* Right sidebar */}
           <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
             {/* CTA card */}
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
@@ -222,10 +239,10 @@ export default function PublicEventPage() {
                 <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Gratis toegang</p>
                 <p className="text-3xl font-display font-bold text-foreground mt-1">€0</p>
               </div>
-              {event.ctaLink ? (
+              {event.cta_link ? (
                 <Button asChild className="w-full gradient-hero text-primary-foreground border-0 hover:opacity-90 h-12 text-base font-semibold gap-2">
-                  <a href={event.ctaLink} target="_blank" rel="noopener noreferrer">
-                    {event.ctaButtonText || "Aanmelden"}<ExternalLink className="w-4 h-4" />
+                  <a href={event.cta_link} target="_blank" rel="noopener noreferrer">
+                    {event.cta_button_text || "Aanmelden"}<ExternalLink className="w-4 h-4" />
                   </a>
                 </Button>
               ) : (
@@ -245,27 +262,23 @@ export default function PublicEventPage() {
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="flex-1 text-xs h-8"
                   onClick={() => {
-                    const start = `${event.startDate.replace(/-/g, "")}T${event.startTime.replace(/:/g, "")}00`;
-                    const end = event.endTime ? `${event.startDate.replace(/-/g, "")}T${event.endTime.replace(/:/g, "")}00` : start;
-                    window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${start}/${end}&location=${encodeURIComponent(event.venue || "")}&details=${encodeURIComponent(event.shortDescription || "")}`, "_blank");
-                  }}>
-                  Google
-                </Button>
+                    const start = `${event.start_date.replace(/-/g, "")}T${event.start_time.replace(/:/g, "")}00`;
+                    const end = event.end_time ? `${event.start_date.replace(/-/g, "")}T${event.end_time.replace(/:/g, "")}00` : start;
+                    window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${start}/${end}&location=${encodeURIComponent(venueName)}&details=${encodeURIComponent(event.short_description || "")}`, "_blank");
+                  }}>Google</Button>
                 <Button variant="outline" size="sm" className="flex-1 text-xs h-8"
                   onClick={() => {
                     const ics = [
                       "BEGIN:VCALENDAR", "VERSION:2.0", "BEGIN:VEVENT",
-                      `DTSTART:${event.startDate.replace(/-/g, "")}T${event.startTime.replace(/:/g, "")}00`,
+                      `DTSTART:${event.start_date.replace(/-/g, "")}T${event.start_time.replace(/:/g, "")}00`,
                       `SUMMARY:${event.title}`,
-                      `LOCATION:${event.venue || ""}`,
-                      `DESCRIPTION:${event.shortDescription || ""}`,
+                      `LOCATION:${venueName}`,
+                      `DESCRIPTION:${event.short_description || ""}`,
                       "END:VEVENT", "END:VCALENDAR"
                     ].join("\r\n");
                     const blob = new Blob([ics], { type: "text/calendar" });
                     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${event.slug}.ics`; a.click();
-                  }}>
-                  .ics downloaden
-                </Button>
+                  }}>.ics downloaden</Button>
               </div>
             </motion.div>
 
@@ -277,7 +290,7 @@ export default function PublicEventPage() {
               </h3>
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
-                  <a href={`https://wa.me/?text=${encodeURIComponent(event.whatsappShareText || shareText + " " + shareUrl)}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`https://wa.me/?text=${encodeURIComponent(event.whatsapp_share_text || shareText + " " + shareUrl)}`} target="_blank" rel="noopener noreferrer">
                     <MessageCircle className="w-3.5 h-3.5" />WhatsApp
                   </a>
                 </Button>
@@ -298,7 +311,6 @@ export default function PublicEventPage() {
               </div>
             </motion.div>
 
-            {/* Powered by */}
             <div className="text-center pt-2">
               <p className="text-[10px] text-muted-foreground/50">
                 Gepresenteerd via <span className="font-semibold text-muted-foreground/70">TX PromoShare</span>
@@ -308,19 +320,18 @@ export default function PublicEventPage() {
         </div>
       </main>
 
-      {/* Footer spacer */}
       <div className="h-16" />
 
-      {/* JSON-LD for SEO */}
+      {/* JSON-LD */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Event",
         name: event.title,
-        description: event.shortDescription || event.fullDescription,
-        startDate: `${event.startDate}T${event.startTime}`,
-        endDate: event.endDate ? `${event.endDate}T${event.endTime || event.startTime}` : undefined,
-        location: event.venue ? { "@type": "Place", name: event.venue, address: event.address } : undefined,
-        organizer: event.organizer ? { "@type": "Organization", name: event.organizer } : undefined,
+        description: event.short_description || event.full_description,
+        startDate: `${event.start_date}T${event.start_time}`,
+        endDate: event.end_date ? `${event.end_date}T${event.end_time || event.start_time}` : undefined,
+        location: venue ? { "@type": "Place", name: venue.name, address: venueAddress } : undefined,
+        organizer: event.organizer_name ? { "@type": "Organization", name: event.organizer_name } : undefined,
         image: heroImg,
         eventStatus: "https://schema.org/EventScheduled",
         eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
