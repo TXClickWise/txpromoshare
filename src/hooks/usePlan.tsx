@@ -38,39 +38,49 @@ export function PlanProvider({ children, planId: defaultPlanId = "free" }: { chi
   useEffect(() => {
     if (!tenantId) return;
     
-    // Fetch subscription plan and active override in parallel
-    Promise.all([
-      supabase
+    async function fetchPlanData() {
+      // Fetch subscription plan
+      const { data: subData, error: subError } = await supabase
         .from("subscriptions")
         .select("plan_id")
-        .eq("tenant_id", tenantId)
+        .eq("tenant_id", tenantId!)
         .eq("status", "active")
-        .maybeSingle(),
-      supabase
+        .maybeSingle();
+      
+      if (subError) {
+        console.error("[PlanProvider] subscription fetch error:", subError.message);
+      } else if (subData?.plan_id) {
+        setPlanId(subData.plan_id as PlanId);
+      }
+
+      // Fetch active override
+      const { data: overrideData, error: overrideError } = await supabase
         .from("plan_overrides")
         .select("override_plan_slug, ends_at")
-        .eq("tenant_id", tenantId)
+        .eq("tenant_id", tenantId!)
         .eq("is_active", true)
-        .maybeSingle(),
-    ]).then(([subResult, overrideResult]) => {
-      if (subResult.data?.plan_id) {
-        setPlanId(subResult.data.plan_id as PlanId);
+        .maybeSingle();
+
+      if (overrideError) {
+        console.error("[PlanProvider] override fetch error:", overrideError.message);
       }
-      if (overrideResult.data) {
-        const overrideSlug = overrideResult.data.override_plan_slug as PlanId;
-        // Check if override has expired
-        if (overrideResult.data.ends_at && new Date(overrideResult.data.ends_at) < new Date()) {
+
+      if (overrideData) {
+        const overrideSlug = overrideData.override_plan_slug as PlanId;
+        if (overrideData.ends_at && new Date(overrideData.ends_at) < new Date()) {
           setOverridePlanId(null);
           setOverrideEndsAt(null);
         } else {
           setOverridePlanId(overrideSlug);
-          setOverrideEndsAt(overrideResult.data.ends_at);
+          setOverrideEndsAt(overrideData.ends_at);
         }
       } else {
         setOverridePlanId(null);
         setOverrideEndsAt(null);
       }
-    });
+    }
+
+    fetchPlanData();
   }, [tenantId]);
 
   const value = useMemo<PlanContextValue>(() => {

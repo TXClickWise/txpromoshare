@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Send, Sparkles, Clock, MapPin, CalendarDays, Image, Share2, Repeat, CalendarClock, Trash2, Check } from "lucide-react";
+import { ArrowLeft, Save, Eye, Send, Sparkles, Clock, MapPin, CalendarDays, Image, Share2, Repeat, CalendarClock, Trash2, Check, Upload } from "lucide-react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,18 @@ const categories = Object.entries(t.events.categories);
 
 function generateSlug(title: string) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function toDatetimeLocal(isoString: string | null): string {
+  if (!isoString) return "";
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return "";
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  } catch {
+    return "";
+  }
 }
 
 export default function CreateEventPage() {
@@ -61,6 +73,9 @@ export default function CreateEventPage() {
   const [featuredImageUrl, setFeaturedImageUrl] = useState<string | null>(null);
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [mediaItems, setMediaItems] = useState<Tables<"media">[]>([]);
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load existing event when editing
   useEffect(() => {
@@ -85,9 +100,8 @@ export default function CreateEventPage() {
         setWhatsappText(data.whatsapp_share_text || "");
         setSocialText(data.social_share_text || "");
         setIsRecurring(data.is_recurring);
-        setPublishAt(data.publish_at || "");
+        setPublishAt(toDatetimeLocal(data.publish_at));
         setFeaturedImageId(data.featured_image_id);
-        // Load featured image URL
         if (data.featured_image_id) {
           const { data: img } = await supabase.from("media").select("original_url").eq("id", data.featured_image_id).maybeSingle();
           if (img) setFeaturedImageUrl(img.original_url);
@@ -103,6 +117,46 @@ export default function CreateEventPage() {
       setSlug(generateSlug(title));
     }
   }, [title, isEditing]);
+
+  async function loadMediaItems() {
+    if (!tenantId) return;
+    setMediaLoading(true);
+    const { data } = await supabase.from("media").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false });
+    setMediaItems((data as Tables<"media">[]) || []);
+    setMediaLoading(false);
+  }
+
+  async function handleMediaUpload(files: FileList | null) {
+    if (!files || !tenantId) return;
+    setUploading(true);
+    for (const file of Array.from(files)) {
+      const ext = file.name.split(".").pop();
+      const path = `${tenantId}/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("media").upload(path, file);
+      if (uploadError) {
+        toast.error(`Upload mislukt: ${file.name}`);
+        continue;
+      }
+      const { data: urlData } = supabase.storage.from("media").getPublicUrl(path);
+      await supabase.from("media").insert({
+        tenant_id: tenantId,
+        filename: file.name,
+        storage_path: path,
+        original_url: urlData.publicUrl,
+        mime_type: file.type,
+        file_size: file.size,
+        source: "upload" as const,
+      });
+    }
+    setUploading(false);
+    toast.success("Upload voltooid");
+    await loadMediaItems();
+  }
+
+  function openMediaPicker() {
+    loadMediaItems();
+    setMediaPickerOpen(true);
+  }
 
   function buildEventData(status: "draft" | "published" | "scheduled") {
     return {
@@ -124,7 +178,7 @@ export default function CreateEventPage() {
       whatsapp_share_text: whatsappText || null,
       social_share_text: socialText || null,
       is_recurring: isRecurring,
-      publish_at: publishAt || null,
+      publish_at: status === "scheduled" && publishAt ? new Date(publishAt).toISOString() : null,
       featured_image_id: featuredImageId,
       status,
       tenant_id: tenantId!,
@@ -162,6 +216,7 @@ export default function CreateEventPage() {
       return;
     }
     setSaving(true);
+    // If publishAt is set, schedule; otherwise publish immediately
     const status = publishAt ? "scheduled" : "published";
     const data = buildEventData(status);
     let error;
@@ -329,26 +384,23 @@ export default function CreateEventPage() {
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.featuredImage}</Label>
                   {featuredImageUrl ? (
-                    <div className="relative rounded-xl border border-border overflow-hidden">
-                      <img src={featuredImageUrl} alt="Featured" className="w-full h-48 object-cover" />
+                    <div className="relative rounded-xl border border-border overflow-hidden bg-secondary/20">
+                      <div className="aspect-square max-w-md mx-auto">
+                        <img src={featuredImageUrl} alt="Featured" className="w-full h-full object-contain" />
+                      </div>
                       <div className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-colors flex items-center justify-center gap-2 opacity-0 hover:opacity-100">
-                        <Button size="sm" variant="secondary" onClick={() => setMediaPickerOpen(true)}>Wijzigen</Button>
+                        <Button size="sm" variant="secondary" onClick={openMediaPicker}>Wijzigen</Button>
                         <Button size="sm" variant="destructive" onClick={() => { setFeaturedImageId(null); setFeaturedImageUrl(null); }}>Verwijderen</Button>
                       </div>
                     </div>
                   ) : (
                     <div
                       className="border-2 border-dashed border-border rounded-xl p-10 text-center hover:border-primary/50 transition-colors cursor-pointer bg-secondary/20"
-                      onClick={async () => {
-                        if (!tenantId) return;
-                        const { data } = await supabase.from("media").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false });
-                        setMediaItems((data as Tables<"media">[]) || []);
-                        setMediaPickerOpen(true);
-                      }}
+                      onClick={openMediaPicker}
                     >
                       <Image className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-                      <p className="text-sm font-medium text-foreground mb-1">Kies een afbeelding uit je media</p>
-                      <p className="text-xs text-muted-foreground">of upload eerst via de Media pagina</p>
+                      <p className="text-sm font-medium text-foreground mb-1">Kies of upload een afbeelding</p>
+                      <p className="text-xs text-muted-foreground">Selecteer uit je mediabibliotheek of upload direct</p>
                     </div>
                   )}
                 </div>
@@ -410,6 +462,17 @@ export default function CreateEventPage() {
                     </div>
                   </div>
                   <Input type="datetime-local" value={publishAt} onChange={(e) => setPublishAt(e.target.value)} className="max-w-xs" />
+                  {publishAt && (
+                    <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setPublishAt("")}>
+                      Wis datum — publiceer direct
+                    </Button>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {publishAt
+                      ? "Bij klikken op 'Publiceren' wordt het evenement ingepland op deze datum."
+                      : "Geen datum ingesteld — bij klikken op 'Publiceren' gaat het direct live."
+                    }
+                  </p>
                 </div>
                 <div className="rounded-xl border border-dashed border-border p-5 opacity-60">
                   <div className="flex items-center gap-3">
@@ -444,16 +507,38 @@ export default function CreateEventPage() {
           </div>
         </div>
       </div>
-      {/* Media Picker Dialog */}
+
+      {/* Media Picker Dialog with Upload */}
       <Dialog open={mediaPickerOpen} onOpenChange={setMediaPickerOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Kies een afbeelding</DialogTitle>
           </DialogHeader>
-          {mediaItems.length === 0 ? (
+          
+          {/* Upload button */}
+          <div className="flex gap-2 mb-4">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => handleMediaUpload(e.target.files)}
+            />
+            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-2">
+              <Upload className="w-4 h-4" />
+              {uploading ? "Uploaden..." : "Upload afbeelding"}
+            </Button>
+          </div>
+
+          {mediaLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+            </div>
+          ) : mediaItems.length === 0 ? (
             <div className="text-center py-8">
               <Image className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Nog geen media. Upload eerst afbeeldingen via de Media pagina.</p>
+              <p className="text-sm text-muted-foreground">Nog geen media. Klik op "Upload afbeelding" hierboven.</p>
             </div>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
