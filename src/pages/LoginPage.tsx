@@ -57,7 +57,7 @@ export default function LoginPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">{t.auth.password}</Label>
-              <Link to="#" className="text-xs text-primary hover:underline">{t.auth.forgotPassword}</Link>
+              <Link to="/reset-password" className="text-xs text-primary hover:underline">{t.auth.forgotPassword}</Link>
             </div>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>

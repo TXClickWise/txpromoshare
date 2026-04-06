@@ -12,9 +12,12 @@ interface EmptyStateProps {
   onAction?: () => void;
   secondaryLabel?: string;
   secondaryTo?: string;
+  onSecondaryAction?: () => void;
 }
 
-export function EmptyState({ icon: Icon, title, description, actionLabel, actionTo, onAction, secondaryLabel, secondaryTo }: EmptyStateProps) {
+export type { EmptyStateProps };
+
+export function EmptyState({ icon: Icon, title, description, actionLabel, actionTo, onAction, secondaryLabel, secondaryTo, onSecondaryAction }: EmptyStateProps) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -43,6 +46,9 @@ export function EmptyState({ icon: Icon, title, description, actionLabel, action
           <Link to={secondaryTo}>
             <Button variant="outline">{secondaryLabel}</Button>
           </Link>
+        )}
+        {secondaryLabel && onSecondaryAction && (
+          <Button variant="outline" onClick={onSecondaryAction}>{secondaryLabel}</Button>
         )}
       </div>
     </motion.div>
