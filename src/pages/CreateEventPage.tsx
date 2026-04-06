@@ -108,6 +108,10 @@ export default function CreateEventPage() {
         setSocialText(data.social_share_text || "");
         setIsRecurring(data.is_recurring);
         setPublishAt(toDatetimeLocal(data.publish_at));
+        setShowOnDiscovery(
+          (data as any).show_on_discovery === true ? "show" :
+          (data as any).show_on_discovery === false ? "hide" : "inherit"
+        );
         setFeaturedImageId(data.featured_image_id);
         if (data.featured_image_id) {
           const { data: img } = await supabase.from("media").select("original_url").eq("id", data.featured_image_id).maybeSingle();
@@ -190,10 +194,11 @@ export default function CreateEventPage() {
       is_recurring: isRecurring,
       publish_at: status === "scheduled" && publishAt ? new Date(publishAt).toISOString() : null,
       featured_image_id: featuredImageId,
+      show_on_discovery: showOnDiscovery === "show" ? true : showOnDiscovery === "hide" ? false : null,
       status,
       tenant_id: tenantId!,
       created_by: user?.id || null,
-    };
+    } as any;
   }
 
   async function saveSponsors(eventId: string) {
