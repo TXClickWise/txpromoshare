@@ -25,7 +25,9 @@ export default function WidgetsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState<WidgetType>("agenda");
+  const [newEventId, setNewEventId] = useState("");
   const [creating, setCreating] = useState(false);
+  const [events, setEvents] = useState<Tables<"events">[]>([]);
 
   async function fetchWidgets() {
     if (!tenantId) return;
@@ -38,7 +40,18 @@ export default function WidgetsPage() {
     setLoading(false);
   }
 
-  useEffect(() => { fetchWidgets(); }, [tenantId]);
+  async function fetchEvents() {
+    if (!tenantId) return;
+    const { data } = await supabase
+      .from("events")
+      .select("id, title, status")
+      .eq("tenant_id", tenantId)
+      .in("status", ["published", "scheduled", "draft"])
+      .order("start_date", { ascending: false });
+    setEvents(data || []);
+  }
+
+  useEffect(() => { fetchWidgets(); fetchEvents(); }, [tenantId]);
 
   async function createWidget() {
     if (!tenantId || !newName.trim()) return;
