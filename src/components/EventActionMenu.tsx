@@ -9,16 +9,88 @@ import {
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EventActionMenuProps {
   eventId: string;
   eventTitle: string;
   eventSlug: string;
   status: string;
+  onRefresh?: () => void;
 }
 
-export function EventActionMenu({ eventId, eventTitle, eventSlug, status }: EventActionMenuProps) {
+export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefresh }: EventActionMenuProps) {
   const navigate = useNavigate();
+
+  async function duplicateEvent() {
+    // Fetch the original event
+    const { data: original, error: fetchErr } = await supabase
+      .from("events")
+      .select("*")
+      .eq("id", eventId)
+      .single();
+
+    if (fetchErr || !original) {
+      toast.error("Kon event niet ophalen");
+      return;
+    }
+
+    // Create a copy with new slug, draft status
+    const newSlug = original.slug + "-kopie-" + Date.now().toString(36);
+    const { error } = await supabase.from("events").insert({
+      tenant_id: original.tenant_id,
+      title: original.title + " (kopie)",
+      slug: newSlug,
+      subtitle: original.subtitle,
+      short_description: original.short_description,
+      full_description: original.full_description,
+      start_date: original.start_date,
+      start_time: original.start_time,
+      end_date: original.end_date,
+      end_time: original.end_time,
+      category_id: original.category_id,
+      venue_id: original.venue_id,
+      featured_image_id: original.featured_image_id,
+      cta_link: original.cta_link,
+      cta_button_text: original.cta_button_text,
+      organizer_name: original.organizer_name,
+      tags: original.tags,
+      seo_title: original.seo_title,
+      seo_description: original.seo_description,
+      social_share_text: original.social_share_text,
+      whatsapp_share_text: original.whatsapp_share_text,
+      auto_end_behavior: original.auto_end_behavior,
+      status: "draft",
+      created_by: (await supabase.auth.getUser()).data.user?.id || null,
+    });
+
+    if (error) {
+      toast.error("Dupliceren mislukt: " + error.message);
+    } else {
+      toast.success(`"${eventTitle}" gedupliceerd als concept`);
+      onRefresh?.();
+    }
+  }
+
+  async function archiveEvent() {
+    const { error } = await supabase
+      .from("events")
+      .update({ status: "archived" })
+      .eq("id", eventId);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`"${eventTitle}" gearchiveerd`);
+    onRefresh?.();
+  }
+
+  async function deleteEvent() {
+    const { error } = await supabase
+      .from("events")
+      .delete()
+      .eq("id", eventId);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`"${eventTitle}" verwijderd`);
+    onRefresh?.();
+  }
 
   return (
     <DropdownMenu>
@@ -40,17 +112,17 @@ export function EventActionMenu({ eventId, eventTitle, eventSlug, status }: Even
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={(e) => { e.preventDefault(); toast.success(`"${eventTitle}" gedupliceerd`); }}>
+        <DropdownMenuItem onClick={(e) => { e.preventDefault(); duplicateEvent(); }}>
           <Copy className="w-4 h-4 mr-2" />Dupliceren
         </DropdownMenuItem>
         <DropdownMenuItem onClick={(e) => { e.preventDefault(); navigate("/app/distribution"); }}>
           <Share2 className="w-4 h-4 mr-2" />Verspreiden
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={(e) => { e.preventDefault(); toast.success(`"${eventTitle}" gearchiveerd`); }}>
+        <DropdownMenuItem onClick={(e) => { e.preventDefault(); archiveEvent(); }}>
           <Archive className="w-4 h-4 mr-2" />Archiveren
         </DropdownMenuItem>
-        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.preventDefault(); toast.error(`"${eventTitle}" verwijderd`); }}>
+        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.preventDefault(); deleteEvent(); }}>
           <Trash2 className="w-4 h-4 mr-2" />Verwijderen
         </DropdownMenuItem>
       </DropdownMenuContent>
