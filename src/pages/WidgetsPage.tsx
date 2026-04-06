@@ -27,7 +27,7 @@ export default function WidgetsPage() {
   const [newType, setNewType] = useState<WidgetType>("agenda");
   const [newEventId, setNewEventId] = useState("");
   const [creating, setCreating] = useState(false);
-  const [events, setEvents] = useState<Tables<"events">[]>([]);
+  const [events, setEvents] = useState<{ id: string; title: string; status: string }[]>([]);
 
   async function fetchWidgets() {
     if (!tenantId) return;
