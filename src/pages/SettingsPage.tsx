@@ -22,6 +22,9 @@ export default function SettingsPage() {
   const [primaryColor, setPrimaryColor] = useState("#E86C2C");
   const [secondaryColor, setSecondaryColor] = useState("#2A9D8F");
   const [saving, setSaving] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   // Venue state
   const [venues, setVenues] = useState<Tables<"venues">[]>([]);
