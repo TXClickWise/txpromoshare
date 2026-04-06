@@ -198,7 +198,7 @@ function generateEmbedScript(payload: any): string {
       '" title="Deel via e-mail" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:#6b7280;color:#fff;text-decoration:none;font-size:16px;">✉</a>' +
       "</div>";
 
-    return '<div style="border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:12px;background:#fff;display:flex;gap:12px;align-items:flex-start;">' +
+    return '<div style="border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:12px;background:#fff;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">' +
       '<div style="min-width:56px;text-align:center;background:' + pc +
       '10;border-radius:8px;padding:8px;">' +
       '<div style="font-size:11px;color:' + pc + ';font-weight:600;">' +
