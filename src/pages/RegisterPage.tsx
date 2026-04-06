@@ -40,6 +40,15 @@ export default function RegisterPage() {
     if (error) {
       toast.error(error.message);
     } else {
+      // Send welcome email
+      supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "welcome-email",
+          recipientEmail: email,
+          idempotencyKey: `welcome-${email}-${Date.now()}`,
+          templateData: { name: fullName },
+        },
+      }).catch(() => {});
       toast.success("Account aangemaakt! Je wordt ingelogd...");
       navigate("/app");
     }
