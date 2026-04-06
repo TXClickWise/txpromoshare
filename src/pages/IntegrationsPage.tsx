@@ -11,7 +11,7 @@ const integrations = [
     description: t.integrations.clickwise.description,
     icon: Zap,
     gradient: "gradient-hero",
-    status: "disconnected" as const,
+    status: "disconnected" as "disconnected" | "connected" | "coming_soon",
     features: [
       "Event info automatisch naar je CRM",
       "Automatisering bij publicatie",
