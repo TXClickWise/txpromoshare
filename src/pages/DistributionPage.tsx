@@ -83,7 +83,7 @@ export default function DistributionPage() {
     return <div className="text-muted-foreground text-sm">Laden...</div>;
   }
 
-  const shareUrl = `${window.location.origin}/e/${event.slug}`;
+  const shareUrl = `https://txeventshare.nl/e/${event.slug}`;
   const tenantSlug = tenant?.slug || "mijn-organisatie";
 
   const whatsappText = event.whatsapp_share_text ||

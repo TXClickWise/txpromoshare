@@ -90,7 +90,7 @@ export default function PublicEventPage() {
     );
   }
 
-  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+  const shareUrl = `https://txeventshare.nl/e/${slug}`;
   const shareText = event.social_share_text || `${event.title} — ${formatDate(event.start_date)}`;
   const venueName = venue?.name || "Locatie volgt";
   const venueAddress = venue ? [venue.address, venue.city].filter(Boolean).join(", ") : "";
