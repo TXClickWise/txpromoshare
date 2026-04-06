@@ -75,11 +75,9 @@ export default function WidgetsPage() {
   }
 
   function getEmbedCode(widget: Tables<"widgets">) {
-    const slug = tenant?.slug || "mijn-organisatie";
-    if (widget.type === "agenda") {
-      return `<div id="tx-agenda-widget" data-tenant="${slug}" data-widget="${widget.id}" data-theme="light"></div>\n<script src="https://txpromoshare.nl/widget.js" async></script>`;
-    }
-    return `<div id="tx-event-widget" data-tenant="${slug}" data-widget="${widget.id}" data-theme="light"></div>\n<script src="https://txpromoshare.nl/widget.js" async></script>`;
+    const baseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+    const scriptUrl = `${baseUrl}/functions/v1/widget-embed?widget_id=${widget.id}&format=js`;
+    return `<div id="txpromoshare-widget-${widget.id}"></div>\n<script src="${scriptUrl}" data-widget-id="${widget.id}" async></script>`;
   }
 
   const copy = (key: string, text: string) => {

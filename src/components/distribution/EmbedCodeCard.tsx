@@ -26,7 +26,7 @@ export function EmbedCodeCard({ type, tenantSlug, eventSlug }: EmbedCodeCardProp
 
   const widgetId = isAgenda ? "tx-agenda-widget" : "tx-event-widget";
 
-  const code = `<div id="${widgetId}" ${dataAttr} data-theme="${theme}"></div>\n<script src="https://txpromoshare.nl/widget.js" async></script>`;
+  const code = `<!-- Gebruik de Widgets pagina om een embed-code te genereren -->\n<div id="${widgetId}" ${dataAttr} data-theme="${theme}"></div>`;
 
   const copy = () => {
     navigator.clipboard.writeText(code);
