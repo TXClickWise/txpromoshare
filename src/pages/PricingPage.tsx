@@ -4,6 +4,7 @@ import { Check, X, ArrowRight, Sparkles, HelpCircle } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useSEO, breadcrumbSchema, faqSchema as faqSchemaLd } from "@/lib/seo";
 
 const plans = [
   { ...t.plans.free, id: "free" as const, popular: false, cta: "Gratis starten" },
@@ -45,6 +46,19 @@ const socialProof = [
 
 export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  useSEO({
+    title: "Prijzen — Event Promotie Software Abonnementen | TX PromoShare",
+    description: "Bekijk de prijzen van TX PromoShare. Gratis starten met event promotie. Upgrade naar Basic of Pro voor meer events, widgets, team samenwerking en ClickWise integratie.",
+    canonical: "/pricing",
+    jsonLd: [
+      breadcrumbSchema([
+        { name: "Home", url: "/" },
+        { name: "Prijzen", url: "/pricing" },
+      ]),
+      faqSchemaLd(faqs.map(f => ({ question: f.q, answer: f.a }))),
+    ],
+  });
 
   return (
     <div className="py-16 md:py-24">
