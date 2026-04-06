@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Calendar, Layers, Share2, Code2, Tags,
   Image, Users, Plug, Settings, CreditCard, Shield, Menu, X, LogOut
@@ -6,6 +6,9 @@ import {
 import { useState } from "react";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { useTenant } from "@/hooks/useTenant";
+import { usePlan } from "@/hooks/usePlan";
 
 const navItems = [
   { to: "/app", icon: LayoutDashboard, label: t.nav.dashboard, end: true },
@@ -24,6 +27,19 @@ const navItems = [
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut, isPlatformAdmin } = useAuth();
+  const { tenant } = useTenant();
+  const { planId } = usePlan();
+
+  const fullName = user?.user_metadata?.full_name || "Gebruiker";
+  const initials = fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+  const planLabel = planId.charAt(0).toUpperCase() + planId.slice(1) + " plan";
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
+  };
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -69,18 +85,30 @@ export default function AppLayout() {
               </Link>
             );
           })}
+          {isPlatformAdmin && (
+            <Link
+              to="/admin"
+              onClick={() => setSidebarOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              <Shield className="w-4 h-4 shrink-0" />
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="px-3 py-4 border-t border-border">
           <div className="flex items-center gap-3 px-3 py-2">
             <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-              <span className="text-xs font-bold text-secondary-foreground">JD</span>
+              <span className="text-xs font-bold text-secondary-foreground">{initials}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">Jan de Vries</p>
-              <p className="text-xs text-muted-foreground truncate">Basic plan</p>
+              <p className="text-sm font-medium text-foreground truncate">{fullName}</p>
+              <p className="text-xs text-muted-foreground truncate">{planLabel}</p>
             </div>
-            <LogOut className="w-4 h-4 text-muted-foreground" />
+            <button onClick={handleSignOut} className="text-muted-foreground hover:text-foreground transition-colors" title="Uitloggen">
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </aside>
