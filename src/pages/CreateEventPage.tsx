@@ -112,6 +112,9 @@ export default function CreateEventPage() {
           const { data: img } = await supabase.from("media").select("original_url").eq("id", data.featured_image_id).maybeSingle();
           if (img) setFeaturedImageUrl(img.original_url);
         }
+        // Load sponsors
+        const { data: spData } = await supabase.from("event_sponsors").select("*").eq("event_id", data.id).order("sort_order");
+        if (spData) setSponsors(spData.map(s => ({ name: s.name, logo_url: s.logo_url || "", website_url: s.website_url || "" })));
       }
       setLoading(false);
     });
