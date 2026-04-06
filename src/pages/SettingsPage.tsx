@@ -76,6 +76,34 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleLogoUpload(files: FileList | null) {
+    if (!files || !tenantId || files.length === 0) return;
+    setLogoUploading(true);
+    const file = files[0];
+    const ext = file.name.split(".").pop();
+    const path = `${tenantId}/logo.${ext}`;
+    // Remove old logo if exists
+    await supabase.storage.from("media").remove([path]);
+    const { error: uploadError } = await supabase.storage.from("media").upload(path, file, { upsert: true });
+    if (uploadError) {
+      toast.error("Logo upload mislukt: " + uploadError.message);
+      setLogoUploading(false);
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("media").getPublicUrl(path);
+    const newUrl = urlData.publicUrl;
+    // Save to tenant
+    const { error } = await supabase.from("tenants").update({ logo_url: newUrl }).eq("id", tenantId);
+    setLogoUploading(false);
+    if (error) {
+      toast.error("Opslaan mislukt: " + error.message);
+    } else {
+      setLogoUrl(newUrl);
+      toast.success("Logo geüpload");
+      refetch();
+    }
+  }
+
   async function saveBranding() {
     if (!tenant) return;
     setSaving(true);
