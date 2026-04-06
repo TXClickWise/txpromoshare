@@ -5,11 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface PlanContextValue {
   planId: PlanId;
+  effectivePlanId: PlanId;
   limits: PlanLimits;
   canUse: (feature: keyof PlanLimits) => boolean;
   isAtLimit: (metric: "events" | "widgets" | "team", current: number) => boolean;
   usagePercent: (metric: "events" | "widgets" | "team", current: number) => number;
   upgradePlan: PlanId | null;
+  hasOverride: boolean;
+  overrideEndsAt: string | null;
 }
 
 const PlanContext = createContext<PlanContextValue | null>(null);
@@ -29,26 +32,53 @@ function getNextPlan(current: PlanId): PlanId | null {
 export function PlanProvider({ children, planId: defaultPlanId = "free" }: { children: ReactNode; planId?: PlanId }) {
   const { tenantId } = useTenant();
   const [planId, setPlanId] = useState<PlanId>(defaultPlanId);
+  const [overridePlanId, setOverridePlanId] = useState<PlanId | null>(null);
+  const [overrideEndsAt, setOverrideEndsAt] = useState<string | null>(null);
 
   useEffect(() => {
     if (!tenantId) return;
-    supabase
-      .from("subscriptions")
-      .select("plan_id")
-      .eq("tenant_id", tenantId)
-      .eq("status", "active")
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.plan_id) {
-          setPlanId(data.plan_id as PlanId);
+    
+    // Fetch subscription plan and active override in parallel
+    Promise.all([
+      supabase
+        .from("subscriptions")
+        .select("plan_id")
+        .eq("tenant_id", tenantId)
+        .eq("status", "active")
+        .maybeSingle(),
+      supabase
+        .from("plan_overrides")
+        .select("override_plan_slug, ends_at")
+        .eq("tenant_id", tenantId)
+        .eq("is_active", true)
+        .maybeSingle(),
+    ]).then(([subResult, overrideResult]) => {
+      if (subResult.data?.plan_id) {
+        setPlanId(subResult.data.plan_id as PlanId);
+      }
+      if (overrideResult.data) {
+        const overrideSlug = overrideResult.data.override_plan_slug as PlanId;
+        // Check if override has expired
+        if (overrideResult.data.ends_at && new Date(overrideResult.data.ends_at) < new Date()) {
+          setOverridePlanId(null);
+          setOverrideEndsAt(null);
+        } else {
+          setOverridePlanId(overrideSlug);
+          setOverrideEndsAt(overrideResult.data.ends_at);
         }
-      });
+      } else {
+        setOverridePlanId(null);
+        setOverrideEndsAt(null);
+      }
+    });
   }, [tenantId]);
 
   const value = useMemo<PlanContextValue>(() => {
-    const limits = planLimits[planId];
+    const effectivePlanId = overridePlanId || planId;
+    const limits = planLimits[effectivePlanId];
     return {
       planId,
+      effectivePlanId,
       limits,
       canUse: (feature) => !!limits[feature],
       isAtLimit: (metric, current) => {
@@ -62,9 +92,11 @@ export function PlanProvider({ children, planId: defaultPlanId = "free" }: { chi
         if (max === Infinity) return 0;
         return Math.min(100, Math.round((current / max) * 100));
       },
-      upgradePlan: getNextPlan(planId),
+      upgradePlan: getNextPlan(effectivePlanId),
+      hasOverride: !!overridePlanId,
+      overrideEndsAt,
     };
-  }, [planId]);
+  }, [planId, overridePlanId, overrideEndsAt]);
 
   return <PlanContext.Provider value={value}>{children}</PlanContext.Provider>;
 }
