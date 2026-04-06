@@ -52,7 +52,7 @@ export default function PublicLayout() {
               {t.auth.login}
             </Link>
             <Link to="/register" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity">
-              Vraag demo aan <ArrowRight className="w-3.5 h-3.5" />
+              Start gratis <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </nav>
 
@@ -72,7 +72,7 @@ export default function PublicLayout() {
             ))}
             <Link to="/login" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-muted-foreground">{t.auth.login}</Link>
             <Link to="/register" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold text-center">
-              Vraag demo aan
+              Start gratis
             </Link>
           </div>
         )}
