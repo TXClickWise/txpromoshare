@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notes: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -756,6 +783,122 @@ export type Database = {
           },
         ]
       }
+      plan_overrides: {
+        Row: {
+          created_at: string
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          notification_sent_at: string | null
+          original_plan_slug: string
+          override_plan_slug: string
+          performed_by: string | null
+          reason: string | null
+          reverted_at: string | null
+          started_at: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          notification_sent_at?: string | null
+          original_plan_slug: string
+          override_plan_slug: string
+          performed_by?: string | null
+          reason?: string | null
+          reverted_at?: string | null
+          started_at?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          notification_sent_at?: string | null
+          original_plan_slug?: string
+          override_plan_slug?: string
+          performed_by?: string | null
+          reason?: string | null
+          reverted_at?: string | null
+          started_at?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_overrides_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          features: Json
+          id: string
+          is_active: boolean
+          is_featured: boolean
+          is_public: boolean
+          limits: Json
+          monthly_price_cents: number
+          name: string
+          notes: string | null
+          slug: string
+          sort_order: number
+          stripe_monthly_price_id: string | null
+          stripe_yearly_price_id: string | null
+          updated_at: string
+          yearly_price_cents: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          is_public?: boolean
+          limits?: Json
+          monthly_price_cents?: number
+          name: string
+          notes?: string | null
+          slug: string
+          sort_order?: number
+          stripe_monthly_price_id?: string | null
+          stripe_yearly_price_id?: string | null
+          updated_at?: string
+          yearly_price_cents?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          is_public?: boolean
+          limits?: Json
+          monthly_price_cents?: number
+          name?: string
+          notes?: string | null
+          slug?: string
+          sort_order?: number
+          stripe_monthly_price_id?: string | null
+          stripe_yearly_price_id?: string | null
+          updated_at?: string
+          yearly_price_cents?: number | null
+        }
+        Relationships: []
+      }
       platform_admins: {
         Row: {
           granted_at: string
@@ -784,6 +927,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          status: string
           updated_at: string
         }
         Insert: {
@@ -792,6 +936,7 @@ export type Database = {
           full_name?: string | null
           id: string
           phone?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
@@ -800,6 +945,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: []
@@ -1000,6 +1146,11 @@ export type Database = {
       }
       tenants: {
         Row: {
+          address: string | null
+          business_type: string | null
+          city: string | null
+          contact_person: string | null
+          country: string | null
           created_at: string
           email: string | null
           id: string
@@ -1007,13 +1158,20 @@ export type Database = {
           name: string
           phone: string | null
           plan_id: Database["public"]["Enums"]["subscription_plan"]
+          postal_code: string | null
           primary_color: string | null
           secondary_color: string | null
           slug: string
+          status: string
           updated_at: string
           website_url: string | null
         }
         Insert: {
+          address?: string | null
+          business_type?: string | null
+          city?: string | null
+          contact_person?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -1021,13 +1179,20 @@ export type Database = {
           name: string
           phone?: string | null
           plan_id?: Database["public"]["Enums"]["subscription_plan"]
+          postal_code?: string | null
           primary_color?: string | null
           secondary_color?: string | null
           slug: string
+          status?: string
           updated_at?: string
           website_url?: string | null
         }
         Update: {
+          address?: string | null
+          business_type?: string | null
+          city?: string | null
+          contact_person?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -1035,9 +1200,11 @@ export type Database = {
           name?: string
           phone?: string | null
           plan_id?: Database["public"]["Enums"]["subscription_plan"]
+          postal_code?: string | null
           primary_color?: string | null
           secondary_color?: string | null
           slug?: string
+          status?: string
           updated_at?: string
           website_url?: string | null
         }
