@@ -71,15 +71,15 @@ export function useClickWiseIntegration() {
 
       if (subaccountId.trim()) {
         // Manual connection with provided subaccount ID
-        const { error } = await supabase.from("integration_connections").insert({
+        const { error } = await supabase.from("integration_connections").insert([{
           tenant_id: tenantId,
           provider: "clickwise" as const,
           status: "connected" as const,
           subaccount_id: subaccountId.trim(),
           connected_by: user.id,
           last_sync_at: new Date().toISOString(),
-          sync_settings: { rules: defaultRules },
-        });
+          sync_settings: { rules: defaultRules } as any,
+        }]);
         if (error) throw error;
       }
       toast.success("ClickWise verbonden!");
