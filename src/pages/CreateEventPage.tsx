@@ -176,6 +176,7 @@ export default function CreateEventPage() {
       toast.error("Publiceren mislukt: " + error.message);
     } else {
       toast.success(status === "scheduled" ? "Evenement ingepland! 📅" : "Evenement gepubliceerd! 🎉");
+      logAudit({ tenantId, entityType: "event", action: status === "scheduled" ? "scheduled" : "published", entityId: id });
       navigate("/app/events");
     }
   }
