@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
       website: tenant.website_url || "",
       tags: [
         `plan:${subscription?.plan_id || "free"}`,
-        `source:txpromoshare`,
+        `source:txeventshare`,
         `event:${event_type}`,
       ],
       customFields: [

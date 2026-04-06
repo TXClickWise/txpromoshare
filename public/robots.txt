@@ -4,4 +4,4 @@ Disallow: /app/
 Disallow: /login
 Disallow: /register
 
-Sitemap: https://txpromoshare.nl/sitemap.xml
+Sitemap: https://txeventshare.nl/sitemap.xml
