@@ -33,8 +33,12 @@ import UnsubscribePage from "@/pages/UnsubscribePage";
 // Admin pages
 import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
 import AdminTenantsPage from "@/pages/admin/AdminTenantsPage";
+import AdminTenantDetailPage from "@/pages/admin/AdminTenantDetailPage";
 import AdminUsersPage from "@/pages/admin/AdminUsersPage";
 import AdminSubscriptionsPage from "@/pages/admin/AdminSubscriptionsPage";
+import AdminPlansPage from "@/pages/admin/AdminPlansPage";
+import AdminOverridesPage from "@/pages/admin/AdminOverridesPage";
+import AdminAuditPage from "@/pages/admin/AdminAuditPage";
 
 // SEO landing pages
 import EventAgendaSoftwarePage from "@/pages/seo/EventAgendaSoftwarePage";
@@ -98,8 +102,12 @@ const App = () => (
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboardPage />} />
                 <Route path="tenants" element={<AdminTenantsPage />} />
+                <Route path="tenants/:id" element={<AdminTenantDetailPage />} />
                 <Route path="users" element={<AdminUsersPage />} />
                 <Route path="subscriptions" element={<AdminSubscriptionsPage />} />
+                <Route path="plans" element={<AdminPlansPage />} />
+                <Route path="overrides" element={<AdminOverridesPage />} />
+                <Route path="audit" element={<AdminAuditPage />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

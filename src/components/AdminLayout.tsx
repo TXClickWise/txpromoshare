@@ -1,6 +1,7 @@
 import { Outlet, Link, useLocation, Navigate } from "react-router-dom";
 import {
-  LayoutDashboard, Building2, Users, CreditCard, BarChart3, Menu, X, LogOut, Shield
+  LayoutDashboard, Building2, Users, CreditCard, BarChart3, Menu, X, LogOut, Shield,
+  Package, ArrowUpDown, ScrollText, Settings, Search
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,9 @@ const adminNavItems = [
   { to: "/admin/tenants", icon: Building2, label: "Organisaties" },
   { to: "/admin/users", icon: Users, label: "Gebruikers" },
   { to: "/admin/subscriptions", icon: CreditCard, label: "Abonnementen" },
+  { to: "/admin/plans", icon: Package, label: "Plannen" },
+  { to: "/admin/overrides", icon: ArrowUpDown, label: "Plan Overrides" },
+  { to: "/admin/audit", icon: ScrollText, label: "Audit Log" },
 ];
 
 export default function AdminLayout() {
@@ -99,7 +103,7 @@ export default function AdminLayout() {
           </button>
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-destructive" />
-            <span className="text-sm font-medium text-muted-foreground">Super Admin</span>
+            <span className="text-sm font-medium text-muted-foreground">Super Admin — TX EventShare</span>
           </div>
           <div className="flex-1" />
         </header>
