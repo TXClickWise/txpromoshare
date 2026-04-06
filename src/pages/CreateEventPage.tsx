@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Send, Sparkles, Clock, MapPin, CalendarDays, Image, Share2, Repeat, CalendarClock, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Eye, Send, Sparkles, Clock, MapPin, CalendarDays, Image, Share2, Repeat, CalendarClock, Trash2, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
@@ -10,10 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
+import { logAudit } from "@/lib/audit";
+import type { Tables } from "@/integrations/supabase/types";
 
 const categories = Object.entries(t.events.categories);
 
@@ -54,11 +57,15 @@ export default function CreateEventPage() {
   const [publishAt, setPublishAt] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEditing);
+  const [featuredImageId, setFeaturedImageId] = useState<string | null>(null);
+  const [featuredImageUrl, setFeaturedImageUrl] = useState<string | null>(null);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const [mediaItems, setMediaItems] = useState<Tables<"media">[]>([]);
 
   // Load existing event when editing
   useEffect(() => {
     if (!id) return;
-    supabase.from("events").select("*").eq("id", id).maybeSingle().then(({ data }) => {
+    supabase.from("events").select("*").eq("id", id).maybeSingle().then(async ({ data }) => {
       if (data) {
         setTitle(data.title);
         setSubtitle(data.subtitle || "");
@@ -79,6 +86,12 @@ export default function CreateEventPage() {
         setSocialText(data.social_share_text || "");
         setIsRecurring(data.is_recurring);
         setPublishAt(data.publish_at || "");
+        setFeaturedImageId(data.featured_image_id);
+        // Load featured image URL
+        if (data.featured_image_id) {
+          const { data: img } = await supabase.from("media").select("original_url").eq("id", data.featured_image_id).maybeSingle();
+          if (img) setFeaturedImageUrl(img.original_url);
+        }
       }
       setLoading(false);
     });
@@ -112,6 +125,7 @@ export default function CreateEventPage() {
       social_share_text: socialText || null,
       is_recurring: isRecurring,
       publish_at: publishAt || null,
+      featured_image_id: featuredImageId,
       status,
       tenant_id: tenantId!,
       created_by: user?.id || null,
@@ -137,6 +151,7 @@ export default function CreateEventPage() {
       toast.error("Opslaan mislukt: " + error.message);
     } else {
       toast.success("Concept opgeslagen");
+      logAudit({ tenantId, entityType: "event", action: isEditing ? "updated" : "created", entityId: id });
       if (!isEditing) navigate("/app/events");
     }
   }
@@ -161,6 +176,7 @@ export default function CreateEventPage() {
       toast.error("Publiceren mislukt: " + error.message);
     } else {
       toast.success(status === "scheduled" ? "Evenement ingepland! 📅" : "Evenement gepubliceerd! 🎉");
+      logAudit({ tenantId, entityType: "event", action: status === "scheduled" ? "scheduled" : "published", entityId: id });
       navigate("/app/events");
     }
   }
@@ -312,11 +328,29 @@ export default function CreateEventPage() {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.featuredImage}</Label>
-                  <div className="border-2 border-dashed border-border rounded-xl p-10 text-center hover:border-primary/50 transition-colors cursor-pointer bg-secondary/20">
-                    <Image className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-foreground mb-1">Sleep een afbeelding hierheen</p>
-                    <p className="text-xs text-muted-foreground">of klik om te uploaden · JPG, PNG tot 5MB</p>
-                  </div>
+                  {featuredImageUrl ? (
+                    <div className="relative rounded-xl border border-border overflow-hidden">
+                      <img src={featuredImageUrl} alt="Featured" className="w-full h-48 object-cover" />
+                      <div className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-colors flex items-center justify-center gap-2 opacity-0 hover:opacity-100">
+                        <Button size="sm" variant="secondary" onClick={() => setMediaPickerOpen(true)}>Wijzigen</Button>
+                        <Button size="sm" variant="destructive" onClick={() => { setFeaturedImageId(null); setFeaturedImageUrl(null); }}>Verwijderen</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="border-2 border-dashed border-border rounded-xl p-10 text-center hover:border-primary/50 transition-colors cursor-pointer bg-secondary/20"
+                      onClick={async () => {
+                        if (!tenantId) return;
+                        const { data } = await supabase.from("media").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false });
+                        setMediaItems((data as Tables<"media">[]) || []);
+                        setMediaPickerOpen(true);
+                      }}
+                    >
+                      <Image className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                      <p className="text-sm font-medium text-foreground mb-1">Kies een afbeelding uit je media</p>
+                      <p className="text-xs text-muted-foreground">of upload eerst via de Media pagina</p>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             </TabsContent>
@@ -410,6 +444,41 @@ export default function CreateEventPage() {
           </div>
         </div>
       </div>
+      {/* Media Picker Dialog */}
+      <Dialog open={mediaPickerOpen} onOpenChange={setMediaPickerOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Kies een afbeelding</DialogTitle>
+          </DialogHeader>
+          {mediaItems.length === 0 ? (
+            <div className="text-center py-8">
+              <Image className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Nog geen media. Upload eerst afbeeldingen via de Media pagina.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {mediaItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setFeaturedImageId(item.id);
+                    setFeaturedImageUrl(item.original_url);
+                    setMediaPickerOpen(false);
+                  }}
+                  className={`relative rounded-lg border-2 overflow-hidden aspect-square transition-colors ${featuredImageId === item.id ? "border-primary" : "border-border hover:border-primary/50"}`}
+                >
+                  <img src={item.original_url || ""} alt={item.alt_text || item.filename} className="w-full h-full object-cover" />
+                  {featuredImageId === item.id && (
+                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                      <Check className="w-6 h-6 text-primary" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

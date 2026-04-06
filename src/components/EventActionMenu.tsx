@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { logAudit } from "@/lib/audit";
+import { useTenant } from "@/hooks/useTenant";
 
 interface EventActionMenuProps {
   eventId: string;
@@ -21,9 +23,9 @@ interface EventActionMenuProps {
 
 export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefresh }: EventActionMenuProps) {
   const navigate = useNavigate();
+  const { tenantId } = useTenant();
 
   async function duplicateEvent() {
-    // Fetch the original event
     const { data: original, error: fetchErr } = await supabase
       .from("events")
       .select("*")
@@ -35,7 +37,6 @@ export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefr
       return;
     }
 
-    // Create a copy with new slug, draft status
     const newSlug = original.slug + "-kopie-" + Date.now().toString(36);
     const { error } = await supabase.from("events").insert({
       tenant_id: original.tenant_id,
@@ -68,6 +69,7 @@ export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefr
       toast.error("Dupliceren mislukt: " + error.message);
     } else {
       toast.success(`"${eventTitle}" gedupliceerd als concept`);
+      if (tenantId) logAudit({ tenantId, entityType: "event", action: "duplicated", entityId: eventId });
       onRefresh?.();
     }
   }
@@ -79,6 +81,7 @@ export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefr
       .eq("id", eventId);
     if (error) { toast.error(error.message); return; }
     toast.success(`"${eventTitle}" gearchiveerd`);
+    if (tenantId) logAudit({ tenantId, entityType: "event", action: "archived", entityId: eventId });
     onRefresh?.();
   }
 
@@ -89,6 +92,7 @@ export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefr
       .eq("id", eventId);
     if (error) { toast.error(error.message); return; }
     toast.success(`"${eventTitle}" verwijderd`);
+    if (tenantId) logAudit({ tenantId, entityType: "event", action: "deleted", entityId: eventId, metadata: { title: eventTitle } });
     onRefresh?.();
   }
 
