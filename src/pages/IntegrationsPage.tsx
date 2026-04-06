@@ -54,7 +54,7 @@ export default function IntegrationsPage() {
             <div className="p-6">
               <div className="flex items-start gap-4">
                 <div className={`w-12 h-12 rounded-xl ${int.gradient || "bg-secondary"} flex items-center justify-center shrink-0`}>
-                  {typeof int.icon === "function" ? <int.icon /> : <int.icon className="w-6 h-6 text-primary-foreground" />}
+                  <int.icon className="w-6 h-6 text-primary-foreground" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
