@@ -125,6 +125,7 @@ export default function CreateEventPage() {
       social_share_text: socialText || null,
       is_recurring: isRecurring,
       publish_at: publishAt || null,
+      featured_image_id: featuredImageId,
       status,
       tenant_id: tenantId!,
       created_by: user?.id || null,
@@ -150,6 +151,7 @@ export default function CreateEventPage() {
       toast.error("Opslaan mislukt: " + error.message);
     } else {
       toast.success("Concept opgeslagen");
+      logAudit({ tenantId, entityType: "event", action: isEditing ? "updated" : "created", entityId: id });
       if (!isEditing) navigate("/app/events");
     }
   }
