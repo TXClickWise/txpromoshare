@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Send, Sparkles, Clock, MapPin, CalendarDays, Image, Share2, Repeat, CalendarClock, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Eye, Send, Sparkles, Clock, MapPin, CalendarDays, Image, Share2, Repeat, CalendarClock, Trash2, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
@@ -10,10 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
+import { logAudit } from "@/lib/audit";
+import type { Tables } from "@/integrations/supabase/types";
 
 const categories = Object.entries(t.events.categories);
 
