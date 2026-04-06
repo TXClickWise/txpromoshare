@@ -47,6 +47,9 @@ export function EmptyState({ icon: Icon, title, description, actionLabel, action
             <Button variant="outline">{secondaryLabel}</Button>
           </Link>
         )}
+        {secondaryLabel && onSecondaryAction && (
+          <Button variant="outline" onClick={onSecondaryAction}>{secondaryLabel}</Button>
+        )}
       </div>
     </motion.div>
   );
