@@ -25,7 +25,9 @@ export default function WidgetsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState<WidgetType>("agenda");
+  const [newEventId, setNewEventId] = useState("");
   const [creating, setCreating] = useState(false);
+  const [events, setEvents] = useState<{ id: string; title: string; status: string }[]>([]);
 
   async function fetchWidgets() {
     if (!tenantId) return;
@@ -38,16 +40,33 @@ export default function WidgetsPage() {
     setLoading(false);
   }
 
-  useEffect(() => { fetchWidgets(); }, [tenantId]);
+  async function fetchEvents() {
+    if (!tenantId) return;
+    const { data } = await supabase
+      .from("events")
+      .select("id, title, status")
+      .eq("tenant_id", tenantId)
+      .in("status", ["published", "scheduled", "draft"])
+      .order("start_date", { ascending: false });
+    setEvents(data || []);
+  }
+
+  useEffect(() => { fetchWidgets(); fetchEvents(); }, [tenantId]);
 
   async function createWidget() {
     if (!tenantId || !newName.trim()) return;
+    if (newType === "single_event" && !newEventId) {
+      toast.error("Selecteer een evenement voor een Enkel Event widget");
+      return;
+    }
     setCreating(true);
+    const config: any = { theme: "light" };
+    if (newType === "single_event") config.event_id = newEventId;
     const { error } = await supabase.from("widgets").insert({
       tenant_id: tenantId,
       name: newName.trim(),
       type: newType,
-      config: { theme: "light" },
+      config,
     });
     setCreating(false);
     if (error) {
@@ -55,6 +74,7 @@ export default function WidgetsPage() {
     } else {
       toast.success("Widget aangemaakt");
       setNewName("");
+      setNewEventId("");
       setDialogOpen(false);
       fetchWidgets();
     }
@@ -118,7 +138,7 @@ export default function WidgetsPage() {
               </div>
               <div className="space-y-2">
                 <Label>Type</Label>
-                <Select value={newType} onValueChange={(v) => setNewType(v as WidgetType)}>
+                <Select value={newType} onValueChange={(v) => { setNewType(v as WidgetType); setNewEventId(""); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="agenda">{t.widgets.agenda}</SelectItem>
@@ -126,6 +146,19 @@ export default function WidgetsPage() {
                   </SelectContent>
                 </Select>
               </div>
+              {newType === "single_event" && (
+                <div className="space-y-2">
+                  <Label>Welk evenement?</Label>
+                  <Select value={newEventId} onValueChange={setNewEventId}>
+                    <SelectTrigger><SelectValue placeholder="Kies een evenement" /></SelectTrigger>
+                    <SelectContent>
+                      {events.map((ev) => (
+                        <SelectItem key={ev.id} value={ev.id}>{ev.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <Button onClick={createWidget} disabled={creating || !newName.trim()} className="w-full">
                 {creating ? "Aanmaken..." : "Aanmaken"}
               </Button>

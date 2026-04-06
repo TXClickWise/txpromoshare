@@ -47,7 +47,7 @@ serve(async (req) => {
 
     let query = supabase
       .from("events")
-      .select("id, title, subtitle, slug, start_date, start_time, end_date, end_time, short_description, status, cta_link, cta_button_text")
+      .select("id, title, subtitle, slug, start_date, start_time, end_date, end_time, short_description, status, cta_link, cta_button_text, featured_image_id")
       .eq("tenant_id", tenantId)
       .eq("status", "published")
       .order("start_date", { ascending: true })
@@ -61,6 +61,26 @@ serve(async (req) => {
 
     const { data: events } = await query;
 
+    // Fetch featured images for events that have them
+    const imageIds = (events || []).map((e: any) => e.featured_image_id).filter(Boolean);
+    let imageMap: Record<string, string> = {};
+    if (imageIds.length > 0) {
+      const { data: mediaRows } = await supabase
+        .from("media")
+        .select("id, original_url")
+        .in("id", imageIds);
+      if (mediaRows) {
+        for (const m of mediaRows) {
+          if (m.original_url) imageMap[m.id] = m.original_url;
+        }
+      }
+    }
+    // Attach image URLs to events
+    const eventsWithImages = (events || []).map((e: any) => ({
+      ...e,
+      featured_image_url: e.featured_image_id ? imageMap[e.featured_image_id] || null : null,
+    }));
+
     const payload = {
       widget: { id: widget.id, type: widget.type, name: widget.name, config: widget.config },
       tenant: {
@@ -69,7 +89,7 @@ serve(async (req) => {
         secondaryColor: tenant?.secondary_color || "#2A9D8F",
         slug: tenant?.slug,
       },
-      events: events || [],
+      events: eventsWithImages,
     };
 
     if (format === "json") {

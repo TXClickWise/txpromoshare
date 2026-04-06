@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Send, Sparkles, Clock, MapPin, CalendarDays, Image, Share2, Repeat, CalendarClock, Trash2, Check, Upload } from "lucide-react";
+import { ArrowLeft, Save, Eye, Send, Sparkles, Clock, MapPin, CalendarDays, Image, Share2, Repeat, CalendarClock, Trash2, Check, Upload, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
@@ -66,6 +66,10 @@ export default function CreateEventPage() {
   const [whatsappText, setWhatsappText] = useState("");
   const [socialText, setSocialText] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringFreq, setRecurringFreq] = useState("weekly");
+  const [recurringInterval, setRecurringInterval] = useState(1);
+  const [recurringDays, setRecurringDays] = useState<number[]>([]);
+  const [recurringEndDate, setRecurringEndDate] = useState("");
   const [publishAt, setPublishAt] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEditing);
@@ -76,6 +80,8 @@ export default function CreateEventPage() {
   const [mediaLoading, setMediaLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [sponsors, setSponsors] = useState<{ name: string; logo_url: string; website_url: string }[]>([]);
+  const [sponsorsLoading, setSponsorsLoading] = useState(false);
 
   // Load existing event when editing
   useEffect(() => {
@@ -106,6 +112,9 @@ export default function CreateEventPage() {
           const { data: img } = await supabase.from("media").select("original_url").eq("id", data.featured_image_id).maybeSingle();
           if (img) setFeaturedImageUrl(img.original_url);
         }
+        // Load sponsors
+        const { data: spData } = await supabase.from("event_sponsors").select("*").eq("event_id", data.id).order("sort_order");
+        if (spData) setSponsors(spData.map(s => ({ name: s.name, logo_url: s.logo_url || "", website_url: s.website_url || "" })));
       }
       setLoading(false);
     });
@@ -186,6 +195,23 @@ export default function CreateEventPage() {
     };
   }
 
+  async function saveSponsors(eventId: string) {
+    // Delete existing, then re-insert
+    await supabase.from("event_sponsors").delete().eq("event_id", eventId);
+    const validSponsors = sponsors.filter(s => s.name.trim());
+    if (validSponsors.length > 0) {
+      await supabase.from("event_sponsors").insert(
+        validSponsors.map((s, i) => ({
+          event_id: eventId,
+          name: s.name.trim(),
+          logo_url: s.logo_url || null,
+          website_url: s.website_url || null,
+          sort_order: i,
+        }))
+      );
+    }
+  }
+
   async function handleSave() {
     if (!tenantId || !title || !startDate || !startTime) {
       toast.error("Vul minimaal titel, datum en tijd in");
@@ -194,18 +220,22 @@ export default function CreateEventPage() {
     setSaving(true);
     const data = buildEventData("draft");
     let error;
+    let eventId = id;
     if (isEditing) {
       const { tenant_id, created_by, ...updateData } = data;
       ({ error } = await supabase.from("events").update(updateData).eq("id", id!));
     } else {
-      ({ error } = await supabase.from("events").insert(data));
+      const res = await supabase.from("events").insert(data).select("id").single();
+      error = res.error;
+      eventId = res.data?.id;
     }
+    if (!error && eventId) await saveSponsors(eventId);
     setSaving(false);
     if (error) {
       toast.error("Opslaan mislukt: " + error.message);
     } else {
       toast.success("Concept opgeslagen");
-      logAudit({ tenantId, entityType: "event", action: isEditing ? "updated" : "created", entityId: id });
+      logAudit({ tenantId, entityType: "event", action: isEditing ? "updated" : "created", entityId: eventId });
       if (!isEditing) navigate("/app/events");
     }
   }
@@ -216,22 +246,25 @@ export default function CreateEventPage() {
       return;
     }
     setSaving(true);
-    // If publishAt is set, schedule; otherwise publish immediately
     const status = publishAt ? "scheduled" : "published";
     const data = buildEventData(status);
     let error;
+    let eventId = id;
     if (isEditing) {
       const { tenant_id, created_by, ...updateData } = data;
       ({ error } = await supabase.from("events").update(updateData).eq("id", id!));
     } else {
-      ({ error } = await supabase.from("events").insert(data));
+      const res = await supabase.from("events").insert(data).select("id").single();
+      error = res.error;
+      eventId = res.data?.id;
     }
+    if (!error && eventId) await saveSponsors(eventId);
     setSaving(false);
     if (error) {
       toast.error("Publiceren mislukt: " + error.message);
     } else {
       toast.success(status === "scheduled" ? "Evenement ingepland! 📅" : "Evenement gepubliceerd! 🎉");
-      logAudit({ tenantId, entityType: "event", action: status === "scheduled" ? "scheduled" : "published", entityId: id });
+      logAudit({ tenantId, entityType: "event", action: status === "scheduled" ? "scheduled" : "published", entityId: eventId });
       navigate("/app/events");
     }
   }
@@ -374,7 +407,8 @@ export default function CreateEventPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.tags}</Label>
-                  <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="Tags gescheiden door komma's" />
+                  <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="bijv. live-muziek, DJ, 80s, retro" />
+                  <p className="text-[11px] text-muted-foreground">Voer tags in gescheiden door komma's, zonder # teken. Bijv: <span className="font-mono bg-secondary px-1 rounded">live-muziek, DJ, feest</span></p>
                 </div>
               </motion.div>
             </TabsContent>
@@ -403,6 +437,26 @@ export default function CreateEventPage() {
                       <p className="text-xs text-muted-foreground">Selecteer uit je mediabibliotheek of upload direct</p>
                     </div>
                   )}
+                </div>
+
+                {/* Sponsors section */}
+                <div className="space-y-3">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Sponsoren & Partners</Label>
+                  {sponsors.map((sp, i) => (
+                    <div key={i} className="grid grid-cols-3 gap-2 items-end">
+                      <Input value={sp.name} onChange={(e) => { const u = [...sponsors]; u[i].name = e.target.value; setSponsors(u); }} placeholder="Naam sponsor" />
+                      <Input value={sp.website_url} onChange={(e) => { const u = [...sponsors]; u[i].website_url = e.target.value; setSponsors(u); }} placeholder="https://website.nl" />
+                      <div className="flex gap-1">
+                        <Input value={sp.logo_url} onChange={(e) => { const u = [...sponsors]; u[i].logo_url = e.target.value; setSponsors(u); }} placeholder="Logo URL (optioneel)" className="flex-1" />
+                        <Button variant="outline" size="sm" onClick={() => setSponsors(sponsors.filter((_, j) => j !== i))} className="text-destructive shrink-0">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" onClick={() => setSponsors([...sponsors, { name: "", logo_url: "", website_url: "" }])} className="gap-2">
+                    <Plus className="w-3.5 h-3.5" />Sponsor toevoegen
+                  </Button>
                 </div>
               </motion.div>
             </TabsContent>
@@ -450,6 +504,50 @@ export default function CreateEventPage() {
                     </div>
                     <Switch checked={isRecurring} onCheckedChange={setIsRecurring} />
                   </div>
+                  {isRecurring && (
+                    <div className="space-y-4 pt-2 border-t border-border">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Frequentie</Label>
+                          <Select value={recurringFreq} onValueChange={setRecurringFreq}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="daily">Dagelijks</SelectItem>
+                              <SelectItem value="weekly">Wekelijks</SelectItem>
+                              <SelectItem value="biweekly">Om de 2 weken</SelectItem>
+                              <SelectItem value="monthly">Maandelijks</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Elke X keer</Label>
+                          <Input type="number" min={1} max={12} value={recurringInterval} onChange={(e) => setRecurringInterval(Number(e.target.value))} />
+                        </div>
+                      </div>
+                      {recurringFreq === "weekly" && (
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Op welke dag(en)</Label>
+                          <div className="flex gap-1 flex-wrap">
+                            {["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"].map((day, i) => (
+                              <button
+                                key={day}
+                                type="button"
+                                onClick={() => setRecurringDays(prev => prev.includes(i + 1) ? prev.filter(d => d !== i + 1) : [...prev, i + 1])}
+                                className={`w-9 h-9 rounded-lg text-xs font-medium transition-colors ${recurringDays.includes(i + 1) ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80"}`}
+                              >
+                                {day}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Eindigt na datum (optioneel)</Label>
+                        <Input type="date" value={recurringEndDate} onChange={(e) => setRecurringEndDate(e.target.value)} />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">Herhalingen worden automatisch aangemaakt op basis van dit schema.</p>
+                    </div>
+                  )}
                 </div>
                 <div className="rounded-xl bg-card border border-border p-5 space-y-3">
                   <div className="flex items-center gap-3">

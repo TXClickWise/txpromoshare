@@ -35,11 +35,11 @@ export default function PublicEventPage() {
   const [relatedEvents, setRelatedEvents] = useState<Tables<"events">[]>([]);
   const [loading, setLoading] = useState(true);
   const [sponsors, setSponsors] = useState<Tables<"event_sponsors">[]>([]);
+  const [featuredImageUrl, setFeaturedImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
-      // Fetch event by slug (anon can see published events)
       const { data: ev } = await supabase
         .from("events")
         .select("*")
@@ -50,7 +50,6 @@ export default function PublicEventPage() {
       if (!ev) { setLoading(false); return; }
       setEvent(ev);
 
-      // Fetch venue, sponsors, related in parallel
       const [venueRes, sponsorsRes, relatedRes] = await Promise.all([
         ev.venue_id ? supabase.from("venues").select("*").eq("id", ev.venue_id).maybeSingle() : { data: null },
         supabase.from("event_sponsors").select("*").eq("event_id", ev.id).order("sort_order"),
@@ -59,6 +58,13 @@ export default function PublicEventPage() {
       setVenue(venueRes.data);
       setSponsors(sponsorsRes.data ?? []);
       setRelatedEvents(relatedRes.data ?? []);
+
+      // Fetch featured image
+      if (ev.featured_image_id) {
+        const { data: img } = await supabase.from("media").select("original_url").eq("id", ev.featured_image_id).maybeSingle();
+        if (img?.original_url) setFeaturedImageUrl(img.original_url);
+      }
+
       setLoading(false);
     }
     load();
@@ -95,7 +101,7 @@ export default function PublicEventPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const heroImg = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop";
+  const heroImg = featuredImageUrl || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop";
 
   return (
     <div className="min-h-screen bg-background">
