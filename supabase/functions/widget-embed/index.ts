@@ -89,7 +89,7 @@ serve(async (req) => {
         secondaryColor: tenant?.secondary_color || "#2A9D8F",
         slug: tenant?.slug,
       },
-      events: events || [],
+      events: eventsWithImages,
     };
 
     if (format === "json") {
