@@ -27,32 +27,29 @@ export const EmailChangeEmail = ({
   newEmail,
   confirmationUrl,
 }: EmailChangeEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="nl" dir="ltr">
     <Head />
-    <Preview>Confirm your email change for {siteName}</Preview>
+    <Preview>Bevestig je e-mailadres wijziging voor {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm your email change</Heading>
+        <div style={logoWrap}>
+          <div style={logo}>TX</div>
+        </div>
+        <Heading style={h1}>E-mailadres wijziging bevestigen</Heading>
         <Text style={text}>
-          You requested to change your email address for {siteName} from{' '}
-          <Link href={`mailto:${email}`} style={link}>
-            {email}
-          </Link>{' '}
-          to{' '}
-          <Link href={`mailto:${newEmail}`} style={link}>
-            {newEmail}
-          </Link>
-          .
+          Je hebt een wijziging aangevraagd van je e-mailadres voor {siteName} van{' '}
+          <Link href={`mailto:${email}`} style={link}>{email}</Link>{' '}
+          naar{' '}
+          <Link href={`mailto:${newEmail}`} style={link}>{newEmail}</Link>.
         </Text>
         <Text style={text}>
-          Click the button below to confirm this change:
+          Klik op de knop hieronder om deze wijziging te bevestigen:
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Confirm Email Change
+          E-mailadres bevestigen
         </Button>
         <Text style={footer}>
-          If you didn't request this change, please secure your account
-          immediately.
+          Als je deze wijziging niet hebt aangevraagd, beveilig dan direct je account.
         </Text>
       </Container>
     </Body>
@@ -61,27 +58,43 @@ export const EmailChangeEmail = ({
 
 export default EmailChangeEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const main = { backgroundColor: '#ffffff', fontFamily: "'DM Sans', Arial, sans-serif" }
+const container = { padding: '40px 25px' }
+const logoWrap = { textAlign: 'center' as const, marginBottom: '24px' }
+const logo = {
+  display: 'inline-block',
+  width: '48px',
+  height: '48px',
+  lineHeight: '48px',
+  textAlign: 'center' as const,
+  borderRadius: '12px',
+  background: 'linear-gradient(135deg, #e8710a, #d4650a)',
+  color: '#ffffff',
+  fontFamily: "'Space Grotesk', Arial, sans-serif",
+  fontWeight: 'bold' as const,
+  fontSize: '18px',
+}
 const h1 = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
-  color: '#000000',
+  color: '#1a1a2e',
   margin: '0 0 20px',
+  fontFamily: "'Space Grotesk', Arial, sans-serif",
 }
 const text = {
   fontSize: '14px',
   color: '#55575d',
-  lineHeight: '1.5',
+  lineHeight: '1.6',
   margin: '0 0 25px',
 }
-const link = { color: 'inherit', textDecoration: 'underline' }
+const link = { color: '#e8710a', textDecoration: 'underline' }
 const button = {
-  backgroundColor: '#000000',
+  backgroundColor: '#e8710a',
   color: '#ffffff',
   fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
+  fontWeight: 'bold' as const,
+  borderRadius: '12px',
+  padding: '14px 24px',
   textDecoration: 'none',
 }
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
