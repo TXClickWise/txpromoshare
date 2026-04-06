@@ -74,6 +74,7 @@ export const planLimits: Record<PlanId, PlanLimits> = {
     distributionCenter: true,
     freeBoostsPerMonth: 2,
   },
+};
 
 // Future ticketing module types (architecture only)
 export interface TicketType {
