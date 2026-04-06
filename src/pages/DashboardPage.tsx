@@ -1,4 +1,4 @@
-import { Calendar, Eye, TrendingUp, Plus, ArrowRight, Share2, Code2, Layers, Zap, Clock, Copy } from "lucide-react";
+import { Calendar, Eye, TrendingUp, Plus, ArrowRight, Share2, Code2, Zap, Clock, Copy } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
@@ -6,9 +6,9 @@ import { mockEvents } from "@/lib/mock-data";
 import { EventStatusBadge } from "@/components/EventStatusBadge";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { QuickActionCard } from "@/components/QuickActionCard";
-import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { EventActionMenu } from "@/components/EventActionMenu";
-import { toast } from "sonner";
+import { UsageMeter } from "@/components/UsageMeter";
+import { usePlan } from "@/hooks/usePlan";
 
 const statCards = [
   { label: t.dashboard.activeEvents, value: "3", icon: Calendar, color: "gradient-hero", change: "+1 deze week" },
@@ -24,13 +24,16 @@ const quickActions = [
 ];
 
 export default function DashboardPage() {
+  const { planId, upgradePlan } = usePlan();
+  const planLabel = planId.charAt(0).toUpperCase() + planId.slice(1);
+
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground">{t.dashboard.welcome}, Jan 👋</h1>
-          <p className="text-muted-foreground text-sm mt-1">Café De Kroeg · Basic plan</p>
+          <p className="text-muted-foreground text-sm mt-1">Café De Kroeg · {planLabel} plan</p>
         </div>
         <Link to="/app/events/new" className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity shadow-glow">
           <Plus className="w-4 h-4" />
@@ -115,6 +118,14 @@ export default function DashboardPage() {
 
         {/* Sidebar */}
         <div className="lg:col-span-2 space-y-4">
+          {/* Usage meters */}
+          <div className="rounded-xl bg-card border border-border shadow-card p-4 space-y-4">
+            <h3 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider">Gebruik</h3>
+            <UsageMeter metric="events" current={3} label="Actieve evenementen" />
+            <UsageMeter metric="widgets" current={1} label="Widgets" />
+            <UsageMeter metric="team" current={2} label="Teamleden" />
+          </div>
+
           {/* Activity feed */}
           <div className="rounded-xl bg-card border border-border shadow-card p-4">
             <h3 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider mb-3">Recente activiteit</h3>
@@ -135,8 +146,21 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Upgrade prompt */}
-          <UpgradeBanner feature="Onbeperkt evenementen & geavanceerde analytics" plan="Pro" />
+          {/* Upgrade prompt - only if not on pro */}
+          {upgradePlan && (
+            <Link to="/app/billing" className="block rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/15 p-4 hover:border-primary/30 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg gradient-hero flex items-center justify-center shrink-0">
+                  <Zap className="w-4 h-4 text-primary-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Upgrade naar {upgradePlan.charAt(0).toUpperCase() + upgradePlan.slice(1)}</p>
+                  <p className="text-xs text-muted-foreground">Ontgrendel meer evenementen, widgets en features</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-primary ml-auto shrink-0" />
+              </div>
+            </Link>
+          )}
 
           {/* Quick tip */}
           <div className="rounded-xl bg-secondary/50 border border-border p-4">
