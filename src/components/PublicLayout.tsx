@@ -5,8 +5,10 @@ import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
+  { to: "/event-agenda-software", label: "Features", hash: false },
   { to: "/#hoe-het-werkt", label: "Hoe het werkt", hash: true },
   { to: "/pricing", label: "Prijzen", hash: false },
+  { to: "/demo", label: "Demo", hash: false },
 ];
 
 export default function PublicLayout() {

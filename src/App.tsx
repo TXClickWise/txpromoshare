@@ -25,6 +25,14 @@ import BillingPage from "@/pages/BillingPage";
 import PublicEventPage from "@/pages/PublicEventPage";
 import NotFound from "@/pages/NotFound";
 
+// SEO landing pages
+import EventAgendaSoftwarePage from "@/pages/seo/EventAgendaSoftwarePage";
+import AgendaWidgetWebsitePage from "@/pages/seo/AgendaWidgetWebsitePage";
+import EventPromotieHorecaPage from "@/pages/seo/EventPromotieHorecaPage";
+import SoftwareVoorKleineEvenementenPage from "@/pages/seo/SoftwareVoorKleineEvenementenPage";
+import ClickWiseIntegratiePage from "@/pages/seo/ClickWiseIntegratiePage";
+import DemoPage from "@/pages/seo/DemoPage";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -39,8 +47,16 @@ const App = () => (
             <Route element={<PublicLayout />}>
               <Route path="/" element={<LandingPage />} />
               <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/demo" element={<DemoPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+
+              {/* SEO landing pages */}
+              <Route path="/event-agenda-software" element={<EventAgendaSoftwarePage />} />
+              <Route path="/agenda-widget-website" element={<AgendaWidgetWebsitePage />} />
+              <Route path="/event-promotie-horeca" element={<EventPromotieHorecaPage />} />
+              <Route path="/software-voor-kleine-evenementen" element={<SoftwareVoorKleineEvenementenPage />} />
+              <Route path="/clickwise-integratie" element={<ClickWiseIntegratiePage />} />
             </Route>
 
             {/* Public event pages */}

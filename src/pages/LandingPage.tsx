@@ -9,6 +9,7 @@ import {
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useSEO, organizationSchema, websiteSchema, softwareSchema, faqSchema } from "@/lib/seo";
 
 /* ────────────────────────── Data ────────────────────────── */
 
@@ -118,6 +119,17 @@ function SectionHeader({ eyebrow, title, subtitle, light = false }: { eyebrow?: 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
+  useSEO({
+    title: "TX PromoShare — Event Promotie Software voor Horeca & Organisatoren",
+    description: "Maak je event één keer aan en verspreid het overal. Event agenda software, embedded widgets, WhatsApp distributie en ClickWise integratie. Het perfecte systeem voor kleinere evenementen.",
+    canonical: "/",
+    jsonLd: [
+      organizationSchema,
+      websiteSchema,
+      softwareSchema,
+      faqSchema(faqs.map(f => ({ question: f.q, answer: f.a }))),
+    ],
+  });
   return (
     <div>
 
