@@ -222,13 +222,45 @@ export default function SettingsPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card border border-border shadow-card p-6 space-y-5">
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Logo</Label>
-              <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 cursor-pointer transition-colors bg-secondary/20">
-                <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
-                  <Building2 className="w-7 h-7 text-muted-foreground/30" />
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/png,image/svg+xml,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(e) => handleLogoUpload(e.target.files)}
+              />
+              {logoUrl ? (
+                <div className="relative border-2 border-dashed border-border rounded-xl p-4 bg-secondary/20">
+                  <div className="aspect-square max-w-[200px] mx-auto">
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                  </div>
+                  <div className="flex justify-center gap-2 mt-3">
+                    <Button variant="outline" size="sm" onClick={() => logoInputRef.current?.click()} disabled={logoUploading} className="gap-2">
+                      <Upload className="w-3.5 h-3.5" />Wijzigen
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-destructive" onClick={async () => {
+                      if (!tenant) return;
+                      await supabase.from("tenants").update({ logo_url: null }).eq("id", tenant.id);
+                      setLogoUrl(null);
+                      refetch();
+                      toast.success("Logo verwijderd");
+                    }}>
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
                 </div>
-                <p className="text-sm font-medium text-foreground">Upload je logo</p>
-                <p className="text-xs text-muted-foreground mt-1">PNG of SVG, minimaal 200x200px</p>
-              </div>
+              ) : (
+                <div
+                  className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 cursor-pointer transition-colors bg-secondary/20"
+                  onClick={() => logoInputRef.current?.click()}
+                >
+                  <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
+                    <Building2 className="w-7 h-7 text-muted-foreground/30" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">{logoUploading ? "Uploaden..." : "Upload je logo"}</p>
+                  <p className="text-xs text-muted-foreground mt-1">PNG, SVG of JPG, minimaal 200x200px</p>
+                </div>
+              )}
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
