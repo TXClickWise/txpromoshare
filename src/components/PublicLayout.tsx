@@ -33,7 +33,7 @@ export default function PublicLayout() {
             <div className="w-8 h-8 rounded-lg gradient-hero flex items-center justify-center">
               <span className="text-primary-foreground font-display font-bold text-sm">TX</span>
             </div>
-            <span className="font-display font-bold text-lg text-foreground">PromoShare</span>
+            <span className="font-display font-bold text-lg text-foreground">EventShare</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">

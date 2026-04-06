@@ -715,7 +715,7 @@ export default function LandingPage() {
                 <div className="w-8 h-8 rounded-lg gradient-hero flex items-center justify-center">
                   <span className="text-primary-foreground font-display font-bold text-sm">TX</span>
                 </div>
-                <span className="font-display font-bold text-lg text-foreground">PromoShare</span>
+                <span className="font-display font-bold text-lg text-foreground">EventShare</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed mb-3">
                 Het slimste event promotie platform voor horeca en organisatoren in Nederland.
