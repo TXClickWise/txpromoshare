@@ -159,7 +159,7 @@ export default function LandingPage() {
 
               <div className="flex flex-col sm:flex-row gap-3 mb-6">
                 <Link to="/register" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl gradient-hero text-primary-foreground font-semibold hover:opacity-90 transition-opacity shadow-glow">
-                  Vraag demo aan <ArrowRight className="w-5 h-5" />
+                  Start gratis <ArrowRight className="w-5 h-5" />
                 </Link>
                 <a href="#hoe-het-werkt" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-secondary text-secondary-foreground font-semibold hover:bg-secondary/80 transition-colors">
                   Bekijk hoe het werkt <ChevronDown className="w-4 h-4" />
