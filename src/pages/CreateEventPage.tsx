@@ -414,6 +414,26 @@ export default function CreateEventPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Sponsors section */}
+                <div className="space-y-3">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Sponsoren & Partners</Label>
+                  {sponsors.map((sp, i) => (
+                    <div key={i} className="grid grid-cols-3 gap-2 items-end">
+                      <Input value={sp.name} onChange={(e) => { const u = [...sponsors]; u[i].name = e.target.value; setSponsors(u); }} placeholder="Naam sponsor" />
+                      <Input value={sp.website_url} onChange={(e) => { const u = [...sponsors]; u[i].website_url = e.target.value; setSponsors(u); }} placeholder="https://website.nl" />
+                      <div className="flex gap-1">
+                        <Input value={sp.logo_url} onChange={(e) => { const u = [...sponsors]; u[i].logo_url = e.target.value; setSponsors(u); }} placeholder="Logo URL (optioneel)" className="flex-1" />
+                        <Button variant="outline" size="sm" onClick={() => setSponsors(sponsors.filter((_, j) => j !== i))} className="text-destructive shrink-0">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" onClick={() => setSponsors([...sponsors, { name: "", logo_url: "", website_url: "" }])} className="gap-2">
+                    <Plus className="w-3.5 h-3.5" />Sponsor toevoegen
+                  </Button>
+                </div>
               </motion.div>
             </TabsContent>
 
