@@ -10,7 +10,7 @@ const CLICKWISE_OWN_SUBACCOUNT_ID = Deno.env.get("CLICKWISE_OWN_SUBACCOUNT_ID");
 /**
  * clickwise-tenant-sync
  * 
- * Syncs tenant (customer) data to the TX PromoShare platform owner's 
+ * Syncs tenant (customer) data to the TX EventShare platform owner's 
  * own ClickWise/GHL sub-account as a contact. This enables the platform
  * owner to use ClickWise for marketing to their own customers.
  * 

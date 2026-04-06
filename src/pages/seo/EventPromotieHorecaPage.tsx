@@ -4,9 +4,9 @@ import { ArrowRight, Check, Utensils, Music, Wine, PartyPopper, Palmtree, Buildi
 import { useSEO, breadcrumbSchema, faqSchema } from "@/lib/seo";
 
 const faqs = [
-  { question: "Is TX PromoShare geschikt voor kleine horeca events?", answer: "Absoluut. TX PromoShare is speciaal gebouwd voor evenementen van 10 tot 3.000 bezoekers — precies de schaal waarop de meeste horeca events plaatsvinden." },
-  { question: "Kan ik events promoten via WhatsApp?", answer: "Ja. Vanuit TX PromoShare kun je direct voorbereide deelteksten kopiëren en via WhatsApp versturen naar je netwerk." },
-  { question: "Werkt dit voor terugkerende events zoals weekelijkse quizavonden?", answer: "Ja. Je stelt het event één keer in en TX PromoShare herhaalt het automatisch. Na de eindtijd wordt het event automatisch gedeactiveerd." },
+  { question: "Is TX EventShare geschikt voor kleine horeca events?", answer: "Absoluut. TX EventShare is speciaal gebouwd voor evenementen van 10 tot 3.000 bezoekers — precies de schaal waarop de meeste horeca events plaatsvinden." },
+  { question: "Kan ik events promoten via WhatsApp?", answer: "Ja. Vanuit TX EventShare kun je direct voorbereide deelteksten kopiëren en via WhatsApp versturen naar je netwerk." },
+  { question: "Werkt dit voor terugkerende events zoals weekelijkse quizavonden?", answer: "Ja. Je stelt het event één keer in en TX EventShare herhaalt het automatisch. Na de eindtijd wordt het event automatisch gedeactiveerd." },
   { question: "Kunnen mijn teamleden ook events beheren?", answer: "Ja. Je kunt collega's uitnodigen met specifieke rollen zodat iedereen kan bijdragen zonder dat je de controle verliest." },
   { question: "Kan ik de agenda op mijn website plaatsen?", answer: "Ja, met de embedded agenda widget. Kopieer de code, plak het op je site en je agenda is altijd automatisch up-to-date." },
 ];
@@ -16,7 +16,7 @@ const useCases = [
   { icon: Utensils, title: "Restaurants", desc: "Proeverijen, seizoensdiners en speciale avonden presenteer je met stijlvolle eventpagina's.", features: ["Branded eventpagina's", "Eigen huisstijl", "Social sharing"] },
   { icon: Palmtree, title: "Beach clubs", desc: "Zomerse events en festivals bereiken je publiek direct via website, socials en WhatsApp.", features: ["Distributie centrum", "Templates", "Meerdere kanalen"] },
   { icon: Music, title: "Poppodia", desc: "Beheer je programmering centraal en toon het automatisch op je website en socials.", features: ["Agenda widget", "Event templates", "Team samenwerking"] },
-  { icon: PartyPopper, title: "Eventorganisaties", desc: "Meerdere events tegelijk? TX PromoShare geeft je overzicht en snelheid.", features: ["Onbeperkt events (Pro)", "Team rollen", "ClickWise integratie"] },
+  { icon: PartyPopper, title: "Eventorganisaties", desc: "Meerdere events tegelijk? TX EventShare geeft je overzicht en snelheid.", features: ["Onbeperkt events (Pro)", "Team rollen", "ClickWise integratie"] },
   { icon: Building2, title: "Festivalorganisaties", desc: "Professionele promotie voor festivals van elke omvang, met branded pagina's en distributie.", features: ["Branded pages", "Sponsor sectie", "Geavanceerde distributie"] },
 ];
 
@@ -49,7 +49,7 @@ export default function EventPromotieHorecaPage() {
             Event promotie software voor de horeca
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Promoot je evenementen professioneel — van quizavond tot festival. TX PromoShare helpt cafés, restaurants, bars en venues om events sneller en mooier te verspreiden via website, WhatsApp en social media.
+            Promoot je evenementen professioneel — van quizavond tot festival. TX EventShare helpt cafés, restaurants, bars en venues om events sneller en mooier te verspreiden via website, WhatsApp en social media.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/register" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg gradient-hero text-primary-foreground font-semibold hover:opacity-90">
@@ -86,7 +86,7 @@ export default function EventPromotieHorecaPage() {
             Voor elk type horecabedrijf en organisator
           </h2>
           <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">
-            TX PromoShare werkt voor elk bedrijf dat regelmatig evenementen organiseert en professioneel wil promoten.
+            TX EventShare werkt voor elk bedrijf dat regelmatig evenementen organiseert en professioneel wil promoten.
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {useCases.map((uc, i) => (

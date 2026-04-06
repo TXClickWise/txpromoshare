@@ -4,10 +4,10 @@ import { useSEO, breadcrumbSchema, faqSchema } from "@/lib/seo";
 import { motion } from "framer-motion";
 
 const faqs = [
-  { question: "Wat maakt TX PromoShare geschikt voor kleine evenementen?", answer: "TX PromoShare is gebouwd voor events van 10 tot 3.000 bezoekers. Het biedt professionele tools zoals branded eventpagina's, embedded widgets en distributie — zonder de complexiteit van zware enterprise systemen." },
-  { question: "Is dit niet te groot voor een klein café?", answer: "Nee, integendeel. TX PromoShare is bewust simpel gehouden zodat ook een café met wekelijkse quizavonden er direct mee uit de voeten kan. Het groeit mee met je behoeften." },
-  { question: "Kan ik terugkerende events automatiseren?", answer: "Ja. Stel een terugkerend event één keer in en TX PromoShare maakt automatisch nieuwe instanties aan. Na de eindtijd worden events automatisch gedeactiveerd." },
-  { question: "Hoe vergelijkt dit met Eventbrite of Ticketmaster?", answer: "Die platforms zijn primair ticket-georiënteerd. TX PromoShare is agenda-first: gericht op het publiceren en promoten van evenementen. Ticketing komt als optionele uitbreiding." },
+  { question: "Wat maakt TX EventShare geschikt voor kleine evenementen?", answer: "TX EventShare is gebouwd voor events van 10 tot 3.000 bezoekers. Het biedt professionele tools zoals branded eventpagina's, embedded widgets en distributie — zonder de complexiteit van zware enterprise systemen." },
+  { question: "Is dit niet te groot voor een klein café?", answer: "Nee, integendeel. TX EventShare is bewust simpel gehouden zodat ook een café met wekelijkse quizavonden er direct mee uit de voeten kan. Het groeit mee met je behoeften." },
+  { question: "Kan ik terugkerende events automatiseren?", answer: "Ja. Stel een terugkerend event één keer in en TX EventShare maakt automatisch nieuwe instanties aan. Na de eindtijd worden events automatisch gedeactiveerd." },
+  { question: "Hoe vergelijkt dit met Eventbrite of Ticketmaster?", answer: "Die platforms zijn primair ticket-georiënteerd. TX EventShare is agenda-first: gericht op het publiceren en promoten van evenementen. Ticketing komt als optionele uitbreiding." },
   { question: "Wat kost het voor kleine organisatoren?", answer: "Er is een gratis plan waarmee je direct kunt starten. Het Basic plan begint bij €29/maand voor meer events, widgets en branding." },
 ];
 
@@ -40,7 +40,7 @@ export default function SoftwareVoorKleineEvenementenPage() {
             Het professionele systeem dat kleinere events wél verdienen
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Grote platformen zijn te zwaar. Simpele tools zijn te beperkt. TX PromoShare zit precies ertussenin — gebouwd voor evenementen van 10 tot 3.000 bezoekers.
+            Grote platformen zijn te zwaar. Simpele tools zijn te beperkt. TX EventShare zit precies ertussenin — gebouwd voor evenementen van 10 tot 3.000 bezoekers.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/register" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg gradient-hero text-primary-foreground font-semibold hover:opacity-90">
@@ -78,7 +78,7 @@ export default function SoftwareVoorKleineEvenementenPage() {
             </div>
           </div>
           <div className="mt-6 p-6 rounded-xl border border-accent/30 bg-accent/5">
-            <h3 className="font-bold text-foreground mb-3 text-center">✅ TX PromoShare — precies ertussenin</h3>
+            <h3 className="font-bold text-foreground mb-3 text-center">✅ TX EventShare — precies ertussenin</h3>
             <p className="text-sm text-muted-foreground text-center">
               Professionele event promotie zonder enterprise complexiteit. Branded pagina's, embedded widgets, snelle distributie en team samenwerking — gebouwd voor jouw schaal.
             </p>
@@ -156,7 +156,7 @@ export default function SoftwareVoorKleineEvenementenPage() {
 
         <section className="text-center max-w-xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-3">Start vandaag nog gratis</h2>
-          <p className="text-muted-foreground mb-6">Ontdek waarom honderden organisatoren kiezen voor TX PromoShare.</p>
+          <p className="text-muted-foreground mb-6">Ontdek waarom honderden organisatoren kiezen voor TX EventShare.</p>
           <Link to="/register" className="inline-flex items-center gap-2 px-8 py-3 rounded-lg gradient-hero text-primary-foreground font-semibold hover:opacity-90 shadow-glow">
             Gratis starten <ArrowRight className="w-4 h-4" />
           </Link>

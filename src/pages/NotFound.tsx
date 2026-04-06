@@ -7,7 +7,7 @@ const NotFound = () => {
 
   useSEO({
     title: "Pagina Niet Gevonden (404)",
-    description: "Deze pagina bestaat niet. Ga terug naar de homepage van TX PromoShare.",
+    description: "Deze pagina bestaat niet. Ga terug naar de homepage van TX EventShare.",
     noindex: true,
   });
 

@@ -4,10 +4,10 @@ import { ArrowRight, Check, Calendar, Globe, Share2, Zap, Users, Palette } from 
 import { useSEO, breadcrumbSchema, faqSchema, softwareSchema } from "@/lib/seo";
 
 const faqs = [
-  { question: "Wat is event agenda software?", answer: "Event agenda software helpt je om evenementen centraal te beheren, publiceren en verspreiden. TX PromoShare biedt daarnaast embedded widgets zodat je agenda altijd gesynchroniseerd is met je website." },
-  { question: "Kan ik de agenda op mijn eigen website plaatsen?", answer: "Ja, TX PromoShare biedt een embedded agenda widget die je met een simpele code op elke website kunt plaatsen. De widget past zich aan je huisstijl aan en is altijd automatisch up-to-date." },
-  { question: "Is dit geschikt voor kleine evenementen?", answer: "Absoluut. TX PromoShare is speciaal gebouwd voor evenementen van 10 tot 3.000 bezoekers. Het is het professionele systeem dat kleinere events verdienen." },
-  { question: "Hoe verschilt dit van een Google Calendar?", answer: "TX PromoShare biedt branded eventpagina's, embedded widgets, distributie via WhatsApp en social media, teamrollen, templates en CRM-integratie. Veel meer dan alleen een kalender." },
+  { question: "Wat is event agenda software?", answer: "Event agenda software helpt je om evenementen centraal te beheren, publiceren en verspreiden. TX EventShare biedt daarnaast embedded widgets zodat je agenda altijd gesynchroniseerd is met je website." },
+  { question: "Kan ik de agenda op mijn eigen website plaatsen?", answer: "Ja, TX EventShare biedt een embedded agenda widget die je met een simpele code op elke website kunt plaatsen. De widget past zich aan je huisstijl aan en is altijd automatisch up-to-date." },
+  { question: "Is dit geschikt voor kleine evenementen?", answer: "Absoluut. TX EventShare is speciaal gebouwd voor evenementen van 10 tot 3.000 bezoekers. Het is het professionele systeem dat kleinere events verdienen." },
+  { question: "Hoe verschilt dit van een Google Calendar?", answer: "TX EventShare biedt branded eventpagina's, embedded widgets, distributie via WhatsApp en social media, teamrollen, templates en CRM-integratie. Veel meer dan alleen een kalender." },
   { question: "Werkt het ook voor terugkerende events?", answer: "Ja, je kunt eenvoudig terugkerende evenementen instellen met automatische herhalingen en auto-deactivering na de eindtijd." },
 ];
 
@@ -60,7 +60,7 @@ export default function EventAgendaSoftwarePage() {
             Wat is event agenda software?
           </h2>
           <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-10">
-            Event agenda software is een systeem waarmee je evenementen centraal beheert en automatisch publiceert naar je website, socials en andere kanalen. In plaats van handmatig je website bij te werken, synchroniseert TX PromoShare alles automatisch.
+            Event agenda software is een systeem waarmee je evenementen centraal beheert en automatisch publiceert naar je website, socials en andere kanalen. In plaats van handmatig je website bij te werken, synchroniseert TX EventShare alles automatisch.
           </p>
           <div className="grid md:grid-cols-3 gap-6">
             {[
@@ -81,7 +81,7 @@ export default function EventAgendaSoftwarePage() {
         {/* Features */}
         <section className="max-w-4xl mx-auto mb-20">
           <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-8 text-center">
-            Wat maakt TX PromoShare anders dan standaard agenda tools?
+            Wat maakt TX EventShare anders dan standaard agenda tools?
           </h2>
           <div className="grid md:grid-cols-2 gap-5">
             {[
@@ -109,7 +109,7 @@ export default function EventAgendaSoftwarePage() {
             Voor wie is event agenda software?
           </h2>
           <p className="text-muted-foreground text-center mb-8">
-            TX PromoShare is gebouwd voor iedereen die regelmatig evenementen organiseert en deze professioneel wil promoten.
+            TX EventShare is gebouwd voor iedereen die regelmatig evenementen organiseert en deze professioneel wil promoten.
           </p>
           <ul className="space-y-3 max-w-lg mx-auto">
             {["Cafés en bars met live muziek of thema-avonden", "Restaurants met proeverijen of seizoensevenementen", "Beach clubs met terugkerende events", "Poppodia en muzieklocaties", "Eventbureaus die meerdere locaties beheren", "Festivalorganisaties die snel willen schakelen"].map((item) => (

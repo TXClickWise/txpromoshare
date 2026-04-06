@@ -19,11 +19,11 @@ function formatTime(t: string) {
 
 function useSEO(title: string, description: string) {
   useEffect(() => {
-    document.title = `${title} | TX PromoShare`;
+    document.title = `${title} | TX EventShare`;
     let meta = document.querySelector('meta[name="description"]');
     if (!meta) { meta = document.createElement("meta"); meta.setAttribute("name", "description"); document.head.appendChild(meta); }
     meta.setAttribute("content", description);
-    return () => { document.title = "TX PromoShare"; };
+    return () => { document.title = "TX EventShare"; };
   }, [title, description]);
 }
 
@@ -313,7 +313,7 @@ export default function PublicEventPage() {
 
             <div className="text-center pt-2">
               <p className="text-[10px] text-muted-foreground/50">
-                Gepresenteerd via <span className="font-semibold text-muted-foreground/70">TX PromoShare</span>
+                Gepresenteerd via <span className="font-semibold text-muted-foreground/70">TX EventShare</span>
               </p>
             </div>
           </div>

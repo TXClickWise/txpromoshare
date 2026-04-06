@@ -17,8 +17,8 @@ export default function RegisterPage() {
   const navigate = useNavigate();
 
   useSEO({
-    title: "Gratis Account Aanmaken — Start met TX PromoShare",
-    description: "Maak gratis een TX PromoShare account aan. Begin direct met het beheren en promoten van je evenementen. Geen creditcard nodig.",
+    title: "Gratis Account Aanmaken — Start met TX EventShare",
+    description: "Maak gratis een TX EventShare account aan. Begin direct met het beheren en promoten van je evenementen. Geen creditcard nodig.",
     canonical: "/register",
   });
 
@@ -53,7 +53,7 @@ export default function RegisterPage() {
             <span className="text-primary-foreground font-display font-bold">TX</span>
           </div>
           <h1 className="text-2xl font-display font-bold text-foreground">{t.auth.register}</h1>
-          <p className="text-sm text-muted-foreground mt-1">Start gratis met TX PromoShare</p>
+          <p className="text-sm text-muted-foreground mt-1">Start gratis met TX EventShare</p>
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>

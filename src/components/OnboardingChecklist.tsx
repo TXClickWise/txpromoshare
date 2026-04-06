@@ -79,7 +79,7 @@ export function OnboardingChecklist() {
       >
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h3 className="font-display font-bold text-foreground text-sm">Welkom bij TX PromoShare! 🎉</h3>
+            <h3 className="font-display font-bold text-foreground text-sm">Welkom bij TX EventShare! 🎉</h3>
             <p className="text-xs text-muted-foreground mt-1">Voltooi deze stappen om alles klaar te zetten</p>
           </div>
           <button onClick={handleDismiss} className="p-1 rounded-lg hover:bg-secondary text-muted-foreground">

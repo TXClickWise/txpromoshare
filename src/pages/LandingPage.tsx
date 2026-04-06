@@ -30,7 +30,7 @@ const problems = [
 ];
 
 const benefits = [
-  { icon: Zap, title: "Minder handmatig werk", desc: "Voer je event één keer in. TX PromoShare genereert automatisch share-teksten, widget-content en je eventpagina." },
+  { icon: Zap, title: "Minder handmatig werk", desc: "Voer je event één keer in. TX EventShare genereert automatisch share-teksten, widget-content en je eventpagina." },
   { icon: RefreshCw, title: "Altijd actuele eventinformatie", desc: "Wijzig je event op één plek — je website, widgets en deellinks worden direct bijgewerkt." },
   { icon: Palette, title: "Professionelere uitstraling", desc: "Gebrandede eventpagina's en widgets die passen bij jouw merk. Geen generieke standaardpagina's meer." },
   { icon: TrendingUp, title: "Sneller promoten", desc: "Kant-en-klare teksten voor WhatsApp, social media en e-mail. Kopieer, plak en deel. Klaar." },
@@ -68,7 +68,7 @@ const useCases = [
   { emoji: "🎉", title: "Festivalorganisaties", desc: "Meerdere podia, categorieën en teamleden. Alles op één plek, overal zichtbaar.", value: "Overzicht en controle, ook bij complexe programma's." },
 ];
 
-const comparisonHeaders = ["", "Handmatig werken", "Generiek platform", "TX PromoShare"];
+const comparisonHeaders = ["", "Handmatig werken", "Generiek platform", "TX EventShare"];
 const comparisonRows = [
   { label: "Event aanmaken", manual: "Langzaam", generic: "Oké", tx: "✅ < 5 min" },
   { label: "Website agenda", manual: "Handmatig", generic: "Beperkt", tx: "✅ Automatisch" },
@@ -90,11 +90,11 @@ const plans = [
 ];
 
 const faqs = [
-  { q: "Is TX PromoShare geschikt voor kleine events?", a: "Absoluut. Het platform is specifiek ontworpen voor events van 10 tot 3000 bezoekers. Van een wekelijkse pubquiz tot een stadsfeest — het werkt voor alles daartussenin." },
+  { q: "Is TX EventShare geschikt voor kleine events?", a: "Absoluut. Het platform is specifiek ontworpen voor events van 10 tot 3000 bezoekers. Van een wekelijkse pubquiz tot een stadsfeest — het werkt voor alles daartussenin." },
   { q: "Kan ik de agenda op mijn eigen website plaatsen?", a: "Ja. Je kopieert een klein stukje code en plakt dat op je website. De agenda widget is responsive, altijd automatisch bijgewerkt en past zich aan aan jouw huisstijl." },
   { q: "Werkt het ook voor terugkerende events?", a: "Ja. Je kunt sjablonen maken en events dupliceren met één klik. Ideaal voor wekelijkse live muziek, maandelijkse proeverijen of seizoensgebonden activiteiten." },
   { q: "Kunnen meerdere teamleden ermee werken?", a: "Ja. Je kunt teamleden uitnodigen met verschillende rollen: eigenaar, beheerder, redacteur, marketeer of bekijker. Iedereen werkt vanuit dezelfde actuele informatie." },
-  { q: "Is er een koppeling met ClickWise?", a: "Ja. TX PromoShare integreert native met ClickWise zodat events onderdeel worden van je CRM-workflows, marketing automation en opvolging." },
+  { q: "Is er een koppeling met ClickWise?", a: "Ja. TX EventShare integreert native met ClickWise zodat events onderdeel worden van je CRM-workflows, marketing automation en opvolging." },
   { q: "Komt ticketverkoop later beschikbaar?", a: "Ja. Ticketing wordt ontwikkeld als add-on module voor Pro plan gebruikers. Inclusief QR-scanning, betalingen via Stripe/Mollie en bezoekersbeheer." },
   { q: "Is dit alleen voor horeca of ook voor eventorganisaties?", a: "Beide. Het platform schaalt van een klein café met 3 events per maand tot een professionele organisatie met tientallen evenementen, meerdere locaties en een volledig team." },
 ];
@@ -120,7 +120,7 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useSEO({
-    title: "Event Promotie Software voor Horeca & Organisatoren | TX PromoShare",
+    title: "Event Promotie Software voor Horeca & Organisatoren | TX EventShare",
     description: "Maak je event één keer aan en verspreid het direct naar je website, socials en WhatsApp. Agenda software met embedded widgets, branded eventpagina's en ClickWise integratie. Gratis starten.",
     canonical: "/",
     jsonLd: [
@@ -313,7 +313,7 @@ export default function LandingPage() {
         <div className="container px-4">
           <SectionHeader
             eyebrow="Resultaten"
-            title="Wat TX PromoShare je oplevert"
+            title="Wat TX EventShare je oplevert"
             subtitle="Geen feature-lijstje, maar echte resultaten voor jouw business"
           />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -468,7 +468,7 @@ export default function LandingPage() {
                 <span className="text-gradient-hero">naadloos verbonden</span>
               </h2>
               <p className="text-muted-foreground mb-6 leading-relaxed">
-                TX PromoShare integreert native met ClickWise zodat je events onderdeel worden van je bredere marketing- en automatiseringsworkflow. Minder losse tools, betere opvolging, slimmer werken vanuit één ecosysteem.
+                TX EventShare integreert native met ClickWise zodat je events onderdeel worden van je bredere marketing- en automatiseringsworkflow. Minder losse tools, betere opvolging, slimmer werken vanuit één ecosysteem.
               </p>
               <ul className="space-y-3 mb-6">
                 {[
@@ -525,13 +525,13 @@ export default function LandingPage() {
             light
             eyebrow="Onze positionering"
             title="Het professionele systeem dat kleinere events wél verdienen"
-            subtitle="De meeste tools zijn te basic of te zwaar. TX PromoShare zit precies in de sweet spot: professioneel, schaalbaar, simpel en snel."
+            subtitle="De meeste tools zijn te basic of te zwaar. TX EventShare zit precies in de sweet spot: professioneel, schaalbaar, simpel en snel."
           />
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {[
               { title: "Te basic", desc: "Facebook-events, Google Docs, WhatsApp-chaos en handmatig kopieer-plakken. Geen structuur, geen branding, geen overzicht.", icon: "👎", highlight: false },
               { title: "Te zwaar", desc: "Enterprise ticketing platforms met complexe instellingen. Ticket-first, hoge kosten en overkill voor events tot 3000 bezoekers.", icon: "🏗️", highlight: false },
-              { title: "TX PromoShare", desc: "Professioneel, schaalbaar, simpel en snel. Agenda-first, distributie-first. Gebouwd voor events van 10 tot 3000 bezoekers.", icon: "✅", highlight: true },
+              { title: "TX EventShare", desc: "Professioneel, schaalbaar, simpel en snel. Agenda-first, distributie-first. Gebouwd voor events van 10 tot 3000 bezoekers.", icon: "✅", highlight: true },
             ].map((item, i) => (
               <motion.div key={i} {...stagger(i)} className={cn("p-6 rounded-2xl border", item.highlight ? "bg-primary/10 border-primary/30 shadow-glow" : "bg-primary-foreground/5 border-primary-foreground/10")}>
                 <span className="text-3xl block mb-3">{item.icon}</span>
@@ -553,7 +553,7 @@ export default function LandingPage() {
         <div className="container px-4">
           <SectionHeader
             eyebrow="Voor wie"
-            title="Van café tot festival — TX PromoShare past bij jou"
+            title="Van café tot festival — TX EventShare past bij jou"
             subtitle="Ontdek hoe het platform werkt voor jouw type organisatie"
           />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
@@ -574,7 +574,7 @@ export default function LandingPage() {
         <div className="container px-4">
           <SectionHeader
             eyebrow="Vergelijking"
-            title="Waarom TX PromoShare de betere keuze is"
+            title="Waarom TX EventShare de betere keuze is"
             subtitle="Vergelijk met handmatig werken en generieke eventplatformen"
           />
           <div className="max-w-4xl mx-auto rounded-2xl border border-border overflow-hidden bg-card shadow-card">
@@ -647,7 +647,7 @@ export default function LandingPage() {
             </div>
             <h2 className="text-xl md:text-2xl font-display font-bold text-foreground mb-3">Binnenkort: ticketverkoop als add-on</h2>
             <p className="text-muted-foreground max-w-xl mx-auto mb-4 leading-relaxed">
-              TX PromoShare wordt uitgebreid met een ticketing module. Verkoop tickets direct via je eventpagina, inclusief QR-scanning, betalingen via Stripe en Mollie, en volledig bezoekersbeheer.
+              TX EventShare wordt uitgebreid met een ticketing module. Verkoop tickets direct via je eventpagina, inclusief QR-scanning, betalingen via Stripe en Mollie, en volledig bezoekersbeheer.
             </p>
             <p className="text-sm text-primary font-semibold">Pro plan gebruikers krijgen als eerste toegang</p>
           </div>
@@ -750,7 +750,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-border pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-            <p>© 2026 TX PromoShare. Alle rechten voorbehouden.</p>
+            <p>© 2026 TX EventShare. Alle rechten voorbehouden.</p>
             <div className="flex items-center gap-4">
               <Link to="/login" className="hover:text-foreground transition-colors">Inloggen</Link>
               <Link to="/register" className="hover:text-foreground transition-colors">Registreren</Link>

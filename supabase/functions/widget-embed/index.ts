@@ -136,7 +136,7 @@ function generateEmbedScript(payload: any): string {
     '</div>' +
     innerHtml +
     '<div style="text-align:center;margin-top:12px;">' +
-    '<a href="https://txpromoshare.lovable.app" target="_blank" rel="noopener" style="font-size:11px;color:#9ca3af;text-decoration:none;">Powered by TX PromoShare</a>' +
+    '<a href="https://txpromoshare.lovable.app" target="_blank" rel="noopener" style="font-size:11px;color:#9ca3af;text-decoration:none;">Powered by TX EventShare</a>' +
     '</div></div>';
 
   const escapedHtml = JSON.stringify(html);
