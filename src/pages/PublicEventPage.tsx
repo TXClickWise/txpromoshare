@@ -88,6 +88,15 @@ export default function PublicEventPage() {
   const shareText = event.social_share_text || `${event.title} — ${formatDate(event.start_date)}`;
   const venueName = venue?.name || "Locatie volgt";
   const venueAddress = venue ? [venue.address, venue.city].filter(Boolean).join(", ") : "";
+  const [featuredImageUrl, setFeaturedImageUrl] = useState<string | null>(null);
+
+  // Fetch featured image
+  useEffect(() => {
+    if (!event?.featured_image_id) return;
+    supabase.from("media").select("original_url").eq("id", event.featured_image_id).maybeSingle().then(({ data }) => {
+      if (data?.original_url) setFeaturedImageUrl(data.original_url);
+    });
+  }, [event?.featured_image_id]);
 
   const copyLink = () => {
     navigator.clipboard.writeText(shareUrl);
@@ -95,7 +104,7 @@ export default function PublicEventPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const heroImg = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop";
+  const heroImg = featuredImageUrl || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop";
 
   return (
     <div className="min-h-screen bg-background">

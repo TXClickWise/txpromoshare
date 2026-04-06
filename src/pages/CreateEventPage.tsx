@@ -374,7 +374,8 @@ export default function CreateEventPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t.events.fields.tags}</Label>
-                  <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="Tags gescheiden door komma's" />
+                  <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="bijv. live-muziek, DJ, 80s, retro" />
+                  <p className="text-[11px] text-muted-foreground">Voer tags in gescheiden door komma's, zonder # teken. Bijv: <span className="font-mono bg-secondary px-1 rounded">live-muziek, DJ, feest</span></p>
                 </div>
               </motion.div>
             </TabsContent>
@@ -450,6 +451,50 @@ export default function CreateEventPage() {
                     </div>
                     <Switch checked={isRecurring} onCheckedChange={setIsRecurring} />
                   </div>
+                  {isRecurring && (
+                    <div className="space-y-4 pt-2 border-t border-border">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Frequentie</Label>
+                          <Select value={recurringFreq} onValueChange={setRecurringFreq}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="daily">Dagelijks</SelectItem>
+                              <SelectItem value="weekly">Wekelijks</SelectItem>
+                              <SelectItem value="biweekly">Om de 2 weken</SelectItem>
+                              <SelectItem value="monthly">Maandelijks</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Elke X keer</Label>
+                          <Input type="number" min={1} max={12} value={recurringInterval} onChange={(e) => setRecurringInterval(Number(e.target.value))} />
+                        </div>
+                      </div>
+                      {recurringFreq === "weekly" && (
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Op welke dag(en)</Label>
+                          <div className="flex gap-1 flex-wrap">
+                            {["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"].map((day, i) => (
+                              <button
+                                key={day}
+                                type="button"
+                                onClick={() => setRecurringDays(prev => prev.includes(i + 1) ? prev.filter(d => d !== i + 1) : [...prev, i + 1])}
+                                className={`w-9 h-9 rounded-lg text-xs font-medium transition-colors ${recurringDays.includes(i + 1) ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80"}`}
+                              >
+                                {day}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Eindigt na datum (optioneel)</Label>
+                        <Input type="date" value={recurringEndDate} onChange={(e) => setRecurringEndDate(e.target.value)} />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">Herhalingen worden automatisch aangemaakt op basis van dit schema.</p>
+                    </div>
+                  )}
                 </div>
                 <div className="rounded-xl bg-card border border-border p-5 space-y-3">
                   <div className="flex items-center gap-3">
