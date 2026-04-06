@@ -55,12 +55,18 @@ export default function WidgetsPage() {
 
   async function createWidget() {
     if (!tenantId || !newName.trim()) return;
+    if (newType === "single_event" && !newEventId) {
+      toast.error("Selecteer een evenement voor een Enkel Event widget");
+      return;
+    }
     setCreating(true);
+    const config: any = { theme: "light" };
+    if (newType === "single_event") config.event_id = newEventId;
     const { error } = await supabase.from("widgets").insert({
       tenant_id: tenantId,
       name: newName.trim(),
       type: newType,
-      config: { theme: "light" },
+      config,
     });
     setCreating(false);
     if (error) {
@@ -68,6 +74,7 @@ export default function WidgetsPage() {
     } else {
       toast.success("Widget aangemaakt");
       setNewName("");
+      setNewEventId("");
       setDialogOpen(false);
       fetchWidgets();
     }
