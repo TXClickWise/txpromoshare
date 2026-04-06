@@ -30,18 +30,18 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const { tenantId } = useTenant();
 
-  useEffect(() => {
+  async function fetchEvents() {
     if (!tenantId) return;
-    supabase
+    const { data } = await supabase
       .from("events")
       .select("*")
       .eq("tenant_id", tenantId)
-      .order("start_date", { ascending: false })
-      .then(({ data }) => {
-        setEvents(data || []);
-        setLoading(false);
-      });
-  }, [tenantId]);
+      .order("start_date", { ascending: false });
+    setEvents(data || []);
+    setLoading(false);
+  }
+
+  useEffect(() => { fetchEvents(); }, [tenantId]);
 
   const filtered = events
     .filter((e) => e.title.toLowerCase().includes(search.toLowerCase()))
