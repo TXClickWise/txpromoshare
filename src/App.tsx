@@ -28,6 +28,7 @@ import SettingsPage from "@/pages/SettingsPage";
 import BillingPage from "@/pages/BillingPage";
 import PublicEventPage from "@/pages/PublicEventPage";
 import NotFound from "@/pages/NotFound";
+import UnsubscribePage from "@/pages/UnsubscribePage";
 
 // Admin pages
 import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
@@ -74,6 +75,7 @@ const App = () => (
 
               {/* Public event pages */}
               <Route path="/e/:slug" element={<PublicEventPage />} />
+              <Route path="/unsubscribe" element={<UnsubscribePage />} />
 
               {/* App routes */}
               <Route path="/app" element={<AppLayout />}>
