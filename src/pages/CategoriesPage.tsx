@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Tags, Plus, Pencil, Trash2, GripVertical, Check, X } from "lucide-react";
+import { logAudit } from "@/lib/audit";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ export default function CategoriesPage() {
       setNewName("");
       setAdding(false);
       toast.success("Categorie toegevoegd");
+      if (tenantId) logAudit({ tenantId, entityType: "category", action: "created", entityId: data.id, metadata: { name: newName } });
     }
   }
 
@@ -51,8 +53,10 @@ export default function CategoriesPage() {
     if (error) {
       toast.error("Verwijderen mislukt: " + error.message);
     } else {
+      const cat = categories.find(c => c.id === id);
       setCategories(categories.filter(c => c.id !== id));
       toast.success("Categorie verwijderd");
+      if (tenantId) logAudit({ tenantId, entityType: "category", action: "deleted", entityId: id, metadata: { name: cat?.name } });
     }
   }
 

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { UsageMeter } from "@/components/UsageMeter";
 import { usePlan } from "@/hooks/usePlan";
+import { useTenant } from "@/hooks/useTenant";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
@@ -24,9 +25,25 @@ const plans = [
 
 export default function BillingPage() {
   const { planId } = usePlan();
+  const { tenantId } = useTenant();
   const [loading, setLoading] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const [searchParams] = useSearchParams();
+  const [usage, setUsage] = useState({ events: 0, widgets: 0, team: 0 });
+
+  useEffect(() => {
+    if (!tenantId) return;
+    // Refresh usage counts from DB
+    supabase.rpc("refresh_tenant_usage", { _tenant_id: tenantId }).then(() => {
+      supabase.from("usage_tracking").select("metric, current_value").eq("tenant_id", tenantId).then(({ data }) => {
+        const u = { events: 0, widgets: 0, team: 0 };
+        (data || []).forEach((row: any) => {
+          if (row.metric in u) u[row.metric as keyof typeof u] = row.current_value;
+        });
+        setUsage(u);
+      });
+    });
+  }, [tenantId]);
 
   useEffect(() => {
     if (searchParams.get("success") === "true") {
@@ -112,9 +129,9 @@ export default function BillingPage() {
       <div className="rounded-xl bg-card border border-border shadow-card p-6">
         <h3 className="font-display font-semibold text-foreground text-sm mb-4">Gebruik deze periode</h3>
         <div className="space-y-4">
-          <UsageMeter metric="events" current={3} label="Actieve evenementen" />
-          <UsageMeter metric="widgets" current={1} label="Widgets" />
-          <UsageMeter metric="team" current={2} label="Teamleden" />
+          <UsageMeter metric="events" current={usage.events} label="Actieve evenementen" />
+          <UsageMeter metric="widgets" current={usage.widgets} label="Widgets" />
+          <UsageMeter metric="team" current={usage.team} label="Teamleden" />
         </div>
       </div>
 

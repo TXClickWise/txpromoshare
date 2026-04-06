@@ -1502,6 +1502,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      refresh_tenant_usage: { Args: { _tenant_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "owner" | "admin" | "editor" | "marketer" | "viewer"
