@@ -114,7 +114,7 @@ export default function EventsPage() {
                 <div className="h-36 bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center relative">
                   <Calendar className="w-8 h-8 text-muted-foreground/20" />
                   <div className="absolute top-3 right-3">
-                    <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} />
+                    <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} onRefresh={fetchEvents} />
                   </div>
                 </div>
                 <div className="p-4">
@@ -155,7 +155,7 @@ export default function EventsPage() {
                   </p>
                 </div>
                 <EventStatusBadge status={event.status} />
-                <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} />
+                <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} onRefresh={fetchEvents} />
               </Link>
             </motion.div>
           ))}
