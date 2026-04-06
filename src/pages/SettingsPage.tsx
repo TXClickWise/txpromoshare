@@ -1,4 +1,4 @@
-import { Building2, Palette, MapPin, Phone, Mail, Save, Plus, Trash2, Upload, X } from "lucide-react";
+import { Building2, Palette, MapPin, Phone, Mail, Save, Plus, Trash2, Upload, X, Globe } from "lucide-react";
 import { logAudit } from "@/lib/audit";
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useTenant } from "@/hooks/useTenant";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,7 @@ export default function SettingsPage() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoUploading, setLogoUploading] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const [showOnDiscovery, setShowOnDiscovery] = useState(true);
 
   // Venue state
   const [venues, setVenues] = useState<Tables<"venues">[]>([]);
@@ -44,6 +46,7 @@ export default function SettingsPage() {
       setPrimaryColor(tenant.primary_color || "#E86C2C");
       setSecondaryColor(tenant.secondary_color || "#2A9D8F");
       setLogoUrl(tenant.logo_url || null);
+      setShowOnDiscovery((tenant as any).show_on_discovery !== false);
     }
   }, [tenant]);
 
@@ -188,6 +191,7 @@ export default function SettingsPage() {
           <TabsTrigger value="organization" className="gap-1.5"><Building2 className="w-3.5 h-3.5" />Organisatie</TabsTrigger>
           <TabsTrigger value="branding" className="gap-1.5"><Palette className="w-3.5 h-3.5" />Branding</TabsTrigger>
           <TabsTrigger value="venue" className="gap-1.5"><MapPin className="w-3.5 h-3.5" />Locaties</TabsTrigger>
+          <TabsTrigger value="visibility" className="gap-1.5"><Globe className="w-3.5 h-3.5" />Zichtbaarheid</TabsTrigger>
         </TabsList>
 
         <TabsContent value="organization">
@@ -358,6 +362,42 @@ export default function SettingsPage() {
                 )}
               </div>
             </div>
+          </motion.div>
+        </TabsContent>
+
+        <TabsContent value="visibility">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card border border-border shadow-card p-6 space-y-5">
+            <div>
+              <p className="text-sm font-medium text-foreground mb-1">Publieke evenementenpagina</p>
+              <p className="text-xs text-muted-foreground mb-4">
+                Bepaal of jouw evenementen zichtbaar zijn op de publieke ontdekkingspagina van TX EventShare. Je kunt dit per evenement nog overschrijven.
+              </p>
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-secondary/30 border border-border p-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">Toon evenementen op ontdekkingspagina</p>
+                <p className="text-xs text-muted-foreground">Als dit uit staat, worden je evenementen standaard niet getoond op /evenementen</p>
+              </div>
+              <Switch checked={showOnDiscovery} onCheckedChange={setShowOnDiscovery} />
+            </div>
+            <Button size="sm" onClick={async () => {
+              if (!tenant) return;
+              setSaving(true);
+              const { error } = await supabase
+                .from("tenants")
+                .update({ show_on_discovery: showOnDiscovery } as any)
+                .eq("id", tenant.id);
+              setSaving(false);
+              if (error) {
+                toast.error("Opslaan mislukt: " + error.message);
+              } else {
+                toast.success("Zichtbaarheid opgeslagen");
+                logAudit({ tenantId: tenant.id, entityType: "tenant", action: "visibility_updated", entityId: tenant.id });
+                refetch();
+              }
+            }} disabled={saving} className="gap-2">
+              <Save className="w-4 h-4" />{saving ? "Opslaan..." : "Opslaan"}
+            </Button>
           </motion.div>
         </TabsContent>
       </Tabs>

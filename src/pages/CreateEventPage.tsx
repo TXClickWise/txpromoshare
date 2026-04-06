@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, Eye, Send, Sparkles, Clock, MapPin, CalendarDays, Image, Share2, Repeat, CalendarClock, Trash2, Check, Upload, Plus } from "lucide-react";
+import { ArrowLeft, Save, Eye, Send, Sparkles, Clock, MapPin, CalendarDays, Image, Share2, Repeat, CalendarClock, Trash2, Check, Upload, Plus, Star, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
@@ -71,6 +71,7 @@ export default function CreateEventPage() {
   const [recurringDays, setRecurringDays] = useState<number[]>([]);
   const [recurringEndDate, setRecurringEndDate] = useState("");
   const [publishAt, setPublishAt] = useState("");
+  const [showOnDiscovery, setShowOnDiscovery] = useState<string>("inherit");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEditing);
   const [featuredImageId, setFeaturedImageId] = useState<string | null>(null);
@@ -107,6 +108,10 @@ export default function CreateEventPage() {
         setSocialText(data.social_share_text || "");
         setIsRecurring(data.is_recurring);
         setPublishAt(toDatetimeLocal(data.publish_at));
+        setShowOnDiscovery(
+          (data as any).show_on_discovery === true ? "show" :
+          (data as any).show_on_discovery === false ? "hide" : "inherit"
+        );
         setFeaturedImageId(data.featured_image_id);
         if (data.featured_image_id) {
           const { data: img } = await supabase.from("media").select("original_url").eq("id", data.featured_image_id).maybeSingle();
@@ -189,10 +194,11 @@ export default function CreateEventPage() {
       is_recurring: isRecurring,
       publish_at: status === "scheduled" && publishAt ? new Date(publishAt).toISOString() : null,
       featured_image_id: featuredImageId,
+      show_on_discovery: showOnDiscovery === "show" ? true : showOnDiscovery === "hide" ? false : null,
       status,
       tenant_id: tenantId!,
       created_by: user?.id || null,
-    };
+    } as any;
   }
 
   async function saveSponsors(eventId: string) {
@@ -572,6 +578,73 @@ export default function CreateEventPage() {
                     }
                   </p>
                 </div>
+                <div className="rounded-xl bg-card border border-border p-5 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-accent/20 flex items-center justify-center">
+                      <Globe className="w-4 h-4 text-accent" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Zichtbaarheid ontdekkingspagina</p>
+                      <p className="text-xs text-muted-foreground">Bepaal of dit evenement zichtbaar is op /evenementen</p>
+                    </div>
+                  </div>
+                  <Select value={showOnDiscovery} onValueChange={setShowOnDiscovery}>
+                    <SelectTrigger className="max-w-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="inherit">Volg organisatie-instelling</SelectItem>
+                      <SelectItem value="show">Altijd tonen</SelectItem>
+                      <SelectItem value="hide">Altijd verbergen</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {isEditing && (
+                  <div className="rounded-xl bg-gradient-to-br from-highlight/10 to-primary/5 border border-highlight/30 p-5 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-highlight/20 flex items-center justify-center">
+                        <Star className="w-4 h-4 text-highlight fill-highlight" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Evenement uitlichten</p>
+                        <p className="text-xs text-muted-foreground">Laat dit event opvallen op de ontdekkingspagina</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-2 border-highlight/50 hover:bg-highlight/10"
+                        onClick={async () => {
+                          const { data } = await supabase.functions.invoke("create-boost-checkout", {
+                            body: { eventId: id, boostDays: 7 },
+                          });
+                          if (data?.url) window.open(data.url, "_blank");
+                          else if (data?.success) toast.success("Boost geactiveerd met gratis credit! ⭐");
+                          else toast.error("Boost niet gelukt");
+                        }}
+                      >
+                        <Star className="w-3.5 h-3.5" />7 dagen — €6,95
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-2 border-highlight/50 hover:bg-highlight/10"
+                        onClick={async () => {
+                          const { data } = await supabase.functions.invoke("create-boost-checkout", {
+                            body: { eventId: id, boostDays: 14 },
+                          });
+                          if (data?.url) window.open(data.url, "_blank");
+                          else if (data?.success) toast.success("Boost geactiveerd met gratis credit! ⭐");
+                          else toast.error("Boost niet gelukt");
+                        }}
+                      >
+                        <Star className="w-3.5 h-3.5" />14 dagen — €12,95
+                      </Button>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">Pro-plan klanten krijgen 2 gratis boosts per maand.</p>
+                  </div>
+                )}
+
                 <div className="rounded-xl border border-dashed border-border p-5 opacity-60">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center"><span className="text-lg">🎟️</span></div>

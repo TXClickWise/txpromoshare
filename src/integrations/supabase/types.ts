@@ -82,6 +82,38 @@ export type Database = {
           },
         ]
       }
+      boost_credits: {
+        Row: {
+          expires_at: string
+          granted_at: string
+          id: string
+          remaining: number
+          tenant_id: string
+        }
+        Insert: {
+          expires_at: string
+          granted_at?: string
+          id?: string
+          remaining?: number
+          tenant_id: string
+        }
+        Update: {
+          expires_at?: string
+          granted_at?: string
+          id?: string
+          remaining?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boost_credits_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           color: string | null
@@ -394,8 +426,10 @@ export type Database = {
           end_date: string | null
           end_time: string | null
           featured_image_id: string | null
+          featured_until: string | null
           full_description: string | null
           id: string
+          is_featured: boolean
           is_recurring: boolean
           organizer_name: string | null
           publish_at: string | null
@@ -403,6 +437,7 @@ export type Database = {
           seo_description: string | null
           seo_title: string | null
           short_description: string | null
+          show_on_discovery: boolean | null
           slug: string
           social_share_text: string | null
           start_date: string
@@ -426,8 +461,10 @@ export type Database = {
           end_date?: string | null
           end_time?: string | null
           featured_image_id?: string | null
+          featured_until?: string | null
           full_description?: string | null
           id?: string
+          is_featured?: boolean
           is_recurring?: boolean
           organizer_name?: string | null
           publish_at?: string | null
@@ -435,6 +472,7 @@ export type Database = {
           seo_description?: string | null
           seo_title?: string | null
           short_description?: string | null
+          show_on_discovery?: boolean | null
           slug: string
           social_share_text?: string | null
           start_date: string
@@ -458,8 +496,10 @@ export type Database = {
           end_date?: string | null
           end_time?: string | null
           featured_image_id?: string | null
+          featured_until?: string | null
           full_description?: string | null
           id?: string
+          is_featured?: boolean
           is_recurring?: boolean
           organizer_name?: string | null
           publish_at?: string | null
@@ -467,6 +507,7 @@ export type Database = {
           seo_description?: string | null
           seo_title?: string | null
           short_description?: string | null
+          show_on_discovery?: boolean | null
           slug?: string
           social_share_text?: string | null
           start_date?: string
@@ -1161,6 +1202,7 @@ export type Database = {
           postal_code: string | null
           primary_color: string | null
           secondary_color: string | null
+          show_on_discovery: boolean
           slug: string
           status: string
           updated_at: string
@@ -1182,6 +1224,7 @@ export type Database = {
           postal_code?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          show_on_discovery?: boolean
           slug: string
           status?: string
           updated_at?: string
@@ -1203,6 +1246,7 @@ export type Database = {
           postal_code?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          show_on_discovery?: boolean
           slug?: string
           status?: string
           updated_at?: string
@@ -1463,6 +1507,40 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_discoverable_events: {
+        Args: {
+          _category_slug?: string
+          _city?: string
+          _date_from?: string
+          _date_to?: string
+          _limit?: number
+          _offset?: number
+          _search?: string
+        }
+        Returns: {
+          category_color: string
+          category_name: string
+          category_slug: string
+          end_date: string
+          end_time: string
+          featured_until: string
+          id: string
+          image_url: string
+          is_featured: boolean
+          organizer_name: string
+          short_description: string
+          slug: string
+          start_date: string
+          start_time: string
+          subtitle: string
+          tags: string[]
+          tenant_name: string
+          title: string
+          venue_address: string
+          venue_city: string
+          venue_name: string
+        }[]
       }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {

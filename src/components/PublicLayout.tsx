@@ -5,6 +5,7 @@ import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
+  { to: "/evenementen", label: "Evenementen", hash: false },
   { to: "/event-agenda-software", label: "Features", hash: false },
   { to: "/#hoe-het-werkt", label: "Hoe het werkt", hash: true },
   { to: "/pricing", label: "Prijzen", hash: false },
