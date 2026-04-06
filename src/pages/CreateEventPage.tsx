@@ -246,22 +246,25 @@ export default function CreateEventPage() {
       return;
     }
     setSaving(true);
-    // If publishAt is set, schedule; otherwise publish immediately
     const status = publishAt ? "scheduled" : "published";
     const data = buildEventData(status);
     let error;
+    let eventId = id;
     if (isEditing) {
       const { tenant_id, created_by, ...updateData } = data;
       ({ error } = await supabase.from("events").update(updateData).eq("id", id!));
     } else {
-      ({ error } = await supabase.from("events").insert(data));
+      const res = await supabase.from("events").insert(data).select("id").single();
+      error = res.error;
+      eventId = res.data?.id;
     }
+    if (!error && eventId) await saveSponsors(eventId);
     setSaving(false);
     if (error) {
       toast.error("Publiceren mislukt: " + error.message);
     } else {
       toast.success(status === "scheduled" ? "Evenement ingepland! 📅" : "Evenement gepubliceerd! 🎉");
-      logAudit({ tenantId, entityType: "event", action: status === "scheduled" ? "scheduled" : "published", entityId: id });
+      logAudit({ tenantId, entityType: "event", action: status === "scheduled" ? "scheduled" : "published", entityId: eventId });
       navigate("/app/events");
     }
   }
