@@ -9,6 +9,7 @@ import {
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useSEO, organizationSchema, websiteSchema, softwareSchema, faqSchema } from "@/lib/seo";
 
 /* ────────────────────────── Data ────────────────────────── */
 
