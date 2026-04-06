@@ -71,6 +71,7 @@ export default function CreateEventPage() {
   const [recurringDays, setRecurringDays] = useState<number[]>([]);
   const [recurringEndDate, setRecurringEndDate] = useState("");
   const [publishAt, setPublishAt] = useState("");
+  const [showOnDiscovery, setShowOnDiscovery] = useState<string>("inherit");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEditing);
   const [featuredImageId, setFeaturedImageId] = useState<string | null>(null);
