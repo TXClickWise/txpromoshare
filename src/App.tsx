@@ -4,8 +4,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PlanProvider } from "@/hooks/usePlan";
+import { AuthProvider } from "@/hooks/useAuth";
 import PublicLayout from "@/components/PublicLayout";
 import AppLayout from "@/components/AppLayout";
+import AdminLayout from "@/components/AdminLayout";
 import LandingPage from "@/pages/LandingPage";
 import PricingPage from "@/pages/PricingPage";
 import LoginPage from "@/pages/LoginPage";
@@ -24,6 +26,12 @@ import SettingsPage from "@/pages/SettingsPage";
 import BillingPage from "@/pages/BillingPage";
 import PublicEventPage from "@/pages/PublicEventPage";
 import NotFound from "@/pages/NotFound";
+
+// Admin pages
+import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
+import AdminTenantsPage from "@/pages/admin/AdminTenantsPage";
+import AdminUsersPage from "@/pages/admin/AdminUsersPage";
+import AdminSubscriptionsPage from "@/pages/admin/AdminSubscriptionsPage";
 
 // SEO landing pages
 import EventAgendaSoftwarePage from "@/pages/seo/EventAgendaSoftwarePage";
