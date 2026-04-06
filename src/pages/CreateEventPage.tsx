@@ -195,6 +195,23 @@ export default function CreateEventPage() {
     };
   }
 
+  async function saveSponsors(eventId: string) {
+    // Delete existing, then re-insert
+    await supabase.from("event_sponsors").delete().eq("event_id", eventId);
+    const validSponsors = sponsors.filter(s => s.name.trim());
+    if (validSponsors.length > 0) {
+      await supabase.from("event_sponsors").insert(
+        validSponsors.map((s, i) => ({
+          event_id: eventId,
+          name: s.name.trim(),
+          logo_url: s.logo_url || null,
+          website_url: s.website_url || null,
+          sort_order: i,
+        }))
+      );
+    }
+  }
+
   async function handleSave() {
     if (!tenantId || !title || !startDate || !startTime) {
       toast.error("Vul minimaal titel, datum en tijd in");
@@ -203,18 +220,22 @@ export default function CreateEventPage() {
     setSaving(true);
     const data = buildEventData("draft");
     let error;
+    let eventId = id;
     if (isEditing) {
       const { tenant_id, created_by, ...updateData } = data;
       ({ error } = await supabase.from("events").update(updateData).eq("id", id!));
     } else {
-      ({ error } = await supabase.from("events").insert(data));
+      const res = await supabase.from("events").insert(data).select("id").single();
+      error = res.error;
+      eventId = res.data?.id;
     }
+    if (!error && eventId) await saveSponsors(eventId);
     setSaving(false);
     if (error) {
       toast.error("Opslaan mislukt: " + error.message);
     } else {
       toast.success("Concept opgeslagen");
-      logAudit({ tenantId, entityType: "event", action: isEditing ? "updated" : "created", entityId: id });
+      logAudit({ tenantId, entityType: "event", action: isEditing ? "updated" : "created", entityId: eventId });
       if (!isEditing) navigate("/app/events");
     }
   }
