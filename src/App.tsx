@@ -21,6 +21,7 @@ import TeamPage from "@/pages/TeamPage";
 import IntegrationsPage from "@/pages/IntegrationsPage";
 import SettingsPage from "@/pages/SettingsPage";
 import BillingPage from "@/pages/BillingPage";
+import PublicEventPage from "@/pages/PublicEventPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,9 @@ const App = () => (
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
           </Route>
+
+          {/* Public event pages */}
+          <Route path="/e/:slug" element={<PublicEventPage />} />
 
           {/* App routes */}
           <Route path="/app" element={<AppLayout />}>
