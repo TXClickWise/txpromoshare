@@ -191,6 +191,7 @@ export default function SettingsPage() {
           <TabsTrigger value="organization" className="gap-1.5"><Building2 className="w-3.5 h-3.5" />Organisatie</TabsTrigger>
           <TabsTrigger value="branding" className="gap-1.5"><Palette className="w-3.5 h-3.5" />Branding</TabsTrigger>
           <TabsTrigger value="venue" className="gap-1.5"><MapPin className="w-3.5 h-3.5" />Locaties</TabsTrigger>
+          <TabsTrigger value="visibility" className="gap-1.5"><Globe className="w-3.5 h-3.5" />Zichtbaarheid</TabsTrigger>
         </TabsList>
 
         <TabsContent value="organization">
