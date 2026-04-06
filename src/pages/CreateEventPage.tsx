@@ -57,6 +57,10 @@ export default function CreateEventPage() {
   const [publishAt, setPublishAt] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEditing);
+  const [featuredImageId, setFeaturedImageId] = useState<string | null>(null);
+  const [featuredImageUrl, setFeaturedImageUrl] = useState<string | null>(null);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const [mediaItems, setMediaItems] = useState<Tables<"media">[]>([]);
 
   // Load existing event when editing
   useEffect(() => {
