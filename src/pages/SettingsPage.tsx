@@ -1,7 +1,7 @@
-import { Building2, Palette, MapPin, Phone, Mail, Save, Plus, Trash2 } from "lucide-react";
+import { Building2, Palette, MapPin, Phone, Mail, Save, Plus, Trash2, Upload, X } from "lucide-react";
 import { logAudit } from "@/lib/audit";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { t } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,9 @@ export default function SettingsPage() {
   const [primaryColor, setPrimaryColor] = useState("#E86C2C");
   const [secondaryColor, setSecondaryColor] = useState("#2A9D8F");
   const [saving, setSaving] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   // Venue state
   const [venues, setVenues] = useState<Tables<"venues">[]>([]);
@@ -40,6 +43,7 @@ export default function SettingsPage() {
       setPhone(tenant.phone || "");
       setPrimaryColor(tenant.primary_color || "#E86C2C");
       setSecondaryColor(tenant.secondary_color || "#2A9D8F");
+      setLogoUrl(tenant.logo_url || null);
     }
   }, [tenant]);
 
@@ -68,6 +72,34 @@ export default function SettingsPage() {
     } else {
       toast.success("Instellingen opgeslagen");
       if (tenant) logAudit({ tenantId: tenant.id, entityType: "tenant", action: "settings_updated", entityId: tenant.id });
+      refetch();
+    }
+  }
+
+  async function handleLogoUpload(files: FileList | null) {
+    if (!files || !tenantId || files.length === 0) return;
+    setLogoUploading(true);
+    const file = files[0];
+    const ext = file.name.split(".").pop();
+    const path = `${tenantId}/logo.${ext}`;
+    // Remove old logo if exists
+    await supabase.storage.from("media").remove([path]);
+    const { error: uploadError } = await supabase.storage.from("media").upload(path, file, { upsert: true });
+    if (uploadError) {
+      toast.error("Logo upload mislukt: " + uploadError.message);
+      setLogoUploading(false);
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("media").getPublicUrl(path);
+    const newUrl = urlData.publicUrl;
+    // Save to tenant
+    const { error } = await supabase.from("tenants").update({ logo_url: newUrl }).eq("id", tenantId);
+    setLogoUploading(false);
+    if (error) {
+      toast.error("Opslaan mislukt: " + error.message);
+    } else {
+      setLogoUrl(newUrl);
+      toast.success("Logo geüpload");
       refetch();
     }
   }
@@ -190,13 +222,45 @@ export default function SettingsPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card border border-border shadow-card p-6 space-y-5">
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Logo</Label>
-              <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 cursor-pointer transition-colors bg-secondary/20">
-                <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
-                  <Building2 className="w-7 h-7 text-muted-foreground/30" />
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/png,image/svg+xml,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(e) => handleLogoUpload(e.target.files)}
+              />
+              {logoUrl ? (
+                <div className="relative border-2 border-dashed border-border rounded-xl p-4 bg-secondary/20">
+                  <div className="aspect-square max-w-[200px] mx-auto">
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                  </div>
+                  <div className="flex justify-center gap-2 mt-3">
+                    <Button variant="outline" size="sm" onClick={() => logoInputRef.current?.click()} disabled={logoUploading} className="gap-2">
+                      <Upload className="w-3.5 h-3.5" />Wijzigen
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-destructive" onClick={async () => {
+                      if (!tenant) return;
+                      await supabase.from("tenants").update({ logo_url: null }).eq("id", tenant.id);
+                      setLogoUrl(null);
+                      refetch();
+                      toast.success("Logo verwijderd");
+                    }}>
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
                 </div>
-                <p className="text-sm font-medium text-foreground">Upload je logo</p>
-                <p className="text-xs text-muted-foreground mt-1">PNG of SVG, minimaal 200x200px</p>
-              </div>
+              ) : (
+                <div
+                  className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 cursor-pointer transition-colors bg-secondary/20"
+                  onClick={() => logoInputRef.current?.click()}
+                >
+                  <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
+                    <Building2 className="w-7 h-7 text-muted-foreground/30" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">{logoUploading ? "Uploaden..." : "Upload je logo"}</p>
+                  <p className="text-xs text-muted-foreground mt-1">PNG, SVG of JPG, minimaal 200x200px</p>
+                </div>
+              )}
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
