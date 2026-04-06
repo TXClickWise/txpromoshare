@@ -26,7 +26,7 @@ const integrations = [
     id: "calendar",
     title: "Kalender integratie",
     description: "Google Calendar & ICS download op publieke eventpagina's",
-    icon: () => <span className="text-xl">📅</span>,
+    icon: Calendar as LucideIcon,
     gradient: "",
     status: "coming_soon" as "disconnected" | "connected" | "coming_soon",
     features: ["Toevoegen aan Google Calendar", "ICS download voor bezoekers", "Outlook sync"],
