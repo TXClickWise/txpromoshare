@@ -66,6 +66,8 @@ export default function TeamPage() {
 
   async function handleInvite() {
     if (!inviteEmail || !tenantId || !user) return;
+    const { data: tenant } = await supabase.from("tenants").select("name").eq("id", tenantId).single();
+    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
     const { error } = await supabase.from("team_invitations").insert({
       email: inviteEmail,
       role: inviteRole as any,
@@ -75,6 +77,20 @@ export default function TeamPage() {
     if (error) {
       toast.error("Uitnodiging mislukt: " + error.message);
     } else {
+      // Send team invitation email
+      const roleName = t.team.roles[inviteRole as keyof typeof t.team.roles] || inviteRole;
+      supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "team-invitation",
+          recipientEmail: inviteEmail,
+          idempotencyKey: `team-invite-${tenantId}-${inviteEmail}-${Date.now()}`,
+          templateData: {
+            inviterName: profile?.full_name || "Iemand",
+            teamName: tenant?.name || "TX EventShare",
+            role: roleName,
+          },
+        },
+      }).catch(() => {});
       toast.success(`Uitnodiging verstuurd naar ${inviteEmail}`);
       setInviteEmail("");
       setInviteOpen(false);
