@@ -138,56 +138,62 @@ function generateEmbedScript(payload: any): string {
     : escapeHtml((events[0]?.title) || "Event");
 
   const eventCards = (events as any[]).map((e: any) => {
-    const dateStr = new Date(e.start_date).toLocaleDateString("nl-NL", {
-      weekday: "short", day: "numeric", month: "short",
-    });
+    const dateObj = new Date(e.start_date);
+    const dayNum = dateObj.getDate();
+    const monthShort = dateObj.toLocaleDateString("nl-NL", { month: "short" });
+    const weekday = dateObj.toLocaleDateString("nl-NL", { weekday: "short" });
     const time = e.start_time ? e.start_time.slice(0, 5) : "";
 
     let ctaHtml = "";
     if (e.cta_link) {
       const btnText = escapeHtml(e.cta_button_text || "Meer info");
-      ctaHtml = '<a href="' + escapeHtml(e.cta_link) + '" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;padding:6px 16px;background:' + pc + ';color:#fff;border-radius:6px;text-decoration:none;font-size:13px;font-weight:500;">' + btnText + '</a>';
+      ctaHtml = '<a href="' + escapeHtml(e.cta_link) + '" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:12px;padding:10px 20px;background:' + pc + ';color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;">' + btnText + '</a>';
     }
 
-    const subtitleHtml = e.subtitle
-      ? '<div style="font-size:13px;color:' + textSecondary + ';margin-top:2px;">' + escapeHtml(e.subtitle) + '</div>'
-      : "";
-
     const descHtml = showDesc && e.short_description
-      ? '<div style="font-size:13px;color:' + textBody + ';margin-top:6px;line-height:1.5;">' + escapeHtml(e.short_description) + '</div>'
+      ? '<div style="font-size:13px;color:' + textBody + ';margin-top:8px;line-height:1.6;">' + escapeHtml(e.short_description) + '</div>'
       : "";
 
-    // Featured image
     const imageHtml = e.featured_image_url
-      ? '<div style="display:flex;align-items:center;justify-content:flex-end;flex:0 0 auto;max-height:100px;max-width:220px;margin-left:auto;">' +
-        '<img src="' + escapeHtml(e.featured_image_url) + '" alt="' + escapeHtml(e.title) + '" loading="lazy" style="display:block;width:auto;height:auto;max-height:100px;max-width:220px;object-fit:contain;border-radius:8px;flex-shrink:0;" />' +
-        '</div>'
+      ? '<img src="' + escapeHtml(e.featured_image_url) + '" alt="' + escapeHtml(e.title) + '" loading="lazy" style="display:block;width:100%;height:auto;border-radius:8px;margin-top:10px;object-fit:cover;max-height:220px;" />'
       : "";
 
-    // Share buttons
     let shareHtml = "";
     if (showShare) {
       const eventUrl = e.cta_link || ("https://txeventshare.nl/event/" + escapeHtml(e.slug));
-      const shareText = encodeURIComponent(e.title + " — " + dateStr + " " + time);
+      const shareText = encodeURIComponent(e.title + " — " + weekday + " " + dayNum + " " + monthShort + " " + time);
       const shareUrl = encodeURIComponent(eventUrl);
-      shareHtml = '<div style="display:flex;gap:6px;margin-top:10px;">' +
-        '<a href="https://wa.me/?text=' + shareText + "%20" + shareUrl + '" target="_blank" rel="noopener" title="Deel via WhatsApp" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:#25D366;color:#fff;text-decoration:none;font-size:16px;">&#9993;</a>' +
-        '<a href="https://www.facebook.com/sharer/sharer.php?u=' + shareUrl + '" target="_blank" rel="noopener" title="Deel op Facebook" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:#1877F2;color:#fff;text-decoration:none;font-size:14px;font-weight:700;">f</a>' +
-        '<a href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener" title="Deel op X" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:#000;color:#fff;text-decoration:none;font-size:14px;font-weight:700;">𝕏</a>' +
-        '<a href="mailto:?subject=' + shareText + '&body=' + shareText + "%20" + shareUrl + '" title="Deel via e-mail" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:' + textSecondary + ';color:#fff;text-decoration:none;font-size:16px;">✉</a>' +
+      shareHtml = '<div style="display:flex;gap:8px;margin-top:12px;justify-content:center;">' +
+        '<a href="https://wa.me/?text=' + shareText + "%20" + shareUrl + '" target="_blank" rel="noopener" title="WhatsApp" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#25D366;color:#fff;text-decoration:none;font-size:16px;">&#9993;</a>' +
+        '<a href="https://www.facebook.com/sharer/sharer.php?u=' + shareUrl + '" target="_blank" rel="noopener" title="Facebook" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#1877F2;color:#fff;text-decoration:none;font-size:14px;font-weight:700;">f</a>' +
+        '<a href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener" title="X" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#000;color:#fff;text-decoration:none;font-size:14px;font-weight:700;">𝕏</a>' +
+        '<a href="mailto:?subject=' + shareText + '&body=' + shareText + "%20" + shareUrl + '" title="E-mail" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:' + textSecondary + ';color:#fff;text-decoration:none;font-size:16px;">✉</a>' +
         '</div>';
     }
 
-    return '<div style="border:1px solid ' + cardBorder + ';border-radius:10px;padding:16px;margin-bottom:12px;background:' + cardBg + ';display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">' +
-      '<div style="min-width:56px;text-align:center;background:' + dateBg + ';border-radius:8px;padding:8px;">' +
-      '<div style="font-size:11px;color:' + pc + ';font-weight:600;">' + dateStr + '</div>' +
-      '<div style="font-size:11px;color:' + textSecondary + ';">' + time + '</div>' +
-      '</div>' +
-      '<div style="flex:1;min-width:0;">' +
-      '<div style="font-weight:600;font-size:15px;color:' + textPrimary + ';">' + escapeHtml(e.title) + '</div>' +
-      subtitleHtml + descHtml + ctaHtml + shareHtml +
-      '</div>' +
+    // Section 1: date block (black) + title side by side
+    const heroSection1 =
+      '<div style="display:flex;gap:12px;align-items:center;">' +
+        '<div style="min-width:60px;text-align:center;background:#111;border-radius:8px;padding:10px 8px;">' +
+          '<div style="font-size:12px;color:#fff;font-weight:600;text-transform:capitalize;">' + weekday + ' ' + dayNum + ' ' + monthShort + '</div>' +
+          '<div style="font-size:14px;color:#fff;font-weight:700;margin-top:2px;">' + time + '</div>' +
+        '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-weight:700;font-size:16px;color:' + textPrimary + ';line-height:1.3;">' + escapeHtml(e.title) + '</div>' +
+          (e.subtitle ? '<div style="font-size:13px;color:' + textSecondary + ';margin-top:2px;">' + escapeHtml(e.subtitle) + '</div>' : '') +
+        '</div>' +
+      '</div>';
+
+    // Section 2: image, description, CTA, share (stacked)
+    const heroSection2 =
       imageHtml +
+      descHtml +
+      ctaHtml +
+      shareHtml;
+
+    return '<div style="border:1px solid ' + cardBorder + ';border-radius:12px;padding:16px;margin-bottom:14px;background:' + cardBg + ';">' +
+      heroSection1 +
+      heroSection2 +
       '</div>';
   }).join("");
 
