@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ArrowLeft, ArrowRight, Save, Send, Trash2, FileText, CalendarDays, Image, Megaphone, Send as SendIcon, Clock } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Send, Trash2, FileText, CalendarDays, Image, Megaphone, Send as SendIcon, Clock, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WizardProgress } from "@/components/event-wizard/WizardProgress";
 import { StepBasics } from "@/components/event-wizard/StepBasics";
@@ -7,10 +7,11 @@ import { StepDateTime } from "@/components/event-wizard/StepDateTime";
 import { StepMedia } from "@/components/event-wizard/StepMedia";
 import { StepPromotion } from "@/components/event-wizard/StepPromotion";
 import { StepPublish } from "@/components/event-wizard/StepPublish";
+import { OccurrencesTab } from "@/components/event-wizard/OccurrencesTab";
 import { useEventForm } from "@/components/event-wizard/useEventForm";
 import { AnimatePresence } from "framer-motion";
 
-const STEPS = [
+const BASE_STEPS = [
   { id: 1, label: "Basis", icon: FileText },
   { id: 2, label: "Datum & Locatie", icon: CalendarDays },
   { id: 3, label: "Content & Media", icon: Image },
@@ -18,19 +19,28 @@ const STEPS = [
   { id: 5, label: "Publiceren", icon: SendIcon },
 ];
 
+const OCCURRENCES_STEP = { id: 6, label: "Datums", icon: Repeat };
+
 export default function CreateEventPage() {
   const ctx = useEventForm();
   const [currentStep, setCurrentStep] = useState(1);
+
+  // Show occurrences tab only when editing a recurring event
+  const showOccurrences = ctx.isEditing && ctx.form.isRecurring;
+  const STEPS = showOccurrences ? [...BASE_STEPS, OCCURRENCES_STEP] : BASE_STEPS;
 
   const completedSteps = useMemo(() => {
     const completed: number[] = [];
     if (ctx.form.title.trim()) completed.push(1);
     if (ctx.form.startDate && ctx.form.startTime) completed.push(2);
-    if (completed.includes(1)) completed.push(3); // Content is optional
-    if (completed.includes(1)) completed.push(4); // Promotion is optional
+    if (completed.includes(1)) completed.push(3);
+    if (completed.includes(1)) completed.push(4);
     if (completed.includes(1) && completed.includes(2)) completed.push(5);
+    if (showOccurrences && completed.includes(2)) completed.push(6);
     return completed;
-  }, [ctx.form.title, ctx.form.startDate, ctx.form.startTime]);
+  }, [ctx.form.title, ctx.form.startDate, ctx.form.startTime, showOccurrences]);
+
+  const maxStep = STEPS[STEPS.length - 1].id;
 
   const canGoNext = () => {
     const v = ctx.validateStep(currentStep);
@@ -38,11 +48,19 @@ export default function CreateEventPage() {
   };
 
   const goNext = () => {
-    if (currentStep < 5 && canGoNext()) setCurrentStep(currentStep + 1);
+    if (currentStep < maxStep && canGoNext()) {
+      const nextStepIds = STEPS.map(s => s.id);
+      const currentIdx = nextStepIds.indexOf(currentStep);
+      if (currentIdx < nextStepIds.length - 1) {
+        setCurrentStep(nextStepIds[currentIdx + 1]);
+      }
+    }
   };
 
   const goPrev = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
+    const stepIds = STEPS.map(s => s.id);
+    const currentIdx = stepIds.indexOf(currentStep);
+    if (currentIdx > 0) setCurrentStep(stepIds[currentIdx - 1]);
   };
 
   if (ctx.loading) {
@@ -69,7 +87,7 @@ export default function CreateEventPage() {
               {ctx.isEditing ? (ctx.form.title || "Evenement bewerken") : (ctx.form.title || "Nieuw evenement")}
             </h1>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>Stap {currentStep} van {STEPS.length}</span>
+              <span>Stap {STEPS.findIndex(s => s.id === currentStep) + 1} van {STEPS.length}</span>
               {ctx.isDirty && <span className="text-highlight">• Niet opgeslagen</span>}
               {ctx.lastSavedAt && !ctx.isDirty && (
                 <span className="text-accent flex items-center gap-1">
@@ -147,6 +165,15 @@ export default function CreateEventPage() {
             validation={ctx.validateStep(5)}
           />
         )}
+        {currentStep === 6 && showOccurrences && ctx.id && ctx.tenantId && (
+          <OccurrencesTab
+            key="occurrences"
+            eventId={ctx.id}
+            tenantId={ctx.tenantId}
+            defaultStartTime={ctx.form.startTime}
+            defaultEndTime={ctx.form.endTime}
+          />
+        )}
       </AnimatePresence>
 
       {/* Navigation buttons */}
@@ -154,14 +181,14 @@ export default function CreateEventPage() {
         <Button
           variant="outline"
           onClick={goPrev}
-          disabled={currentStep === 1}
+          disabled={currentStep === STEPS[0].id}
           className="gap-2"
         >
           <ArrowLeft className="w-4 h-4" />
           Vorige
         </Button>
 
-        {currentStep < 5 ? (
+        {currentStep < maxStep ? (
           <Button
             onClick={goNext}
             disabled={!canGoNext()}
@@ -170,7 +197,7 @@ export default function CreateEventPage() {
             Volgende
             <ArrowRight className="w-4 h-4" />
           </Button>
-        ) : (
+        ) : currentStep !== 6 ? (
           <div className="flex gap-2">
             <Button variant="outline" onClick={ctx.handleSave} disabled={ctx.saving} className="gap-2">
               <Save className="w-4 h-4" />
@@ -181,7 +208,7 @@ export default function CreateEventPage() {
               {ctx.form.publishAt ? "Inplannen" : "Publiceren"}
             </Button>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

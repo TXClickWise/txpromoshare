@@ -6,6 +6,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { logAudit } from "@/lib/audit";
 import type { Tables } from "@/integrations/supabase/types";
+import { generatePreviewDates } from "./StepDateTime";
 
 function generateSlug(title: string) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -47,9 +48,12 @@ export interface EventFormState {
   socialText: string;
   isRecurring: boolean;
   recurringFreq: string;
+  recurringCustomFreq: string;
   recurringInterval: number;
   recurringDays: number[];
+  recurringEndType: string;
   recurringEndDate: string;
+  recurringEndCount: number;
   publishAt: string;
   showOnDiscovery: string;
   featuredImageId: string | null;
@@ -105,9 +109,12 @@ export function useEventForm() {
     socialText: "",
     isRecurring: false,
     recurringFreq: "weekly",
+    recurringCustomFreq: "weekly",
     recurringInterval: 1,
     recurringDays: [],
+    recurringEndType: "never",
     recurringEndDate: "",
+    recurringEndCount: 10,
     publishAt: "",
     showOnDiscovery: "inherit",
     featuredImageId: null,
@@ -387,6 +394,30 @@ export function useEventForm() {
     }
   }
 
+  async function generateOccurrences(eventId: string) {
+    if (!form.isRecurring || !tenantId) return;
+    const dates = generatePreviewDates(form);
+    if (dates.length === 0) return;
+
+    // Delete existing occurrences and regenerate
+    await supabase.from("event_occurrences").delete().eq("event_id", eventId);
+
+    const rows = dates.map(d => ({
+      event_id: eventId,
+      tenant_id: tenantId,
+      occurrence_date: d,
+      start_time: form.startTime || null,
+      end_time: form.endTime || null,
+      status: "active" as const,
+    }));
+
+    // Insert in batches of 50
+    for (let i = 0; i < rows.length; i += 50) {
+      const batch = rows.slice(i, i + 50);
+      await supabase.from("event_occurrences").insert(batch);
+    }
+  }
+
   async function handleSave() {
     if (!tenantId || !form.title.trim()) {
       toast.error("Vul minimaal een titel in om op te slaan");
@@ -405,7 +436,10 @@ export function useEventForm() {
       eventId = res.data?.id;
       if (eventId) setAutoSavedEventId(eventId);
     }
-    if (!error && eventId) await saveSponsors(eventId);
+    if (!error && eventId) {
+      await saveSponsors(eventId);
+      if (form.isRecurring) await generateOccurrences(eventId);
+    }
     setSaving(false);
     if (error) {
       toast.error("Opslaan mislukt: " + error.message);
@@ -442,7 +476,10 @@ export function useEventForm() {
       error = res.error;
       eventId = res.data?.id;
     }
-    if (!error && eventId) await saveSponsors(eventId);
+    if (!error && eventId) {
+      await saveSponsors(eventId);
+      if (form.isRecurring) await generateOccurrences(eventId);
+    }
     setSaving(false);
     if (error) {
       toast.error("Publiceren mislukt: " + error.message);
