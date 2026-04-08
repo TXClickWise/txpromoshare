@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AiAssistButton } from "@/components/AiAssistButton";
+import { useAiAssist } from "@/hooks/useAiAssist";
 import type { EventFormState } from "./useEventForm";
 
 interface StepPublishProps {
@@ -20,6 +22,40 @@ interface StepPublishProps {
 }
 
 export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSave, onPublish }: StepPublishProps) {
+  const { run, loading } = useAiAssist();
+
+  const handleGenerateSeo = () => {
+    run({
+      task: "generate_seo",
+      context: {
+        title: form.title,
+        description: form.shortDescription,
+        venue: "",
+        date: form.startDate,
+      },
+      onResult: (result) => {
+        if (result.seoTitle) updateForm({ seoTitle: result.seoTitle });
+        if (result.seoDescription) updateForm({ seoDescription: result.seoDescription });
+      },
+    });
+  };
+
+  const handleGenerateShareTexts = () => {
+    run({
+      task: "generate_share_texts",
+      context: {
+        title: form.title,
+        description: form.shortDescription,
+        date: form.startDate,
+        url: `https://txeventshare.nl/e/${form.slug}`,
+      },
+      onResult: (result) => {
+        if (result.whatsappText) updateForm({ whatsappText: result.whatsappText });
+        if (result.socialText) updateForm({ socialText: result.socialText });
+      },
+    });
+  };
+
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
       <div className="space-y-1">
@@ -29,7 +65,17 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
 
       {/* SEO */}
       <div className="rounded-xl bg-card border border-border p-5 space-y-4">
-        <p className="text-sm font-semibold text-foreground">SEO & URL</p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-foreground">SEO & URL</p>
+          {form.title && (
+            <AiAssistButton
+              onClick={handleGenerateSeo}
+              loading={loading === "generate_seo"}
+              label="Genereer SEO"
+              tooltip="Genereer SEO-titel en beschrijving met AI"
+            />
+          )}
+        </div>
         <div className="space-y-2">
           <Label className="text-xs text-muted-foreground">URL slug</Label>
           <div className="flex items-center gap-0">
@@ -49,7 +95,17 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
 
       {/* Share texts */}
       <div className="rounded-xl bg-card border border-border p-5 space-y-4">
-        <p className="text-sm font-semibold text-foreground">Deelteksten</p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-foreground">Deelteksten</p>
+          {form.title && (
+            <AiAssistButton
+              onClick={handleGenerateShareTexts}
+              loading={loading === "generate_share_texts"}
+              label="Genereer deelteksten"
+              tooltip="Genereer WhatsApp en social media teksten met AI"
+            />
+          )}
+        </div>
         <div className="space-y-2">
           <Label className="text-xs text-muted-foreground">WhatsApp tekst</Label>
           <Textarea value={form.whatsappText} onChange={(e) => updateForm({ whatsappText: e.target.value })} placeholder={`Check dit event: ${form.title}`} rows={2} />
@@ -154,6 +210,19 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
             <Send className="w-4 h-4" />
             {form.publishAt ? "Inplannen" : "Publiceren"}
           </Button>
+        </div>
+      </div>
+
+      {/* AI Assistant hint */}
+      <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+            <span className="text-lg">✨</span>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-foreground">AI-assistent</p>
+            <p className="text-xs text-muted-foreground">Gebruik de ✨-knoppen om beschrijvingen, SEO-teksten en deelteksten automatisch te genereren</p>
+          </div>
         </div>
       </div>
 

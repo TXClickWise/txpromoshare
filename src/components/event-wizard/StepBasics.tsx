@@ -3,6 +3,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
+import { AiAssistButton } from "@/components/AiAssistButton";
+import { useAiAssist } from "@/hooks/useAiAssist";
 import type { EventFormState } from "./useEventForm";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -13,6 +15,41 @@ interface StepBasicsProps {
 }
 
 export function StepBasics({ form, updateForm, categories }: StepBasicsProps) {
+  const { run, loading } = useAiAssist();
+
+  const categoryName = categories.find((c) => c.id === form.category)?.name || "";
+
+  const handleGenerateDescription = () => {
+    run({
+      task: "generate_description",
+      context: {
+        title: form.title,
+        category: categoryName,
+        organizer: form.organizer,
+        date: form.startDate,
+        venue: "",
+      },
+      onResult: (result) => {
+        if (result.shortDescription) updateForm({ shortDescription: result.shortDescription });
+        if (result.fullDescription) updateForm({ fullDescription: result.fullDescription });
+      },
+    });
+  };
+
+  const handleGenerateTags = () => {
+    run({
+      task: "generate_tags",
+      context: {
+        title: form.title,
+        category: categoryName,
+        description: form.shortDescription,
+      },
+      onResult: (result) => {
+        if (result.tags) updateForm({ tags: result.tags });
+      },
+    });
+  };
+
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
       <div className="space-y-1">
@@ -54,7 +91,17 @@ export function StepBasics({ form, updateForm, categories }: StepBasicsProps) {
 
         {/* Short description */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Korte beschrijving</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">Korte beschrijving</Label>
+            {form.title && (
+              <AiAssistButton
+                onClick={handleGenerateDescription}
+                loading={loading === "generate_description"}
+                label="Genereer beschrijvingen"
+                tooltip="Genereer korte en volledige beschrijving met AI"
+              />
+            )}
+          </div>
           <Textarea
             value={form.shortDescription}
             onChange={(e) => updateForm({ shortDescription: e.target.value })}
@@ -65,7 +112,7 @@ export function StepBasics({ form, updateForm, categories }: StepBasicsProps) {
           <p className="text-[11px] text-muted-foreground">{form.shortDescription.length}/160 tekens — wordt getoond in overzichten en deelberichten</p>
         </div>
 
-        {/* Subtitle - optional, collapsed feel */}
+        {/* Subtitle - optional */}
         <div className="space-y-2">
           <Label className="text-sm font-medium text-muted-foreground">Ondertitel <span className="text-xs">(optioneel)</span></Label>
           <Input value={form.subtitle} onChange={(e) => updateForm({ subtitle: e.target.value })} placeholder="Optionele ondertitel" />
@@ -84,7 +131,17 @@ export function StepBasics({ form, updateForm, categories }: StepBasicsProps) {
 
         {/* Tags */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Tags</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">Tags</Label>
+            {form.title && (
+              <AiAssistButton
+                onClick={handleGenerateTags}
+                loading={loading === "generate_tags"}
+                label="Genereer tags"
+                tooltip="Genereer relevante tags met AI"
+              />
+            )}
+          </div>
           <Input value={form.tags} onChange={(e) => updateForm({ tags: e.target.value })} placeholder="bijv. live-muziek, DJ, 80s, retro" />
           <p className="text-[11px] text-muted-foreground">Gescheiden door komma's, zonder # teken. Bijv: <span className="font-mono bg-secondary px-1 rounded">live-muziek, DJ, feest</span></p>
         </div>
