@@ -15,6 +15,7 @@ const adminNavItems = [
   { to: "/admin/plans", icon: Package, label: "Plannen" },
   { to: "/admin/overrides", icon: ArrowUpDown, label: "Plan Overrides" },
   { to: "/admin/audit", icon: ScrollText, label: "Audit Log" },
+  { to: "/admin/settings", icon: Settings, label: "Instellingen" },
 ];
 
 export default function AdminLayout() {
