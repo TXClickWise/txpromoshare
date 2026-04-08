@@ -170,6 +170,13 @@ export default function EventsPage() {
                       {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.start_time?.slice(0, 5)}
                     </span>
                   </p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="text-[10px] text-muted-foreground font-medium">ID:</span>
+                    <code className="text-[10px] bg-secondary px-1.5 py-0.5 rounded font-mono text-muted-foreground truncate max-w-[200px]">{event.id}</code>
+                    <button onClick={(e) => copyEventId(e, event.id)} className="shrink-0 p-0.5 rounded hover:bg-secondary transition-colors" title="Kopieer Event ID">
+                      {copiedId === event.id ? <Check className="w-3 h-3 text-accent" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
+                    </button>
+                  </div>
                 </div>
                 <EventStatusBadge status={event.status} />
                 <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} onRefresh={fetchEvents} />
