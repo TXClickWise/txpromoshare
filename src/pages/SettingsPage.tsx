@@ -13,6 +13,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { usePlan } from "@/hooks/usePlan";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import BrandingTab from "@/components/settings/BrandingTab";
 
 function SettingsCard({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
