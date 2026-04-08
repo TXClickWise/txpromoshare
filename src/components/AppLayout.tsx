@@ -30,7 +30,7 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const { user, loading, signOut, isPlatformAdmin } = useAuth();
   const { tenant } = useTenant();
-  const { planId } = usePlan();
+  const { effectivePlanId } = usePlan();
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen bg-background"><div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
@@ -41,7 +41,7 @@ export default function AppLayout() {
 
   const fullName = user?.user_metadata?.full_name || "Gebruiker";
   const initials = fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
-  const planLabel = planId.charAt(0).toUpperCase() + planId.slice(1) + " plan";
+  const planLabel = effectivePlanId.charAt(0).toUpperCase() + effectivePlanId.slice(1) + " plan";
 
   const handleSignOut = async () => {
     await signOut();

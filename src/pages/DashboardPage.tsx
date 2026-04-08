@@ -33,10 +33,10 @@ interface DashboardEvent {
 }
 
 export default function DashboardPage() {
-  const { planId, upgradePlan } = usePlan();
+  const { effectivePlanId, upgradePlan } = usePlan();
   const { user } = useAuth();
   const { tenant, tenantId } = useTenant();
-  const planLabel = planId.charAt(0).toUpperCase() + planId.slice(1);
+  const planLabel = effectivePlanId.charAt(0).toUpperCase() + effectivePlanId.slice(1);
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "daar";
   const orgName = tenant?.name || "Mijn organisatie";

@@ -18,8 +18,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { logAudit } from "@/lib/audit";
 import type { Tables } from "@/integrations/supabase/types";
 
-const categories = Object.entries(t.events.categories);
-
 function generateSlug(title: string) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
@@ -50,6 +48,7 @@ export default function CreateEventPage() {
   const [shortDescription, setShortDescription] = useState("");
   const [fullDescription, setFullDescription] = useState("");
   const [category, setCategory] = useState(template || "");
+  const [availableCategories, setAvailableCategories] = useState<Pick<Tables<"categories">, "id" | "name" | "slug">[]>([]);
   const [organizer, setOrganizer] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -84,6 +83,24 @@ export default function CreateEventPage() {
   const [sponsors, setSponsors] = useState<{ name: string; logo_url: string; website_url: string }[]>([]);
   const [sponsorsLoading, setSponsorsLoading] = useState(false);
 
+  useEffect(() => {
+    supabase
+      .from("categories")
+      .select("id, name, slug")
+      .order("sort_order")
+      .then(({ data }) => {
+        setAvailableCategories(data || []);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (isEditing || !template || category || availableCategories.length === 0) return;
+    const templateCategory = availableCategories.find((item) => item.slug === template);
+    if (templateCategory) {
+      setCategory(templateCategory.id);
+    }
+  }, [availableCategories, category, isEditing, template]);
+
   // Load existing event when editing
   useEffect(() => {
     if (!id) return;
@@ -93,6 +110,7 @@ export default function CreateEventPage() {
         setSubtitle(data.subtitle || "");
         setShortDescription(data.short_description || "");
         setFullDescription(data.full_description || "");
+        setCategory(data.category_id || "");
         setOrganizer(data.organizer_name || "");
         setStartDate(data.start_date);
         setEndDate(data.end_date || "");
@@ -178,6 +196,7 @@ export default function CreateEventPage() {
       subtitle: subtitle || null,
       short_description: shortDescription || null,
       full_description: fullDescription || null,
+      category_id: category || null,
       organizer_name: organizer || null,
       start_date: startDate,
       end_date: endDate || null,
@@ -346,8 +365,8 @@ export default function CreateEventPage() {
                     <Select value={category} onValueChange={setCategory}>
                       <SelectTrigger><SelectValue placeholder="Kies categorie" /></SelectTrigger>
                       <SelectContent>
-                        {categories.map(([key, label]) => (
-                          <SelectItem key={key} value={key}>{label}</SelectItem>
+                        {availableCategories.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
