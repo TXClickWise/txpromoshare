@@ -284,11 +284,39 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="rounded-xl bg-secondary/30 border border-border p-4">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Preview</p>
+            <div className="rounded-xl bg-secondary/30 border border-border p-4 space-y-4">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Preview — Zo ziet het eruit</p>
+              
+              {/* Buttons preview */}
               <div className="flex gap-3">
                 <div className="w-full py-2.5 rounded-lg text-xs font-semibold text-center text-white" style={{ backgroundColor: primaryColor }}>Reserveer nu</div>
                 <div className="w-full py-2.5 rounded-lg text-xs font-semibold text-center text-white" style={{ backgroundColor: secondaryColor }}>Deel event</div>
+              </div>
+
+              {/* Mini widget preview */}
+              <div className="rounded-lg bg-white border border-border p-4" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+                <div className="flex items-center gap-2 mb-3">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="" className="h-5 w-auto object-contain" />
+                  ) : (
+                    <div className="w-1 h-5 rounded-sm" style={{ backgroundColor: primaryColor }} />
+                  )}
+                  <p className="text-sm font-bold text-gray-900">Agenda · {orgName || "Jouw organisatie"}</p>
+                </div>
+                <div className="rounded-lg border border-gray-200 p-3 flex gap-3 items-start">
+                  <div className="text-center rounded-md px-2 py-1.5" style={{ backgroundColor: primaryColor + "15" }}>
+                    <p className="text-[10px] font-semibold" style={{ color: primaryColor }}>vr 25 apr</p>
+                    <p className="text-[10px] text-gray-500">20:00</p>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-gray-900">Voorbeeld evenement</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5">Een korte beschrijving van het event</p>
+                    <div className="mt-2 inline-block text-[10px] font-medium text-white px-3 py-1 rounded" style={{ backgroundColor: primaryColor }}>
+                      Meer info
+                    </div>
+                  </div>
+                </div>
+                <p className="text-center text-[9px] text-gray-400 mt-3">Powered by TX EventShare</p>
               </div>
             </div>
 

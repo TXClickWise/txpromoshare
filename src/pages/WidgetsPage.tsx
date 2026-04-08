@@ -1,4 +1,4 @@
-import { Code2, Copy, Check, Plus, Palette, Trash2, Power, PowerOff } from "lucide-react";
+import { Code2, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
@@ -7,18 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { EmptyState } from "@/components/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { toast } from "sonner";
+import { WidgetCard } from "@/components/widgets/WidgetCard";
+import { WidgetConfigPanel } from "@/components/widgets/WidgetConfigPanel";
 import type { Tables } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 
 type WidgetType = Database["public"]["Enums"]["widget_type"];
 
 export default function WidgetsPage() {
-  const { tenantId, tenant } = useTenant();
+  const { tenantId } = useTenant();
   const [widgets, setWidgets] = useState<Tables<"widgets">[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
@@ -28,6 +29,7 @@ export default function WidgetsPage() {
   const [newEventId, setNewEventId] = useState("");
   const [creating, setCreating] = useState(false);
   const [events, setEvents] = useState<{ id: string; title: string; status: string }[]>([]);
+  const [selectedWidgetId, setSelectedWidgetId] = useState<string | null>(null);
 
   async function fetchWidgets() {
     if (!tenantId) return;
@@ -60,14 +62,14 @@ export default function WidgetsPage() {
       return;
     }
     setCreating(true);
-    const config: any = { theme: "light" };
+    const config: any = { theme: "light", show_description: true, show_share_buttons: true };
     if (newType === "single_event") config.event_id = newEventId;
-    const { error } = await supabase.from("widgets").insert({
+    const { data, error } = await supabase.from("widgets").insert({
       tenant_id: tenantId,
       name: newName.trim(),
       type: newType,
       config,
-    });
+    }).select("id").single();
     setCreating(false);
     if (error) {
       toast.error("Aanmaken mislukt: " + error.message);
@@ -76,7 +78,8 @@ export default function WidgetsPage() {
       setNewName("");
       setNewEventId("");
       setDialogOpen(false);
-      fetchWidgets();
+      await fetchWidgets();
+      if (data) setSelectedWidgetId(data.id);
     }
   }
 
@@ -91,6 +94,7 @@ export default function WidgetsPage() {
     const { error } = await supabase.from("widgets").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success(`"${name}" verwijderd`);
+    if (selectedWidgetId === id) setSelectedWidgetId(null);
     fetchWidgets();
   }
 
@@ -100,11 +104,14 @@ export default function WidgetsPage() {
     return `<div id="txeventshare-widget-${widget.id}"></div>\n<script src="${scriptUrl}" data-widget-id="${widget.id}" async></script>`;
   }
 
-  const copy = (key: string, text: string) => {
+  const copy = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
-    setCopied(key);
+    setCopied(id);
+    toast.success("Embed code gekopieerd");
     setTimeout(() => setCopied(null), 2000);
   };
+
+  const selectedWidget = widgets.find((w) => w.id === selectedWidgetId) || null;
 
   if (loading) {
     return (
@@ -115,7 +122,8 @@ export default function WidgetsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground">{t.widgets.title}</h1>
@@ -169,7 +177,7 @@ export default function WidgetsPage() {
 
       {/* How it works */}
       <div className="rounded-xl bg-secondary/30 border border-border p-4">
-        <div className="flex items-center gap-4 justify-center text-xs text-muted-foreground">
+        <div className="flex items-center gap-4 justify-center text-xs text-muted-foreground flex-wrap">
           <div className="flex items-center gap-2">
             <span className="w-6 h-6 rounded-full gradient-hero text-primary-foreground text-[10px] font-bold flex items-center justify-center">1</span>
             Maak een widget
@@ -177,12 +185,12 @@ export default function WidgetsPage() {
           <span className="text-muted-foreground/30">→</span>
           <div className="flex items-center gap-2">
             <span className="w-6 h-6 rounded-full gradient-hero text-primary-foreground text-[10px] font-bold flex items-center justify-center">2</span>
-            Kopieer de code
+            Pas instellingen aan
           </div>
           <span className="text-muted-foreground/30">→</span>
           <div className="flex items-center gap-2">
             <span className="w-6 h-6 rounded-full gradient-hero text-primary-foreground text-[10px] font-bold flex items-center justify-center">3</span>
-            Plak op je website
+            Kopieer & plak op je website
           </div>
         </div>
       </div>
@@ -190,61 +198,53 @@ export default function WidgetsPage() {
       {widgets.length === 0 ? (
         <EmptyState icon={Code2} title="Nog geen widgets" description="Maak je eerste widget aan om je evenementen op je website te tonen." />
       ) : (
-        <div className="grid md:grid-cols-2 gap-5">
-          {widgets.map((w, i) => {
-            const embedCode = getEmbedCode(w);
-            return (
+        <div className="flex gap-6 flex-col lg:flex-row">
+          {/* Widget list */}
+          <div className="space-y-3 lg:w-[340px] shrink-0">
+            {widgets.map((w, i) => (
               <motion.div
                 key={w.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="rounded-xl bg-card border border-border shadow-card overflow-hidden"
+                transition={{ delay: i * 0.03 }}
               >
-                {/* Preview area */}
-                <div className="h-24 bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center border-b border-border relative">
-                  <span className="text-3xl">{w.type === "agenda" ? "📅" : "🎯"}</span>
-                  <div className="absolute top-2 right-2 flex gap-1">
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${w.is_active ? "bg-accent/20 text-accent" : "bg-muted text-muted-foreground"}`}>
-                      {w.is_active ? "Actief" : "Inactief"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-5 space-y-4">
-                  <div>
-                    <h3 className="font-display font-bold text-foreground">{w.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {w.type === "agenda" ? t.widgets.agenda : t.widgets.singleEvent}
-                    </p>
-                  </div>
-
-                  {/* Embed code */}
-                  <div>
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">{t.widgets.embedInstructions}:</p>
-                    <code className="block text-[11px] bg-secondary p-3 rounded-lg text-muted-foreground whitespace-pre-wrap font-mono break-all">{embedCode}</code>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => copy(w.id, embedCode)} className="gap-2 flex-1">
-                      {copied === w.id ? <Check className="w-4 h-4 text-accent" /> : <Copy className="w-4 h-4" />}
-                      {copied === w.id ? "Gekopieerd!" : "Kopieer code"}
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => toggleActive(w.id, w.is_active)} className="gap-2" title={w.is_active ? "Deactiveren" : "Activeren"}>
-                      {w.is_active ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => deleteWidget(w.id, w.name)} className="gap-2 text-destructive hover:text-destructive">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
+                <WidgetCard
+                  widget={w}
+                  isSelected={selectedWidgetId === w.id}
+                  copied={copied === w.id}
+                  onSelect={() => setSelectedWidgetId(w.id)}
+                  onCopy={() => copy(w.id, getEmbedCode(w))}
+                  onToggleActive={() => toggleActive(w.id, w.is_active)}
+                  onDelete={() => deleteWidget(w.id, w.name)}
+                />
               </motion.div>
-            );
-          })}
+            ))}
+          </div>
+
+          {/* Config panel */}
+          <div className="flex-1 min-w-0">
+            {selectedWidget ? (
+              <motion.div
+                key={selectedWidget.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="rounded-xl bg-card border border-border shadow-card p-6"
+              >
+                <WidgetConfigPanel
+                  widget={selectedWidget}
+                  events={events}
+                  onUpdated={fetchWidgets}
+                />
+              </motion.div>
+            ) : (
+              <div className="rounded-xl bg-secondary/20 border border-dashed border-border p-12 text-center">
+                <Code2 className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">Selecteer een widget om de instellingen en preview te bekijken</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
-
-      <UpgradeBanner feature="Onbeperkt widgets & geavanceerde stijlopties" plan="Pro" compact />
     </div>
   );
 }
