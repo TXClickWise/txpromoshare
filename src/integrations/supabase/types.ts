@@ -329,6 +329,63 @@ export type Database = {
           },
         ]
       }
+      event_occurrences: {
+        Row: {
+          created_at: string
+          end_time: string | null
+          event_id: string
+          id: string
+          label: string | null
+          occurrence_date: string
+          overrides: Json
+          start_time: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_time?: string | null
+          event_id: string
+          id?: string
+          label?: string | null
+          occurrence_date: string
+          overrides?: Json
+          start_time?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string | null
+          event_id?: string
+          id?: string
+          label?: string | null
+          occurrence_date?: string
+          overrides?: Json
+          start_time?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_occurrences_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_occurrences_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_sponsors: {
         Row: {
           event_id: string
