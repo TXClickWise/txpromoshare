@@ -13,6 +13,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { usePlan } from "@/hooks/usePlan";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import BrandingTab from "@/components/settings/BrandingTab";
 
 function SettingsCard({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
@@ -39,12 +40,7 @@ export default function SettingsPage() {
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [businessType, setBusinessType] = useState("");
-  const [primaryColor, setPrimaryColor] = useState("#E86C2C");
-  const [secondaryColor, setSecondaryColor] = useState("#2A9D8F");
   const [saving, setSaving] = useState(false);
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [logoUploading, setLogoUploading] = useState(false);
-  const logoInputRef = useRef<HTMLInputElement>(null);
   const [showOnDiscovery, setShowOnDiscovery] = useState(true);
 
   // Venue state
@@ -67,9 +63,6 @@ export default function SettingsPage() {
       setCity(tenant.city || "");
       setPostalCode(tenant.postal_code || "");
       setBusinessType(tenant.business_type || "");
-      setPrimaryColor(tenant.primary_color || "#E86C2C");
-      setSecondaryColor(tenant.secondary_color || "#2A9D8F");
-      setLogoUrl(tenant.logo_url || null);
       setShowOnDiscovery((tenant as any).show_on_discovery !== false);
     }
   }, [tenant]);
@@ -109,49 +102,6 @@ export default function SettingsPage() {
     } else {
       toast.success("Organisatie-instellingen opgeslagen");
       logAudit({ tenantId: tenant.id, entityType: "tenant", action: "settings_updated", entityId: tenant.id });
-      refetch();
-    }
-  }
-
-  async function handleLogoUpload(files: FileList | null) {
-    if (!files || !tenantId || files.length === 0) return;
-    setLogoUploading(true);
-    const file = files[0];
-    const ext = file.name.split(".").pop();
-    const path = `${tenantId}/logo.${ext}`;
-    await supabase.storage.from("media").remove([path]);
-    const { error: uploadError } = await supabase.storage.from("media").upload(path, file, { upsert: true });
-    if (uploadError) {
-      toast.error("Logo upload mislukt: " + uploadError.message);
-      setLogoUploading(false);
-      return;
-    }
-    const { data: urlData } = supabase.storage.from("media").getPublicUrl(path);
-    const newUrl = urlData.publicUrl;
-    const { error } = await supabase.from("tenants").update({ logo_url: newUrl }).eq("id", tenantId);
-    setLogoUploading(false);
-    if (error) {
-      toast.error("Opslaan mislukt: " + error.message);
-    } else {
-      setLogoUrl(newUrl);
-      toast.success("Logo geüpload");
-      refetch();
-    }
-  }
-
-  async function saveBranding() {
-    if (!tenant) return;
-    setSaving(true);
-    const { error } = await supabase
-      .from("tenants")
-      .update({ primary_color: primaryColor, secondary_color: secondaryColor })
-      .eq("id", tenant.id);
-    setSaving(false);
-    if (error) {
-      toast.error("Opslaan mislukt: " + error.message);
-    } else {
-      toast.success("Branding opgeslagen");
-      logAudit({ tenantId: tenant.id, entityType: "tenant", action: "branding_updated", entityId: tenant.id });
       refetch();
     }
   }
@@ -289,105 +239,8 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Branding */}
-        <TabsContent value="branding" className="space-y-5">
-          <SettingsCard title="Logo" description="Je logo wordt getoond op eventpagina's, widgets en e-mails.">
-            <input
-              ref={logoInputRef}
-              type="file"
-              accept="image/png,image/svg+xml,image/jpeg,image/webp"
-              className="hidden"
-              onChange={(e) => handleLogoUpload(e.target.files)}
-            />
-            {logoUrl ? (
-              <div className="relative border-2 border-dashed border-border rounded-xl p-4 bg-secondary/20">
-                <div className="aspect-square max-w-[180px] mx-auto">
-                  <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
-                </div>
-                <div className="flex justify-center gap-2 mt-3">
-                  <Button variant="outline" size="sm" onClick={() => logoInputRef.current?.click()} disabled={logoUploading} className="gap-2 text-xs">
-                    <Upload className="w-3.5 h-3.5" />Wijzigen
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-destructive" onClick={async () => {
-                    if (!tenant) return;
-                    await supabase.from("tenants").update({ logo_url: null }).eq("id", tenant.id);
-                    setLogoUrl(null);
-                    refetch();
-                    toast.success("Logo verwijderd");
-                  }}>
-                    <X className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div
-                className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 cursor-pointer transition-colors bg-secondary/20"
-                onClick={() => logoInputRef.current?.click()}
-              >
-                <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
-                  <Building2 className="w-6 h-6 text-muted-foreground/30" />
-                </div>
-                <p className="text-sm font-medium text-foreground">{logoUploading ? "Uploaden..." : "Upload je logo"}</p>
-                <p className="text-xs text-muted-foreground mt-1">PNG, SVG of JPG, minimaal 200×200px</p>
-              </div>
-            )}
-          </SettingsCard>
-
-          <SettingsCard title="Kleuren" description="Kleuren worden gebruikt op eventpagina's, widgets en deelkaarten.">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Primaire kleur</Label>
-                <div className="flex gap-2 items-center">
-                  <Input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-12 h-10 p-1 cursor-pointer" />
-                  <Input value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="flex-1 font-mono text-sm" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Secundaire kleur</Label>
-                <div className="flex gap-2 items-center">
-                  <Input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-12 h-10 p-1 cursor-pointer" />
-                  <Input value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="flex-1 font-mono text-sm" />
-                </div>
-              </div>
-            </div>
-          </SettingsCard>
-
-          {/* Live preview */}
-          <SettingsCard title="Preview" description="Zo ziet jouw branding eruit op een widget.">
-            <div className="rounded-xl bg-secondary/30 border border-border p-4 space-y-4">
-              <div className="flex gap-3">
-                <div className="w-full py-2.5 rounded-lg text-xs font-semibold text-center text-white" style={{ backgroundColor: primaryColor }}>Reserveer nu</div>
-                <div className="w-full py-2.5 rounded-lg text-xs font-semibold text-center text-white" style={{ backgroundColor: secondaryColor }}>Deel event</div>
-              </div>
-              <div className="rounded-lg bg-white border border-border p-4" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
-                <div className="flex items-center gap-2 mb-3">
-                  {logoUrl ? (
-                    <img src={logoUrl} alt="" className="h-5 w-auto object-contain" />
-                  ) : (
-                    <div className="w-1 h-5 rounded-sm" style={{ backgroundColor: primaryColor }} />
-                  )}
-                  <p className="text-sm font-bold text-gray-900">Agenda · {orgName || "Jouw organisatie"}</p>
-                </div>
-                <div className="rounded-lg border border-gray-200 p-3 flex gap-3 items-start">
-                  <div className="text-center rounded-md px-2 py-1.5" style={{ backgroundColor: primaryColor + "15" }}>
-                    <p className="text-[10px] font-semibold" style={{ color: primaryColor }}>vr 25 apr</p>
-                    <p className="text-[10px] text-gray-500">20:00</p>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-semibold text-gray-900">Voorbeeld evenement</p>
-                    <p className="text-[11px] text-gray-500 mt-0.5">Een korte beschrijving van het event</p>
-                    <div className="mt-2 inline-block text-[10px] font-medium text-white px-3 py-1 rounded" style={{ backgroundColor: primaryColor }}>
-                      Meer info
-                    </div>
-                  </div>
-                </div>
-                <p className="text-center text-[9px] text-gray-400 mt-3">Powered by TX EventShare</p>
-              </div>
-            </div>
-          </SettingsCard>
-
-          <Button size="sm" onClick={saveBranding} disabled={saving} className="gap-2">
-            <Save className="w-4 h-4" />{saving ? "Opslaan..." : t.common.save}
-          </Button>
+        <TabsContent value="branding">
+          <BrandingTab />
         </TabsContent>
 
         {/* Venues */}

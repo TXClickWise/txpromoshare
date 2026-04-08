@@ -1245,13 +1245,18 @@ export type Database = {
       tenants: {
         Row: {
           address: string | null
+          brand_summary: string | null
           business_type: string | null
+          button_style: string | null
           city: string | null
           contact_person: string | null
           country: string | null
           created_at: string
+          default_cta_text: string | null
           email: string | null
+          font_family: string | null
           id: string
+          image_style: string | null
           logo_url: string | null
           name: string
           phone: string | null
@@ -1262,18 +1267,25 @@ export type Database = {
           show_on_discovery: boolean
           slug: string
           status: string
+          tagline: string | null
+          tone_of_voice: string | null
           updated_at: string
           website_url: string | null
         }
         Insert: {
           address?: string | null
+          brand_summary?: string | null
           business_type?: string | null
+          button_style?: string | null
           city?: string | null
           contact_person?: string | null
           country?: string | null
           created_at?: string
+          default_cta_text?: string | null
           email?: string | null
+          font_family?: string | null
           id?: string
+          image_style?: string | null
           logo_url?: string | null
           name: string
           phone?: string | null
@@ -1284,18 +1296,25 @@ export type Database = {
           show_on_discovery?: boolean
           slug: string
           status?: string
+          tagline?: string | null
+          tone_of_voice?: string | null
           updated_at?: string
           website_url?: string | null
         }
         Update: {
           address?: string | null
+          brand_summary?: string | null
           business_type?: string | null
+          button_style?: string | null
           city?: string | null
           contact_person?: string | null
           country?: string | null
           created_at?: string
+          default_cta_text?: string | null
           email?: string | null
+          font_family?: string | null
           id?: string
+          image_style?: string | null
           logo_url?: string | null
           name?: string
           phone?: string | null
@@ -1306,6 +1325,8 @@ export type Database = {
           show_on_discovery?: boolean
           slug?: string
           status?: string
+          tagline?: string | null
+          tone_of_voice?: string | null
           updated_at?: string
           website_url?: string | null
         }
