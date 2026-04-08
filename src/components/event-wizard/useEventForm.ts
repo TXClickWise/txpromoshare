@@ -127,10 +127,13 @@ export function useEventForm() {
 
   // Match template to category
   useEffect(() => {
-    if (isEditing || !template || form.category || availableCategories.length === 0) return;
-    const match = availableCategories.find(c => c.slug === template);
+    if (isEditing || form.category || availableCategories.length === 0) return;
+    // Match by UUID (template_category) or slug (template)
+    const matchId = templateCategory && availableCategories.find(c => c.id === templateCategory);
+    const matchSlug = template && availableCategories.find(c => c.slug === template);
+    const match = matchId || matchSlug;
     if (match) updateForm({ category: match.id });
-  }, [availableCategories, form.category, isEditing, template, updateForm]);
+  }, [availableCategories, form.category, isEditing, template, templateCategory, updateForm]);
 
   // Load existing event
   useEffect(() => {
