@@ -13,6 +13,20 @@ interface StepDateTimeProps {
   venues?: Tables<"venues">[];
 }
 
+const RECURRENCE_PRESETS = [
+  { value: "weekly", label: "Wekelijks", desc: "Elke week op dezelfde dag" },
+  { value: "biweekly", label: "Om de 2 weken", desc: "Elke twee weken" },
+  { value: "monthly", label: "Maandelijks", desc: "Eén keer per maand" },
+  { value: "daily", label: "Dagelijks", desc: "Elke dag" },
+  { value: "custom", label: "Aangepast", desc: "Stel zelf de frequentie in" },
+];
+
+const END_OPTIONS = [
+  { value: "never", label: "Geen einddatum" },
+  { value: "date", label: "Tot een datum" },
+  { value: "count", label: "Na X keer" },
+];
+
 export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProps) {
   const handleVenueSelect = (venueId: string) => {
     if (venueId === "custom") {
@@ -28,6 +42,8 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
       });
     }
   };
+
+  const isCustomFreq = form.recurringFreq === "custom";
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
@@ -120,27 +136,71 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
           </div>
           <Switch checked={form.isRecurring} onCheckedChange={(v) => updateForm({ isRecurring: v })} />
         </div>
+
         {form.isRecurring && (
-          <div className="space-y-4 pt-3 border-t border-border">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Frequentie</Label>
-                <Select value={form.recurringFreq} onValueChange={(v) => updateForm({ recurringFreq: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="daily">Dagelijks</SelectItem>
-                    <SelectItem value="weekly">Wekelijks</SelectItem>
-                    <SelectItem value="biweekly">Om de 2 weken</SelectItem>
-                    <SelectItem value="monthly">Maandelijks</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Elke X keer</Label>
-                <Input type="number" min={1} max={12} value={form.recurringInterval} onChange={(e) => updateForm({ recurringInterval: Number(e.target.value) })} />
+          <div className="space-y-5 pt-4 border-t border-border">
+            {/* Presets */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground font-medium">Herhaling</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {RECURRENCE_PRESETS.map(p => (
+                  <button
+                    key={p.value}
+                    type="button"
+                    onClick={() => {
+                      if (p.value === "custom") {
+                        updateForm({ recurringFreq: "custom" });
+                      } else if (p.value === "biweekly") {
+                        updateForm({ recurringFreq: "weekly", recurringInterval: 2 });
+                      } else {
+                        updateForm({ recurringFreq: p.value, recurringInterval: 1 });
+                      }
+                    }}
+                    className={`px-3 py-2.5 rounded-lg text-left transition-all border ${
+                      (form.recurringFreq === p.value) ||
+                      (p.value === "biweekly" && form.recurringFreq === "weekly" && form.recurringInterval === 2) ||
+                      (p.value === form.recurringFreq && form.recurringInterval === 1 && p.value !== "custom")
+                        ? "bg-primary/10 border-primary/30 text-primary"
+                        : "bg-secondary/50 border-border text-muted-foreground hover:bg-secondary/80"
+                    }`}
+                  >
+                    <span className="text-xs font-semibold block">{p.label}</span>
+                    <span className="text-[10px] opacity-70">{p.desc}</span>
+                  </button>
+                ))}
               </div>
             </div>
-            {form.recurringFreq === "weekly" && (
+
+            {/* Custom frequency */}
+            {isCustomFreq && (
+              <div className="grid grid-cols-2 gap-4 bg-secondary/30 rounded-lg p-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Frequentie</Label>
+                  <Select value={form.recurringCustomFreq || "weekly"} onValueChange={(v) => updateForm({ recurringCustomFreq: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">Dagen</SelectItem>
+                      <SelectItem value="weekly">Weken</SelectItem>
+                      <SelectItem value="monthly">Maanden</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Elke</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={12}
+                    value={form.recurringInterval}
+                    onChange={(e) => updateForm({ recurringInterval: Number(e.target.value) })}
+                    placeholder="1"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Days of week (for weekly) */}
+            {(form.recurringFreq === "weekly" || (isCustomFreq && (form.recurringCustomFreq || "weekly") === "weekly")) && (
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Op welke dag(en)</Label>
                 <div className="flex gap-1.5 flex-wrap">
@@ -148,8 +208,16 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
                     <button
                       key={day}
                       type="button"
-                      onClick={() => updateForm({ recurringDays: form.recurringDays.includes(i + 1) ? form.recurringDays.filter(d => d !== i + 1) : [...form.recurringDays, i + 1] })}
-                      className={`w-10 h-10 rounded-lg text-xs font-semibold transition-all ${form.recurringDays.includes(i + 1) ? "bg-primary text-primary-foreground shadow-sm" : "bg-secondary text-muted-foreground hover:bg-secondary/80"}`}
+                      onClick={() => updateForm({
+                        recurringDays: form.recurringDays.includes(i + 1)
+                          ? form.recurringDays.filter(d => d !== i + 1)
+                          : [...form.recurringDays, i + 1]
+                      })}
+                      className={`w-10 h-10 rounded-lg text-xs font-semibold transition-all ${
+                        form.recurringDays.includes(i + 1)
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                      }`}
                     >
                       {day}
                     </button>
@@ -157,13 +225,127 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
                 </div>
               </div>
             )}
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Eindigt na datum (optioneel)</Label>
-              <Input type="date" value={form.recurringEndDate} onChange={(e) => updateForm({ recurringEndDate: e.target.value })} className="max-w-xs" />
+
+            {/* End condition */}
+            <div className="space-y-3">
+              <Label className="text-xs text-muted-foreground font-medium">Wanneer stopt de herhaling?</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {END_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => updateForm({ recurringEndType: opt.value })}
+                    className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all border ${
+                      (form.recurringEndType || "never") === opt.value
+                        ? "bg-primary/10 border-primary/30 text-primary"
+                        : "bg-secondary/50 border-border text-muted-foreground hover:bg-secondary/80"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              {form.recurringEndType === "date" && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Einddatum herhaling</Label>
+                  <Input
+                    type="date"
+                    value={form.recurringEndDate}
+                    onChange={(e) => updateForm({ recurringEndDate: e.target.value })}
+                    min={form.startDate || undefined}
+                    className="max-w-xs"
+                  />
+                </div>
+              )}
+
+              {form.recurringEndType === "count" && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Aantal keer herhalen</Label>
+                  <Input
+                    type="number"
+                    min={2}
+                    max={52}
+                    value={form.recurringEndCount || 10}
+                    onChange={(e) => updateForm({ recurringEndCount: Number(e.target.value) })}
+                    className="max-w-xs"
+                    placeholder="10"
+                  />
+                </div>
+              )}
             </div>
+
+            {/* Preview of generated dates */}
+            {form.startDate && (
+              <div className="bg-secondary/30 rounded-lg p-3 space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">Voorbeeld datums die gegenereerd worden:</p>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {generatePreviewDates(form).slice(0, 8).map((d, i) => (
+                    <span key={i} className="text-[11px] bg-background rounded px-2 py-0.5 text-foreground border border-border">
+                      {new Date(d).toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short" })}
+                    </span>
+                  ))}
+                  {generatePreviewDates(form).length > 8 && (
+                    <span className="text-[11px] text-muted-foreground px-2 py-0.5">
+                      +{generatePreviewDates(form).length - 8} meer
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
     </motion.div>
   );
+}
+
+/** Generate preview dates based on form recurrence settings */
+export function generatePreviewDates(form: EventFormState): string[] {
+  if (!form.startDate || !form.isRecurring) return [];
+
+  const start = new Date(form.startDate);
+  const dates: string[] = [];
+  const maxDates = form.recurringEndType === "count" ? (form.recurringEndCount || 10) : 52;
+  const endDate = form.recurringEndType === "date" && form.recurringEndDate
+    ? new Date(form.recurringEndDate)
+    : null;
+
+  const freq = form.recurringFreq === "custom"
+    ? (form.recurringCustomFreq || "weekly")
+    : form.recurringFreq;
+  const interval = form.recurringFreq === "custom" || form.recurringFreq === "weekly"
+    ? form.recurringInterval
+    : 1;
+
+  let current = new Date(start);
+  for (let i = 0; i < maxDates * 7 && dates.length < maxDates; i++) {
+    if (endDate && current > endDate) break;
+
+    if (freq === "weekly" && form.recurringDays.length > 0) {
+      // For weekly with specific days
+      const dayOfWeek = current.getDay() === 0 ? 7 : current.getDay(); // 1=Ma, 7=Zo
+      if (form.recurringDays.includes(dayOfWeek) && current >= start) {
+        dates.push(current.toISOString().split("T")[0]);
+      }
+      current.setDate(current.getDate() + 1);
+      // Skip weeks based on interval
+      if (dayOfWeek === 7 && interval > 1) {
+        current.setDate(current.getDate() + (interval - 1) * 7);
+      }
+    } else if (freq === "daily") {
+      if (current >= start) dates.push(current.toISOString().split("T")[0]);
+      current.setDate(current.getDate() + interval);
+    } else if (freq === "weekly") {
+      if (current >= start) dates.push(current.toISOString().split("T")[0]);
+      current.setDate(current.getDate() + 7 * interval);
+    } else if (freq === "monthly") {
+      if (current >= start) dates.push(current.toISOString().split("T")[0]);
+      current.setMonth(current.getMonth() + interval);
+    } else {
+      break;
+    }
+  }
+
+  return dates;
 }
