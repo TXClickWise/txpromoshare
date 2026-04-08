@@ -1,4 +1,4 @@
-import { Share2, MessageCircle, Smartphone, Zap, BarChart3 } from "lucide-react";
+import { Share2, MessageCircle, Smartphone, Zap, BarChart3, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
@@ -6,17 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/EmptyState";
-import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { ChannelBar } from "@/components/distribution/ChannelBar";
 import { ShareLinkCard } from "@/components/distribution/ShareLinkCard";
 import { ShareTextCard } from "@/components/distribution/ShareTextCard";
-import { EmbedCodeCard } from "@/components/distribution/EmbedCodeCard";
 import { DistributionStats } from "@/components/distribution/DistributionStats";
+import { QRCodeDialog } from "@/components/distribution/QRCodeDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 
 export default function DistributionPage() {
@@ -24,6 +24,7 @@ export default function DistributionPage() {
   const { user } = useAuth();
   const [selectedEvent, setSelectedEvent] = useState("");
   const [activeTab, setActiveTab] = useState("share");
+  const [showQR, setShowQR] = useState(false);
 
   const { data: publishedEvents = [], isLoading } = useQuery({
     queryKey: ["events-published", tenantId],
@@ -84,7 +85,6 @@ export default function DistributionPage() {
   }
 
   const shareUrl = `https://txeventshare.nl/e/${event.slug}`;
-  const tenantSlug = tenant?.slug || "mijn-organisatie";
 
   const whatsappText = event.whatsapp_share_text ||
     `🎉 ${event.title}\n📅 ${new Date(event.start_date).toLocaleDateString("nl-NL")} om ${event.start_time}\n\n👉 Meer info:\n${shareUrl}`;
@@ -107,13 +107,13 @@ export default function DistributionPage() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">{t.distribution.title}</h1>
-          <p className="text-sm text-muted-foreground mt-1">Eén event, overal verspreid. Snel, consistent en on-brand.</p>
-        </div>
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-display font-bold text-foreground">{t.distribution.title}</h1>
+        <p className="text-sm text-muted-foreground mt-1">Kies een evenement en deel het overal — in één klik.</p>
       </div>
 
+      {/* Event selector */}
       <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border shadow-card">
         <Zap className="w-4 h-4 text-primary shrink-0" />
         <span className="text-sm font-medium text-foreground shrink-0">Evenement:</span>
@@ -136,40 +136,43 @@ export default function DistributionPage() {
         </Select>
       </div>
 
+      {/* Quick share bar */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
         <ChannelBar
           shareUrl={shareUrl}
           whatsappText={whatsappText}
+          socialText={socialText}
+          eventTitle={event.title}
           onChannelClick={(ch) => {
             trackAction(ch);
-            if (ch === "embed") setActiveTab("widgets");
-            if (ch === "social") setActiveTab("share");
           }}
+          onShowQR={() => setShowQR(true)}
         />
       </motion.div>
 
+      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="share" className="gap-2 text-xs"><Share2 className="w-3.5 h-3.5" />Delen</TabsTrigger>
+          <TabsTrigger value="share" className="gap-2 text-xs"><Share2 className="w-3.5 h-3.5" />Teksten</TabsTrigger>
           <TabsTrigger value="widgets" className="gap-2 text-xs"><Zap className="w-3.5 h-3.5" />Widgets</TabsTrigger>
           <TabsTrigger value="stats" className="gap-2 text-xs"><BarChart3 className="w-3.5 h-3.5" />Statistieken</TabsTrigger>
         </TabsList>
 
         <TabsContent value="share" className="mt-4 space-y-4">
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <ShareLinkCard url={shareUrl} />
+            <ShareLinkCard url={shareUrl} eventId={event.id} />
           </motion.div>
           <div className="grid md:grid-cols-2 gap-4">
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
               <ShareTextCard
-                icon={<MessageCircle className="w-4 h-4 text-accent" />}
+                icon={<MessageCircle className="w-4 h-4 text-green-600" />}
                 title="WhatsApp bericht"
                 description="Klaar om te sturen naar je gasten of groepen"
                 text={whatsappText}
                 onTextChange={() => toast.success("WhatsApp tekst opgeslagen")}
                 actions={
                   <a href={`https://wa.me/?text=${encodeURIComponent(whatsappText)}`} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" className="gap-2 gradient-accent text-accent-foreground border-0 hover:opacity-90">
+                    <Button size="sm" className="gap-2 bg-green-600 text-white hover:bg-green-700 border-0">
                       <Smartphone className="w-3.5 h-3.5" />Stuur via WhatsApp
                     </Button>
                   </a>
@@ -198,49 +201,36 @@ export default function DistributionPage() {
         </TabsContent>
 
         <TabsContent value="widgets" className="mt-4 space-y-4">
-          <div className="rounded-xl bg-secondary/30 border border-border p-4">
-            <div className="flex items-center gap-4 justify-center text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full gradient-hero text-primary-foreground text-[10px] font-bold flex items-center justify-center">1</span>
-                Kies widget type
-              </div>
-              <span className="text-muted-foreground/30">→</span>
-              <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full gradient-hero text-primary-foreground text-[10px] font-bold flex items-center justify-center">2</span>
-                Kopieer de code
-              </div>
-              <span className="text-muted-foreground/30">→</span>
-              <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full gradient-hero text-primary-foreground text-[10px] font-bold flex items-center justify-center">3</span>
-                Plak op je website
-              </div>
+          <div className="p-6 rounded-xl bg-card border border-border shadow-card text-center space-y-4">
+            <Zap className="w-8 h-8 text-primary mx-auto" />
+            <div>
+              <h3 className="font-display font-semibold text-foreground mb-1">Widgets beheren</h3>
+              <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                Maak en configureer je embed widgets op de Widgets pagina. Daar kun je het type kiezen, de stijl aanpassen en de embed-code kopiëren.
+              </p>
             </div>
+            <Link to="/app/widgets">
+              <Button className="gap-2">
+                Naar Widgets <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
           </div>
-          <div className="grid md:grid-cols-2 gap-4">
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-              <EmbedCodeCard type="agenda" tenantSlug={tenantSlug} />
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-              <EmbedCodeCard type="single_event" tenantSlug={tenantSlug} eventSlug={event.slug} />
-            </motion.div>
-          </div>
-          <UpgradeBanner feature="Onbeperkt widgets, geavanceerde stijlopties & eigen branding" plan="Pro" compact />
         </TabsContent>
 
         <TabsContent value="stats" className="mt-4 space-y-4">
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <DistributionStats stats={stats} />
           </motion.div>
-          <div className="p-6 rounded-xl bg-card border border-border shadow-card text-center">
-            <BarChart3 className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-            <h3 className="font-display font-semibold text-foreground text-sm mb-1">Gedetailleerde analytics</h3>
-            <p className="text-xs text-muted-foreground max-w-md mx-auto mb-4">
-              Bekijk precies hoe je evenementen verspreid worden: welke kanalen het beste werken, hoeveel kliks, en wanneer je gasten het meest actief zijn.
-            </p>
-            <UpgradeBanner feature="Geavanceerde distributie-analytics met klik-tracking en conversie-inzichten" plan="Pro" compact />
-          </div>
         </TabsContent>
       </Tabs>
+
+      {/* QR Dialog */}
+      <QRCodeDialog
+        open={showQR}
+        onOpenChange={setShowQR}
+        url={shareUrl}
+        eventTitle={event.title}
+      />
     </div>
   );
 }
