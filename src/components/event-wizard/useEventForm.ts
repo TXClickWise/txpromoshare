@@ -61,24 +61,32 @@ export function useEventForm() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const template = searchParams.get("template");
+  const templateCategory = searchParams.get("template_category");
   const { tenantId } = useTenant();
   const { user } = useAuth();
   const isEditing = !!id;
 
+  // Prefill from template URL params
+  const pfStartTime = searchParams.get("pf_startTime") || "20:00";
+  const pfEndTime = searchParams.get("pf_endTime") || "23:00";
+  const pfCta = searchParams.get("pf_cta") || "Reserveer nu";
+  const pfOrganizer = searchParams.get("pf_organizer") || "";
+  const pfDesc = searchParams.get("pf_desc") || "";
+
   const [form, setForm] = useState<EventFormState>({
     title: "",
     subtitle: "",
-    shortDescription: "",
+    shortDescription: pfDesc,
     fullDescription: "",
-    category: template || "",
-    organizer: "",
+    category: templateCategory || template || "",
+    organizer: pfOrganizer,
     startDate: "",
     endDate: "",
-    startTime: "20:00",
-    endTime: "23:00",
+    startTime: pfStartTime,
+    endTime: pfEndTime,
     venue: "",
     address: "",
-    ctaButtonText: "Reserveer nu",
+    ctaButtonText: pfCta,
     ctaLink: "",
     tags: "",
     slug: "",
@@ -119,10 +127,13 @@ export function useEventForm() {
 
   // Match template to category
   useEffect(() => {
-    if (isEditing || !template || form.category || availableCategories.length === 0) return;
-    const match = availableCategories.find(c => c.slug === template);
+    if (isEditing || form.category || availableCategories.length === 0) return;
+    // Match by UUID (template_category) or slug (template)
+    const matchId = templateCategory && availableCategories.find(c => c.id === templateCategory);
+    const matchSlug = template && availableCategories.find(c => c.slug === template);
+    const match = matchId || matchSlug;
     if (match) updateForm({ category: match.id });
-  }, [availableCategories, form.category, isEditing, template, updateForm]);
+  }, [availableCategories, form.category, isEditing, template, templateCategory, updateForm]);
 
   // Load existing event
   useEffect(() => {
