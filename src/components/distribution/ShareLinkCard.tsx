@@ -5,31 +5,56 @@ import { toast } from "sonner";
 
 interface ShareLinkCardProps {
   url: string;
+  eventId: string;
 }
 
-export function ShareLinkCard({ url }: ShareLinkCardProps) {
-  const [copied, setCopied] = useState(false);
+export function ShareLinkCard({ url, eventId }: ShareLinkCardProps) {
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
 
-  const copy = () => {
+  const copyLink = () => {
     navigator.clipboard.writeText(url);
-    setCopied(true);
+    setCopiedLink(true);
     toast.success("Link gekopieerd");
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const copyId = () => {
+    navigator.clipboard.writeText(eventId);
+    setCopiedId(true);
+    toast.success("Event ID gekopieerd");
+    setTimeout(() => setCopiedId(false), 2000);
   };
 
   return (
-    <div className="p-5 rounded-xl bg-card border border-border shadow-card space-y-3">
+    <div className="p-5 rounded-xl bg-card border border-border shadow-card space-y-4">
       <div className="flex items-center gap-2">
         <LinkIcon className="w-4 h-4 text-primary" />
         <h3 className="font-display font-semibold text-foreground text-sm">Publieke event link</h3>
       </div>
-      <p className="text-[11px] text-muted-foreground">Deel deze link overal — altijd up-to-date met de laatste eventinfo.</p>
-      <div className="flex gap-2">
-        <code className="flex-1 text-xs bg-secondary p-3 rounded-lg text-muted-foreground overflow-x-auto font-mono">{url}</code>
-        <Button variant="outline" size="sm" onClick={copy} className="shrink-0">
-          {copied ? <Check className="w-4 h-4 text-accent" /> : <Copy className="w-4 h-4" />}
-        </Button>
+
+      <div className="space-y-3">
+        <div>
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Event URL</p>
+          <div className="flex gap-2">
+            <code className="flex-1 text-xs bg-secondary p-2.5 rounded-lg text-muted-foreground overflow-x-auto font-mono">{url}</code>
+            <Button variant="outline" size="sm" onClick={copyLink} className="shrink-0 h-9">
+              {copiedLink ? <Check className="w-4 h-4 text-accent" /> : <Copy className="w-4 h-4" />}
+            </Button>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Event ID <span className="normal-case">(voor WordPress plugin)</span></p>
+          <div className="flex gap-2">
+            <code className="flex-1 text-xs bg-secondary p-2.5 rounded-lg text-muted-foreground overflow-x-auto font-mono">{eventId}</code>
+            <Button variant="outline" size="sm" onClick={copyId} className="shrink-0 h-9">
+              {copiedId ? <Check className="w-4 h-4 text-accent" /> : <Copy className="w-4 h-4" />}
+            </Button>
+          </div>
+        </div>
       </div>
+
       <a href={url} target="_blank" rel="noopener noreferrer">
         <Button variant="ghost" size="sm" className="gap-2 text-xs text-muted-foreground">
           <ExternalLink className="w-3.5 h-3.5" />Bekijk publieke pagina
