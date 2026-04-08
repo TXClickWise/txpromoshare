@@ -476,7 +476,10 @@ export function useEventForm() {
       error = res.error;
       eventId = res.data?.id;
     }
-    if (!error && eventId) await saveSponsors(eventId);
+    if (!error && eventId) {
+      await saveSponsors(eventId);
+      if (form.isRecurring) await generateOccurrences(eventId);
+    }
     setSaving(false);
     if (error) {
       toast.error("Publiceren mislukt: " + error.message);
