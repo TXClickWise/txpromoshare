@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
-import { ArrowLeft, ArrowRight, Save, Send, Trash2, FileText, CalendarDays, Image, Send as SendIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Send, Trash2, FileText, CalendarDays, Image, Megaphone, Send as SendIcon, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WizardProgress } from "@/components/event-wizard/WizardProgress";
 import { StepBasics } from "@/components/event-wizard/StepBasics";
 import { StepDateTime } from "@/components/event-wizard/StepDateTime";
 import { StepMedia } from "@/components/event-wizard/StepMedia";
+import { StepPromotion } from "@/components/event-wizard/StepPromotion";
 import { StepPublish } from "@/components/event-wizard/StepPublish";
 import { useEventForm } from "@/components/event-wizard/useEventForm";
 import { AnimatePresence } from "framer-motion";
@@ -12,33 +13,32 @@ import { AnimatePresence } from "framer-motion";
 const STEPS = [
   { id: 1, label: "Basis", icon: FileText },
   { id: 2, label: "Datum & Locatie", icon: CalendarDays },
-  { id: 3, label: "Media", icon: Image },
-  { id: 4, label: "Publiceren", icon: SendIcon },
+  { id: 3, label: "Content & Media", icon: Image },
+  { id: 4, label: "Promotie", icon: Megaphone },
+  { id: 5, label: "Publiceren", icon: SendIcon },
 ];
 
 export default function CreateEventPage() {
   const ctx = useEventForm();
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Track completed steps based on filled fields
   const completedSteps = useMemo(() => {
     const completed: number[] = [];
     if (ctx.form.title.trim()) completed.push(1);
     if (ctx.form.startDate && ctx.form.startTime) completed.push(2);
-    // Media is always "completable" (optional)
-    if (completed.includes(1)) completed.push(3);
-    if (completed.includes(1) && completed.includes(2)) completed.push(4);
+    if (completed.includes(1)) completed.push(3); // Content is optional
+    if (completed.includes(1)) completed.push(4); // Promotion is optional
+    if (completed.includes(1) && completed.includes(2)) completed.push(5);
     return completed;
   }, [ctx.form.title, ctx.form.startDate, ctx.form.startTime]);
 
   const canGoNext = () => {
-    if (currentStep === 1) return ctx.form.title.trim().length > 0;
-    if (currentStep === 2) return !!ctx.form.startDate && !!ctx.form.startTime;
-    return true;
+    const v = ctx.validateStep(currentStep);
+    return v.isValid;
   };
 
   const goNext = () => {
-    if (currentStep < 4 && canGoNext()) setCurrentStep(currentStep + 1);
+    if (currentStep < 5 && canGoNext()) setCurrentStep(currentStep + 1);
   };
 
   const goPrev = () => {
@@ -58,14 +58,26 @@ export default function CreateEventPage() {
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm -mx-4 lg:-mx-6 px-4 lg:px-6 py-3 border-b border-border mb-6">
         <div className="flex items-center gap-3">
-          <button onClick={() => ctx.navigate(-1)} className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors">
+          <button onClick={() => {
+            if (ctx.isDirty && !confirm("Je hebt onopgeslagen wijzigingen. Weet je zeker dat je wilt teruggaan?")) return;
+            ctx.navigate(-1);
+          }} className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-lg font-display font-bold text-foreground truncate">
               {ctx.isEditing ? (ctx.form.title || "Evenement bewerken") : (ctx.form.title || "Nieuw evenement")}
             </h1>
-            <p className="text-xs text-muted-foreground">Stap {currentStep} van {STEPS.length}</p>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Stap {currentStep} van {STEPS.length}</span>
+              {ctx.isDirty && <span className="text-highlight">• Niet opgeslagen</span>}
+              {ctx.lastSavedAt && !ctx.isDirty && (
+                <span className="text-accent flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  Opgeslagen {ctx.lastSavedAt.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {ctx.isEditing && (
@@ -77,7 +89,7 @@ export default function CreateEventPage() {
               <Save className="w-4 h-4" />
               <span className="hidden sm:inline">{ctx.saving ? "Opslaan..." : "Concept"}</span>
             </Button>
-            <Button size="sm" onClick={ctx.handlePublish} disabled={ctx.saving} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button size="sm" onClick={ctx.handlePublish} disabled={ctx.saving || !completedSteps.includes(5)} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
               <Send className="w-4 h-4" />
               <span className="hidden sm:inline">Publiceren</span>
             </Button>
@@ -101,7 +113,7 @@ export default function CreateEventPage() {
           <StepBasics key="basics" form={ctx.form} updateForm={ctx.updateForm} categories={ctx.availableCategories} />
         )}
         {currentStep === 2 && (
-          <StepDateTime key="datetime" form={ctx.form} updateForm={ctx.updateForm} />
+          <StepDateTime key="datetime" form={ctx.form} updateForm={ctx.updateForm} venues={ctx.venues} />
         )}
         {currentStep === 3 && (
           <StepMedia
@@ -116,9 +128,13 @@ export default function CreateEventPage() {
             fileInputRef={ctx.fileInputRef as React.RefObject<HTMLInputElement>}
             openMediaPicker={ctx.openMediaPicker}
             handleMediaUpload={ctx.handleMediaUpload}
+            categories={ctx.availableCategories}
           />
         )}
         {currentStep === 4 && (
+          <StepPromotion key="promotion" form={ctx.form} updateForm={ctx.updateForm} />
+        )}
+        {currentStep === 5 && (
           <StepPublish
             key="publish"
             form={ctx.form}
@@ -128,6 +144,7 @@ export default function CreateEventPage() {
             saving={ctx.saving}
             onSave={ctx.handleSave}
             onPublish={ctx.handlePublish}
+            validation={ctx.validateStep(5)}
           />
         )}
       </AnimatePresence>
@@ -144,7 +161,7 @@ export default function CreateEventPage() {
           Vorige
         </Button>
 
-        {currentStep < 4 ? (
+        {currentStep < 5 ? (
           <Button
             onClick={goNext}
             disabled={!canGoNext()}
@@ -159,7 +176,7 @@ export default function CreateEventPage() {
               <Save className="w-4 h-4" />
               Concept
             </Button>
-            <Button onClick={ctx.handlePublish} disabled={ctx.saving} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button onClick={ctx.handlePublish} disabled={ctx.saving || !ctx.validateStep(5).isValid} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
               <Send className="w-4 h-4" />
               {ctx.form.publishAt ? "Inplannen" : "Publiceren"}
             </Button>

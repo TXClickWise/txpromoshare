@@ -1,22 +1,39 @@
-import { CalendarDays, MapPin, Repeat } from "lucide-react";
+import { CalendarDays, MapPin, Repeat, Globe } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
 import type { EventFormState } from "./useEventForm";
+import type { Tables } from "@/integrations/supabase/types";
 
 interface StepDateTimeProps {
   form: EventFormState;
   updateForm: (updates: Partial<EventFormState>) => void;
+  venues?: Tables<"venues">[];
 }
 
-export function StepDateTime({ form, updateForm }: StepDateTimeProps) {
+export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProps) {
+  const handleVenueSelect = (venueId: string) => {
+    if (venueId === "custom") {
+      updateForm({ venueId: "", venue: "", address: "" });
+      return;
+    }
+    const v = venues.find(v => v.id === venueId);
+    if (v) {
+      updateForm({
+        venueId: v.id,
+        venue: v.name,
+        address: [v.address, v.city].filter(Boolean).join(", "),
+      });
+    }
+  };
+
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-xl font-display font-bold text-foreground">Wanneer & waar</h2>
-        <p className="text-sm text-muted-foreground">Stel datum, tijd en locatie in voor je evenement.</p>
+        <h2 className="text-xl font-display font-bold text-foreground">Datum & locatie</h2>
+        <p className="text-sm text-muted-foreground">Wanneer en waar vindt je evenement plaats?</p>
       </div>
 
       {/* Date & Time */}
@@ -27,17 +44,18 @@ export function StepDateTime({ form, updateForm }: StepDateTimeProps) {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Startdatum *</Label>
+            <Label className="text-xs text-muted-foreground">Startdatum <span className="text-destructive">*</span></Label>
             <Input type="date" value={form.startDate} onChange={(e) => updateForm({ startDate: e.target.value })} />
           </div>
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Einddatum</Label>
-            <Input type="date" value={form.endDate} onChange={(e) => updateForm({ endDate: e.target.value })} />
+            <Input type="date" value={form.endDate} onChange={(e) => updateForm({ endDate: e.target.value })} min={form.startDate || undefined} />
+            <p className="text-[11px] text-muted-foreground">Alleen voor meerdaagse events</p>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Starttijd *</Label>
+            <Label className="text-xs text-muted-foreground">Starttijd <span className="text-destructive">*</span></Label>
             <Input type="time" value={form.startTime} onChange={(e) => updateForm({ startTime: e.target.value })} />
           </div>
           <div className="space-y-2">
@@ -53,31 +71,39 @@ export function StepDateTime({ form, updateForm }: StepDateTimeProps) {
           <MapPin className="w-4 h-4 text-primary" />
           Locatie
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {venues.length > 0 && (
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Locatienaam</Label>
-            <Input value={form.venue} onChange={(e) => updateForm({ venue: e.target.value })} placeholder="Bijv. Café De Kroeg" />
+            <Label className="text-xs text-muted-foreground">Kies een opgeslagen locatie</Label>
+            <Select value={form.venueId || "custom"} onValueChange={handleVenueSelect}>
+              <SelectTrigger><SelectValue placeholder="Selecteer locatie" /></SelectTrigger>
+              <SelectContent>
+                {venues.map((v) => (
+                  <SelectItem key={v.id} value={v.id}>
+                    {v.name}{v.is_primary ? " ★" : ""}{v.city ? ` — ${v.city}` : ""}
+                  </SelectItem>
+                ))}
+                <SelectItem value="custom">Andere locatie invoeren...</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Adres</Label>
-            <Input value={form.address} onChange={(e) => updateForm({ address: e.target.value })} placeholder="Straat, Stad" />
+        )}
+        {(!form.venueId || venues.length === 0) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Locatienaam</Label>
+              <Input value={form.venue} onChange={(e) => updateForm({ venue: e.target.value })} placeholder="Bijv. Café De Kroeg" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Adres</Label>
+              <Input value={form.address} onChange={(e) => updateForm({ address: e.target.value })} placeholder="Straat, Stad" />
+            </div>
           </div>
-        </div>
-      </div>
-
-      {/* CTA */}
-      <div className="rounded-xl bg-card border border-border p-5 space-y-4">
-        <div className="text-sm font-semibold text-foreground">Call-to-Action knop</div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Knoptekst</Label>
-            <Input value={form.ctaButtonText} onChange={(e) => updateForm({ ctaButtonText: e.target.value })} placeholder="Reserveer nu" />
+        )}
+        {form.venueId && venues.length > 0 && (
+          <div className="text-xs text-muted-foreground bg-secondary/50 rounded-lg p-3">
+            📍 {form.venue}{form.address ? ` — ${form.address}` : ""}
           </div>
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Link</Label>
-            <Input value={form.ctaLink} onChange={(e) => updateForm({ ctaLink: e.target.value })} placeholder="https://..." />
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Recurring */}
