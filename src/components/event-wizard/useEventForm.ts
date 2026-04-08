@@ -436,7 +436,10 @@ export function useEventForm() {
       eventId = res.data?.id;
       if (eventId) setAutoSavedEventId(eventId);
     }
-    if (!error && eventId) await saveSponsors(eventId);
+    if (!error && eventId) {
+      await saveSponsors(eventId);
+      if (form.isRecurring) await generateOccurrences(eventId);
+    }
     setSaving(false);
     if (error) {
       toast.error("Opslaan mislukt: " + error.message);
