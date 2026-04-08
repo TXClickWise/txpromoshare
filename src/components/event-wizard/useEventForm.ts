@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams, useBlocker } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -34,6 +34,7 @@ export interface EventFormState {
   endDate: string;
   startTime: string;
   endTime: string;
+  venueId: string;
   venue: string;
   address: string;
   ctaButtonText: string;
@@ -56,13 +57,20 @@ export interface EventFormState {
   sponsors: { name: string; logo_url: string; website_url: string }[];
 }
 
+export interface StepValidation {
+  isValid: boolean;
+  errors: string[];
+}
+
+const AUTOSAVE_DELAY_MS = 30_000; // 30 seconds
+
 export function useEventForm() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const template = searchParams.get("template");
   const templateCategory = searchParams.get("template_category");
-  const { tenantId } = useTenant();
+  const { tenantId, tenant } = useTenant();
   const { user } = useAuth();
   const isEditing = !!id;
 
@@ -79,15 +87,16 @@ export function useEventForm() {
     shortDescription: pfDesc,
     fullDescription: "",
     category: templateCategory || template || "",
-    organizer: pfOrganizer,
+    organizer: pfOrganizer || tenant?.name || "",
     startDate: "",
     endDate: "",
     startTime: pfStartTime,
     endTime: pfEndTime,
+    venueId: "",
     venue: "",
     address: "",
     ctaButtonText: pfCta,
-    ctaLink: "",
+    ctaLink: tenant?.website_url || "",
     tags: "",
     slug: "",
     seoTitle: "",
@@ -107,28 +116,93 @@ export function useEventForm() {
   });
 
   const [availableCategories, setAvailableCategories] = useState<Pick<Tables<"categories">, "id" | "name" | "slug">[]>([]);
+  const [venues, setVenues] = useState<Tables<"venues">[]>([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEditing);
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [mediaItems, setMediaItems] = useState<Tables<"media">[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [autoSavedEventId, setAutoSavedEventId] = useState<string | null>(id || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const initialFormRef = useRef<string>("");
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const updateForm = useCallback((updates: Partial<EventFormState>) => {
-    setForm(prev => ({ ...prev, ...updates }));
+    setForm(prev => {
+      const next = { ...prev, ...updates };
+      return next;
+    });
+    setIsDirty(true);
   }, []);
 
-  // Load categories
+  // Track dirty state
+  useEffect(() => {
+    if (!loading) {
+      const current = JSON.stringify(form);
+      if (initialFormRef.current && current !== initialFormRef.current) {
+        setIsDirty(true);
+      }
+    }
+  }, [form, loading]);
+
+  // Unsaved changes warning
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
+  // Autosave for drafts (only when editing or after first save)
+  useEffect(() => {
+    if (!isDirty || !autoSavedEventId || !tenantId) return;
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    autosaveTimerRef.current = setTimeout(async () => {
+      if (!form.title.trim()) return;
+      const data = buildEventData("draft");
+      const { tenant_id, created_by, ...updateData } = data;
+      const { error } = await supabase.from("events").update(updateData).eq("id", autoSavedEventId);
+      if (!error) {
+        setLastSavedAt(new Date());
+        setIsDirty(false);
+        initialFormRef.current = JSON.stringify(form);
+      }
+    }, AUTOSAVE_DELAY_MS);
+    return () => { if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current); };
+  }, [isDirty, autoSavedEventId, tenantId, form]);
+
+  // Load categories + venues
   useEffect(() => {
     supabase.from("categories").select("id, name, slug").order("sort_order")
       .then(({ data }) => setAvailableCategories(data || []));
-  }, []);
+    if (tenantId) {
+      supabase.from("venues").select("*").eq("tenant_id", tenantId).order("is_primary", { ascending: false })
+        .then(({ data }) => {
+          setVenues(data || []);
+          // Auto-select primary venue for new events
+          if (!isEditing && data && data.length > 0) {
+            const primary = data.find(v => v.is_primary) || data[0];
+            setForm(prev => ({
+              ...prev,
+              venueId: prev.venueId || primary.id,
+              venue: prev.venue || primary.name,
+              address: prev.address || [primary.address, primary.city].filter(Boolean).join(", "),
+            }));
+          }
+        });
+    }
+  }, [tenantId, isEditing]);
 
   // Match template to category
   useEffect(() => {
     if (isEditing || form.category || availableCategories.length === 0) return;
-    // Match by UUID (template_category) or slug (template)
     const matchId = templateCategory && availableCategories.find(c => c.id === templateCategory);
     const matchSlug = template && availableCategories.find(c => c.slug === template);
     const match = matchId || matchSlug;
@@ -151,6 +225,7 @@ export function useEventForm() {
           endDate: data.end_date || "",
           startTime: data.start_time,
           endTime: data.end_time || "",
+          venueId: data.venue_id || "",
           ctaButtonText: data.cta_button_text || "",
           ctaLink: data.cta_link || "",
           tags: data.tags?.join(", ") || "",
@@ -166,17 +241,29 @@ export function useEventForm() {
             (data as any).show_on_discovery === false ? "hide" : "inherit",
           featuredImageId: data.featured_image_id,
         };
+        // Load venue info
+        if (data.venue_id) {
+          const { data: v } = await supabase.from("venues").select("*").eq("id", data.venue_id).maybeSingle();
+          if (v) {
+            updates.venue = v.name;
+            updates.address = [v.address, v.city].filter(Boolean).join(", ");
+          }
+        }
         if (data.featured_image_id) {
           const { data: img } = await supabase.from("media").select("original_url").eq("id", data.featured_image_id).maybeSingle();
           if (img) updates.featuredImageUrl = img.original_url;
         }
         const { data: spData } = await supabase.from("event_sponsors").select("*").eq("event_id", data.id).order("sort_order");
         if (spData) updates.sponsors = spData.map(s => ({ name: s.name, logo_url: s.logo_url || "", website_url: s.website_url || "" }));
-        updateForm(updates);
+        setForm(prev => ({ ...prev, ...updates }));
+        setTimeout(() => {
+          initialFormRef.current = JSON.stringify({ ...form, ...updates });
+          setIsDirty(false);
+        }, 100);
       }
       setLoading(false);
     });
-  }, [id, updateForm]);
+  }, [id]);
 
   // Auto-slug
   useEffect(() => {
@@ -184,6 +271,37 @@ export function useEventForm() {
       setForm(prev => ({ ...prev, slug: generateSlug(prev.title) }));
     }
   }, [form.title, isEditing]);
+
+  // Step validation
+  function validateStep(step: number): StepValidation {
+    const errors: string[] = [];
+    switch (step) {
+      case 1:
+        if (!form.title.trim()) errors.push("Titel is verplicht");
+        if (form.title.length > 100) errors.push("Titel mag maximaal 100 tekens zijn");
+        if (form.shortDescription.length > 160) errors.push("Korte beschrijving mag maximaal 160 tekens zijn");
+        break;
+      case 2:
+        if (!form.startDate) errors.push("Startdatum is verplicht");
+        if (!form.startTime) errors.push("Starttijd is verplicht");
+        if (form.endDate && form.startDate && form.endDate < form.startDate) errors.push("Einddatum moet na startdatum liggen");
+        break;
+      case 3:
+        // Content & media is optional
+        break;
+      case 4:
+        if (form.ctaLink && !form.ctaLink.startsWith("http")) errors.push("CTA link moet beginnen met http(s)://");
+        if (form.seoTitle && form.seoTitle.length > 60) errors.push("SEO titel mag maximaal 60 tekens zijn");
+        if (form.seoDescription && form.seoDescription.length > 160) errors.push("SEO beschrijving mag maximaal 160 tekens zijn");
+        break;
+      case 5:
+        if (!form.title.trim()) errors.push("Titel is verplicht om te publiceren");
+        if (!form.startDate) errors.push("Startdatum is verplicht om te publiceren");
+        if (!form.startTime) errors.push("Starttijd is verplicht om te publiceren");
+        break;
+    }
+    return { isValid: errors.length === 0, errors };
+  }
 
   async function loadMediaItems() {
     if (!tenantId) return;
@@ -234,6 +352,7 @@ export function useEventForm() {
       end_date: form.endDate || null,
       start_time: form.startTime,
       end_time: form.endTime || null,
+      venue_id: form.venueId || null,
       cta_button_text: form.ctaButtonText || null,
       cta_link: form.ctaLink || null,
       tags: form.tags ? form.tags.split(",").map(t => t.trim()).filter(Boolean) : null,
@@ -269,8 +388,8 @@ export function useEventForm() {
   }
 
   async function handleSave() {
-    if (!tenantId || !form.title || !form.startDate || !form.startTime) {
-      toast.error("Vul minimaal titel, datum en tijd in");
+    if (!tenantId || !form.title.trim()) {
+      toast.error("Vul minimaal een titel in om op te slaan");
       return false;
     }
     setSaving(true);
@@ -284,6 +403,7 @@ export function useEventForm() {
       const res = await supabase.from("events").insert(data).select("id").single();
       error = res.error;
       eventId = res.data?.id;
+      if (eventId) setAutoSavedEventId(eventId);
     }
     if (!error && eventId) await saveSponsors(eventId);
     setSaving(false);
@@ -291,25 +411,32 @@ export function useEventForm() {
       toast.error("Opslaan mislukt: " + error.message);
       return false;
     }
-    toast.success("Concept opgeslagen");
+    setIsDirty(false);
+    setLastSavedAt(new Date());
+    initialFormRef.current = JSON.stringify(form);
+    toast.success("Concept opgeslagen ✓", { description: "Je kunt later verder werken aan dit event." });
     logAudit({ tenantId, entityType: "event", action: isEditing ? "updated" : "created", entityId: eventId });
-    if (!isEditing) navigate("/app/events");
+    if (!isEditing && eventId) {
+      navigate(`/app/events/${eventId}`, { replace: true });
+    }
     return true;
   }
 
   async function handlePublish() {
-    if (!tenantId || !form.title || !form.startDate || !form.startTime) {
-      toast.error("Vul minimaal titel, datum en tijd in");
+    const validation = validateStep(5);
+    if (!validation.isValid) {
+      validation.errors.forEach(err => toast.error(err));
       return false;
     }
+    if (!tenantId) return false;
     setSaving(true);
     const status = form.publishAt ? "scheduled" : "published";
     const data = buildEventData(status);
     let error;
-    let eventId = id;
-    if (isEditing) {
+    let eventId = autoSavedEventId || id;
+    if (eventId) {
       const { tenant_id, created_by, ...updateData } = data;
-      ({ error } = await supabase.from("events").update(updateData).eq("id", id!));
+      ({ error } = await supabase.from("events").update(updateData).eq("id", eventId));
     } else {
       const res = await supabase.from("events").insert(data).select("id").single();
       error = res.error;
@@ -321,14 +448,18 @@ export function useEventForm() {
       toast.error("Publiceren mislukt: " + error.message);
       return false;
     }
-    toast.success(status === "scheduled" ? "Evenement ingepland! 📅" : "Evenement gepubliceerd! 🎉");
+    setIsDirty(false);
+    toast.success(
+      status === "scheduled" ? "Evenement ingepland! 📅" : "Evenement gepubliceerd! 🎉",
+      { description: status === "scheduled" ? "Het event gaat automatisch live op de ingestelde datum." : "Je event is nu zichtbaar voor bezoekers." }
+    );
     logAudit({ tenantId, entityType: "event", action: status === "scheduled" ? "scheduled" : "published", entityId: eventId });
     navigate("/app/events");
     return true;
   }
 
   async function handleDelete() {
-    if (!id || !confirm("Weet je zeker dat je dit evenement wilt verwijderen?")) return;
+    if (!id || !confirm("Weet je zeker dat je dit evenement wilt verwijderen? Dit kan niet ongedaan worden gemaakt.")) return;
     const { error } = await supabase.from("events").delete().eq("id", id);
     if (error) toast.error("Verwijderen mislukt: " + error.message);
     else { toast.success("Evenement verwijderd"); navigate("/app/events"); }
@@ -336,12 +467,13 @@ export function useEventForm() {
 
   return {
     form, updateForm, isEditing, id, saving, loading,
-    availableCategories,
+    availableCategories, venues,
     mediaPickerOpen, setMediaPickerOpen,
     mediaItems, mediaLoading, uploading,
     fileInputRef, openMediaPicker, handleMediaUpload,
     loadMediaItems,
     handleSave, handlePublish, handleDelete,
-    navigate,
+    validateStep, isDirty, lastSavedAt,
+    navigate, tenantId,
   };
 }
