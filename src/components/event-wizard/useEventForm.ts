@@ -6,6 +6,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { logAudit } from "@/lib/audit";
 import type { Tables } from "@/integrations/supabase/types";
+import { generatePreviewDates } from "./StepDateTime";
 
 function generateSlug(title: string) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -390,6 +391,30 @@ export function useEventForm() {
           sort_order: i,
         }))
       );
+    }
+  }
+
+  async function generateOccurrences(eventId: string) {
+    if (!form.isRecurring || !tenantId) return;
+    const dates = generatePreviewDates(form);
+    if (dates.length === 0) return;
+
+    // Delete existing occurrences and regenerate
+    await supabase.from("event_occurrences").delete().eq("event_id", eventId);
+
+    const rows = dates.map(d => ({
+      event_id: eventId,
+      tenant_id: tenantId,
+      occurrence_date: d,
+      start_time: form.startTime || null,
+      end_time: form.endTime || null,
+      status: "active" as const,
+    }));
+
+    // Insert in batches of 50
+    for (let i = 0; i < rows.length; i += 50) {
+      const batch = rows.slice(i, i + 50);
+      await supabase.from("event_occurrences").insert(batch);
     }
   }
 
