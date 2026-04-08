@@ -1,17 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Trash2, Archive } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Plus, Search, LayoutGrid, List, Calendar, Filter, Clock, MapPin } from "lucide-react";
+import { Plus, Search, LayoutGrid, List, Calendar, Filter, Clock, MapPin, ArrowUpDown, RefreshCw, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
 import { EventStatusBadge } from "@/components/EventStatusBadge";
 import { EventActionMenu } from "@/components/EventActionMenu";
 import { EmptyState } from "@/components/EmptyState";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
+import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
 const statusFilters = [
@@ -23,13 +27,25 @@ const statusFilters = [
   { value: "archived", label: "Gearchiveerd" },
 ];
 
+const sortOptions = [
+  { value: "date_desc", label: "Datum (nieuwst)" },
+  { value: "date_asc", label: "Datum (oudst)" },
+  { value: "title_asc", label: "Naam (A-Z)" },
+  { value: "title_desc", label: "Naam (Z-A)" },
+  { value: "updated", label: "Laatst bewerkt" },
+];
+
 export default function EventsPage() {
   const [view, setView] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("date_desc");
   const [events, setEvents] = useState<Tables<"events">[]>([]);
+  const [categories, setCategories] = useState<Tables<"categories">[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const { tenantId } = useTenant();
 
   const copyEventId = (e: React.MouseEvent, id: string) => {
@@ -39,6 +55,40 @@ export default function EventsPage() {
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
+
+  const toggleSelect = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    if (selected.size === filtered.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filtered.map(e => e.id)));
+    }
+  };
+
+  async function bulkAction(action: "archive" | "delete") {
+    if (selected.size === 0) return;
+    const ids = Array.from(selected);
+    if (action === "archive") {
+      const { error } = await supabase.from("events").update({ status: "archived" }).in("id", ids);
+      if (error) { toast.error(error.message); return; }
+      toast.success(`${ids.length} evenement(en) gearchiveerd`);
+    } else {
+      const { error } = await supabase.from("events").delete().in("id", ids);
+      if (error) { toast.error(error.message); return; }
+      toast.success(`${ids.length} evenement(en) verwijderd`);
+    }
+    setSelected(new Set());
+    fetchEvents();
+  }
 
   async function fetchEvents() {
     if (!tenantId) return;
@@ -51,13 +101,44 @@ export default function EventsPage() {
     setLoading(false);
   }
 
-  useEffect(() => { fetchEvents(); }, [tenantId]);
+  async function fetchCategories() {
+    if (!tenantId) return;
+    const { data } = await supabase
+      .from("categories")
+      .select("*")
+      .or(`is_default.eq.true,tenant_id.eq.${tenantId}`)
+      .order("sort_order");
+    setCategories(data || []);
+  }
+
+  useEffect(() => {
+    fetchEvents();
+    fetchCategories();
+  }, [tenantId]);
 
   const filtered = events
-    .filter((e) => e.title.toLowerCase().includes(search.toLowerCase()))
-    .filter((e) => statusFilter === "all" || e.status === statusFilter);
+    .filter((e) => {
+      if (search) {
+        const q = search.toLowerCase();
+        return e.title.toLowerCase().includes(q) || e.short_description?.toLowerCase().includes(q) || e.id.toLowerCase().includes(q);
+      }
+      return true;
+    })
+    .filter((e) => statusFilter === "all" || e.status === statusFilter)
+    .filter((e) => categoryFilter === "all" || e.category_id === categoryFilter)
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "date_asc": return a.start_date.localeCompare(b.start_date);
+        case "title_asc": return a.title.localeCompare(b.title);
+        case "title_desc": return b.title.localeCompare(a.title);
+        case "updated": return b.updated_at.localeCompare(a.updated_at);
+        default: return b.start_date.localeCompare(a.start_date);
+      }
+    });
 
   const publishedCount = events.filter(e => e.status === "published").length;
+  const draftCount = events.filter(e => e.status === "draft").length;
+  const recurringCount = events.filter(e => e.is_recurring).length;
 
   if (loading) {
     return (
@@ -69,10 +150,20 @@ export default function EventsPage() {
 
   return (
     <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground">{t.events.title}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{events.length} evenementen · {publishedCount} gepubliceerd</p>
+          <div className="flex items-center gap-3 mt-1">
+            <span className="text-xs text-muted-foreground">{events.length} totaal</span>
+            <span className="text-xs text-accent font-medium">{publishedCount} live</span>
+            <span className="text-xs text-muted-foreground">{draftCount} concept</span>
+            {recurringCount > 0 && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <RefreshCw className="w-3 h-3" />{recurringCount} terugkerend
+              </span>
+            )}
+          </div>
         </div>
         <Link to="/app/events/new" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold hover:opacity-90 shadow-glow">
           <Plus className="w-4 h-4" />
@@ -80,14 +171,14 @@ export default function EventsPage() {
         </Link>
       </div>
 
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
+      {/* Filters bar */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Zoek op naam..." className="pl-9" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Zoek op naam, beschrijving of ID..." className="pl-9 h-9 text-sm" />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[160px]">
-            <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
+          <SelectTrigger className="w-[140px] h-9 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -96,20 +187,64 @@ export default function EventsPage() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-[140px] h-9 text-xs">
+            <Filter className="w-3 h-3 mr-1 text-muted-foreground" />
+            <SelectValue placeholder="Categorie" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Alle categorieën</SelectItem>
+            {categories.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                <span className="flex items-center gap-2">
+                  {c.color && <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c.color }} />}
+                  {c.name}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-[140px] h-9 text-xs">
+            <ArrowUpDown className="w-3 h-3 mr-1 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {sortOptions.map((s) => (
+              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div className="flex border border-border rounded-lg overflow-hidden">
-          <button onClick={() => setView("grid")} className={cn("p-2.5 transition-colors", view === "grid" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-secondary")}>
-            <LayoutGrid className="w-4 h-4" />
+          <button onClick={() => setView("grid")} className={cn("p-2 transition-colors", view === "grid" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-secondary")}>
+            <LayoutGrid className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => setView("list")} className={cn("p-2.5 transition-colors", view === "list" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-secondary")}>
-            <List className="w-4 h-4" />
+          <button onClick={() => setView("list")} className={cn("p-2 transition-colors", view === "list" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-secondary")}>
+            <List className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
+      {/* Bulk actions bar */}
+      {selected.size > 0 && (
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+          <Checkbox checked={selected.size === filtered.length} onCheckedChange={selectAll} />
+          <span className="text-sm font-medium text-foreground">{selected.size} geselecteerd</span>
+          <div className="flex-1" />
+          <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => bulkAction("archive")}>
+            <Archive className="w-3 h-3" />Archiveren
+          </Button>
+          <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => bulkAction("delete")}>
+            <Trash2 className="w-3 h-3" />Verwijderen
+          </Button>
+          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelected(new Set())}>Deselecteer</Button>
+        </motion.div>
+      )}
+
       {filtered.length === 0 ? (
         <EmptyState
           icon={Calendar}
-          title={search ? "Geen resultaten gevonden" : t.events.noEvents}
+          title={search || statusFilter !== "all" ? "Geen resultaten" : t.events.noEvents}
           description={search ? `Geen evenementen gevonden voor "${search}".` : t.events.noEventsDesc}
           actionLabel={search ? undefined : "Eerste evenement aanmaken"}
           actionTo={search ? undefined : "/app/events/new"}
@@ -118,72 +253,119 @@ export default function EventsPage() {
         />
       ) : view === "grid" ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((event, i) => (
-            <motion.div key={event.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-              <Link to={`/app/events/${event.id}`} className="block rounded-xl bg-card border border-border shadow-card hover:shadow-elevated hover:border-primary/20 transition-all overflow-hidden group">
-                <div className="h-36 bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center relative">
-                  <Calendar className="w-8 h-8 text-muted-foreground/20" />
-                  <div className="absolute top-3 right-3">
-                    <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} onRefresh={fetchEvents} />
+          {filtered.map((event, i) => {
+            const cat = categories.find(c => c.id === event.category_id);
+            return (
+              <motion.div key={event.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+                <Link to={`/app/events/${event.id}`} className="block rounded-xl bg-card border border-border shadow-card hover:shadow-elevated hover:border-primary/20 transition-all overflow-hidden group relative">
+                  {/* Select checkbox */}
+                  <div className="absolute top-3 left-3 z-10" onClick={(e) => toggleSelect(e, event.id)}>
+                    <Checkbox checked={selected.has(event.id)} className="bg-background/80 backdrop-blur-sm" />
                   </div>
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <EventStatusBadge status={event.status} />
-                    {event.is_recurring && <span className="text-[10px] font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full">♻ Terugkerend</span>}
+                  <div className="h-32 bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center relative">
+                    <Calendar className="w-8 h-8 text-muted-foreground/20" />
+                    <div className="absolute top-3 right-3">
+                      <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} onRefresh={fetchEvents} />
+                    </div>
+                    {cat && (
+                      <div className="absolute bottom-2 left-3">
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: cat.color || 'hsl(var(--primary))' }}>
+                          {cat.name}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <h3 className="font-display font-semibold text-foreground mb-1.5 truncate group-hover:text-primary transition-colors">{event.title}</h3>
-                  {event.short_description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{event.short_description}</p>
-                  )}
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.start_time?.slice(0, 5)}
-                    </span>
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <EventStatusBadge status={event.status} />
+                      {event.is_recurring && <span className="text-[10px] font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full flex items-center gap-0.5"><RefreshCw className="w-2.5 h-2.5" />Terugkerend</span>}
+                    </div>
+                    <h3 className="font-display font-semibold text-foreground mb-1 truncate group-hover:text-primary transition-colors text-sm">{event.title}</h3>
+                    {event.short_description && (
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{event.short_description}</p>
+                    )}
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.start_time?.slice(0, 5)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border">
+                      <code className="text-[10px] bg-secondary px-1.5 py-0.5 rounded font-mono text-muted-foreground truncate flex-1">{event.id.slice(0, 8)}…</code>
+                      <button onClick={(e) => copyEventId(e, event.id)} className="shrink-0 p-1 rounded hover:bg-secondary transition-colors" title="Kopieer Event ID">
+                        {copiedId === event.id ? <Check className="w-3 h-3 text-accent" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border">
-                    <span className="text-[10px] text-muted-foreground font-medium">ID:</span>
-                    <code className="text-[10px] bg-secondary px-1.5 py-0.5 rounded font-mono text-muted-foreground truncate flex-1">{event.id}</code>
-                    <button onClick={(e) => copyEventId(e, event.id)} className="shrink-0 p-1 rounded hover:bg-secondary transition-colors" title="Kopieer Event ID">
-                      {copiedId === event.id ? <Check className="w-3 h-3 text-accent" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
-                    </button>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
       ) : (
-        <div className="space-y-2">
-          {filtered.map((event, i) => (
-            <motion.div key={event.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}>
-              <Link to={`/app/events/${event.id}`} className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border shadow-card hover:shadow-elevated hover:border-primary/20 transition-all group">
-                <div className="w-11 h-11 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                  <Calendar className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-foreground truncate group-hover:text-primary transition-colors">{event.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.start_time?.slice(0, 5)}
-                    </span>
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className="text-[10px] text-muted-foreground font-medium">ID:</span>
-                    <code className="text-[10px] bg-secondary px-1.5 py-0.5 rounded font-mono text-muted-foreground truncate max-w-[200px]">{event.id}</code>
+        <div className="space-y-1.5">
+          {/* List header */}
+          <div className="flex items-center gap-3 px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <div className="w-5"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={selectAll} /></div>
+            <div className="w-9" />
+            <div className="flex-1">Evenement</div>
+            <div className="w-24 hidden sm:block">Categorie</div>
+            <div className="w-28 hidden sm:block">Datum</div>
+            <div className="w-20">Status</div>
+            <div className="w-28">ID</div>
+            <div className="w-8" />
+          </div>
+          {filtered.map((event, i) => {
+            const cat = categories.find(c => c.id === event.category_id);
+            return (
+              <motion.div key={event.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.02 }}>
+                <Link to={`/app/events/${event.id}`} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-card border border-border hover:shadow-elevated hover:border-primary/20 transition-all group">
+                  <div className="w-5" onClick={(e) => toggleSelect(e, event.id)}>
+                    <Checkbox checked={selected.has(event.id)} />
+                  </div>
+                  <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                    {event.is_recurring ? <RefreshCw className="w-4 h-4 text-accent" /> : <Calendar className="w-4 h-4 text-muted-foreground" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground text-sm truncate group-hover:text-primary transition-colors">{event.title}</p>
+                    {event.short_description && <p className="text-[11px] text-muted-foreground truncate">{event.short_description}</p>}
+                  </div>
+                  <div className="w-24 hidden sm:block">
+                    {cat && (
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: cat.color || 'hsl(var(--primary))' }}>
+                        {cat.name}
+                      </span>
+                    )}
+                  </div>
+                  <div className="w-28 hidden sm:block text-xs text-muted-foreground">
+                    {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}
+                    <br />
+                    <span className="text-[11px]">{event.start_time?.slice(0, 5)}</span>
+                  </div>
+                  <div className="w-20">
+                    <EventStatusBadge status={event.status} />
+                  </div>
+                  <div className="w-28 flex items-center gap-1">
+                    <code className="text-[10px] bg-secondary px-1.5 py-0.5 rounded font-mono text-muted-foreground truncate">{event.id.slice(0, 8)}…</code>
                     <button onClick={(e) => copyEventId(e, event.id)} className="shrink-0 p-0.5 rounded hover:bg-secondary transition-colors" title="Kopieer Event ID">
                       {copiedId === event.id ? <Check className="w-3 h-3 text-accent" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
                     </button>
                   </div>
-                </div>
-                <EventStatusBadge status={event.status} />
-                <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} onRefresh={fetchEvents} />
-              </Link>
-            </motion.div>
-          ))}
+                  <div className="w-8">
+                    <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} onRefresh={fetchEvents} />
+                  </div>
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
+      )}
+
+      {/* Results count */}
+      {filtered.length > 0 && filtered.length !== events.length && (
+        <p className="text-xs text-muted-foreground text-center pt-2">
+          {filtered.length} van {events.length} evenementen getoond
+        </p>
       )}
     </div>
   );
