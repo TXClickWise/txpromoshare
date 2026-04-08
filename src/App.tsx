@@ -39,6 +39,7 @@ import AdminSubscriptionsPage from "@/pages/admin/AdminSubscriptionsPage";
 import AdminPlansPage from "@/pages/admin/AdminPlansPage";
 import AdminOverridesPage from "@/pages/admin/AdminOverridesPage";
 import AdminAuditPage from "@/pages/admin/AdminAuditPage";
+import AdminSettingsPage from "@/pages/admin/AdminSettingsPage";
 
 // SEO landing pages
 import EventAgendaSoftwarePage from "@/pages/seo/EventAgendaSoftwarePage";
@@ -110,6 +111,7 @@ const App = () => (
                 <Route path="plans" element={<AdminPlansPage />} />
                 <Route path="overrides" element={<AdminOverridesPage />} />
                 <Route path="audit" element={<AdminAuditPage />} />
+                <Route path="settings" element={<AdminSettingsPage />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
