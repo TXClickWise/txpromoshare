@@ -47,9 +47,12 @@ export interface EventFormState {
   socialText: string;
   isRecurring: boolean;
   recurringFreq: string;
+  recurringCustomFreq: string;
   recurringInterval: number;
   recurringDays: number[];
+  recurringEndType: string;
   recurringEndDate: string;
+  recurringEndCount: number;
   publishAt: string;
   showOnDiscovery: string;
   featuredImageId: string | null;
@@ -105,9 +108,12 @@ export function useEventForm() {
     socialText: "",
     isRecurring: false,
     recurringFreq: "weekly",
+    recurringCustomFreq: "weekly",
     recurringInterval: 1,
     recurringDays: [],
+    recurringEndType: "never",
     recurringEndDate: "",
+    recurringEndCount: 10,
     publishAt: "",
     showOnDiscovery: "inherit",
     featuredImageId: null,
