@@ -1,4 +1,4 @@
-import { MoreHorizontal, Copy, Share2, Archive, Trash2, Eye, Pencil, ExternalLink } from "lucide-react";
+import { MoreHorizontal, Copy, Share2, Archive, Trash2, Eye, Pencil, ExternalLink, RotateCcw } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,7 +38,7 @@ export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefr
     }
 
     const newSlug = original.slug + "-kopie-" + Date.now().toString(36);
-    const { error } = await supabase.from("events").insert({
+    const { data: newEvent, error } = await supabase.from("events").insert({
       tenant_id: original.tenant_id,
       title: original.title + " (kopie)",
       slug: newSlug,
@@ -63,33 +63,38 @@ export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefr
       auto_end_behavior: original.auto_end_behavior,
       status: "draft",
       created_by: (await supabase.auth.getUser()).data.user?.id || null,
-    });
+    }).select("id").single();
 
     if (error) {
       toast.error("Dupliceren mislukt: " + error.message);
     } else {
-      toast.success(`"${eventTitle}" gedupliceerd als concept`);
+      toast.success(`"${eventTitle}" gedupliceerd als concept`, {
+        action: newEvent?.id ? { label: "Openen", onClick: () => navigate(`/app/events/${newEvent.id}`) } : undefined,
+      });
       if (tenantId) logAudit({ tenantId, entityType: "event", action: "duplicated", entityId: eventId });
       onRefresh?.();
     }
   }
 
   async function archiveEvent() {
-    const { error } = await supabase
-      .from("events")
-      .update({ status: "archived" })
-      .eq("id", eventId);
+    const { error } = await supabase.from("events").update({ status: "archived" }).eq("id", eventId);
     if (error) { toast.error(error.message); return; }
     toast.success(`"${eventTitle}" gearchiveerd`);
     if (tenantId) logAudit({ tenantId, entityType: "event", action: "archived", entityId: eventId });
     onRefresh?.();
   }
 
+  async function republishEvent() {
+    const { error } = await supabase.from("events").update({ status: "published" }).eq("id", eventId);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`"${eventTitle}" opnieuw gepubliceerd`);
+    if (tenantId) logAudit({ tenantId, entityType: "event", action: "published", entityId: eventId });
+    onRefresh?.();
+  }
+
   async function deleteEvent() {
-    const { error } = await supabase
-      .from("events")
-      .delete()
-      .eq("id", eventId);
+    if (!confirm(`Weet je zeker dat je "${eventTitle}" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.`)) return;
+    const { error } = await supabase.from("events").delete().eq("id", eventId);
     if (error) { toast.error(error.message); return; }
     toast.success(`"${eventTitle}" verwijderd`);
     if (tenantId) logAudit({ tenantId, entityType: "event", action: "deleted", entityId: eventId, metadata: { title: eventTitle } });
@@ -107,12 +112,14 @@ export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefr
         <DropdownMenuItem onClick={(e) => { e.preventDefault(); navigate(`/app/events/${eventId}`); }}>
           <Pencil className="w-4 h-4 mr-2" />Bewerken
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={(e) => { e.preventDefault(); toast.success("Preview geopend"); }}>
-          <Eye className="w-4 h-4 mr-2" />Voorbeeld bekijken
-        </DropdownMenuItem>
         {status === "published" && (
           <DropdownMenuItem onClick={(e) => { e.preventDefault(); window.open(`/e/${eventSlug}`, "_blank"); }}>
             <ExternalLink className="w-4 h-4 mr-2" />Publieke pagina
+          </DropdownMenuItem>
+        )}
+        {status !== "published" && (
+          <DropdownMenuItem onClick={(e) => { e.preventDefault(); window.open(`/e/${eventSlug}`, "_blank"); }}>
+            <Eye className="w-4 h-4 mr-2" />Preview
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
@@ -120,12 +127,19 @@ export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefr
           <Copy className="w-4 h-4 mr-2" />Dupliceren
         </DropdownMenuItem>
         <DropdownMenuItem onClick={(e) => { e.preventDefault(); navigate("/app/distribution"); }}>
-          <Share2 className="w-4 h-4 mr-2" />Verspreiden
+          <Share2 className="w-4 h-4 mr-2" />Delen & Posten
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={(e) => { e.preventDefault(); archiveEvent(); }}>
-          <Archive className="w-4 h-4 mr-2" />Archiveren
-        </DropdownMenuItem>
+        {(status === "archived" || status === "ended") && (
+          <DropdownMenuItem onClick={(e) => { e.preventDefault(); republishEvent(); }}>
+            <RotateCcw className="w-4 h-4 mr-2" />Opnieuw publiceren
+          </DropdownMenuItem>
+        )}
+        {status !== "archived" && (
+          <DropdownMenuItem onClick={(e) => { e.preventDefault(); archiveEvent(); }}>
+            <Archive className="w-4 h-4 mr-2" />Archiveren
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.preventDefault(); deleteEvent(); }}>
           <Trash2 className="w-4 h-4 mr-2" />Verwijderen
         </DropdownMenuItem>
