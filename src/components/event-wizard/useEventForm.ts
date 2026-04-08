@@ -86,7 +86,7 @@ export function useEventForm() {
     endTime: pfEndTime,
     venue: "",
     address: "",
-    ctaButtonText: "Reserveer nu",
+    ctaButtonText: pfCta,
     ctaLink: "",
     tags: "",
     slug: "",
