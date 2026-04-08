@@ -29,7 +29,16 @@ export default function EventsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [events, setEvents] = useState<Tables<"events">[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const { tenantId } = useTenant();
+
+  const copyEventId = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(id);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   async function fetchEvents() {
     if (!tenantId) return;
