@@ -40,12 +40,7 @@ export default function SettingsPage() {
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [businessType, setBusinessType] = useState("");
-  const [primaryColor, setPrimaryColor] = useState("#E86C2C");
-  const [secondaryColor, setSecondaryColor] = useState("#2A9D8F");
   const [saving, setSaving] = useState(false);
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [logoUploading, setLogoUploading] = useState(false);
-  const logoInputRef = useRef<HTMLInputElement>(null);
   const [showOnDiscovery, setShowOnDiscovery] = useState(true);
 
   // Venue state
