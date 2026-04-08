@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { motion } from "framer-motion";
+import { AiFieldActions } from "./AiFieldActions";
 import { AiAssistButton } from "@/components/AiAssistButton";
 import { useAiAssist } from "@/hooks/useAiAssist";
 import type { EventFormState } from "./useEventForm";
@@ -14,6 +15,7 @@ interface StepPromotionProps {
 
 export function StepPromotion({ form, updateForm }: StepPromotionProps) {
   const { run, loading } = useAiAssist();
+  const eventContext = { title: form.title, category: "", description: form.shortDescription };
 
   const handleGenerateSeo = () => {
     run({
@@ -62,7 +64,16 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Knoptekst</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-muted-foreground">Knoptekst</Label>
+              <AiFieldActions
+                fieldName="CTA knoptekst"
+                currentText={form.ctaButtonText}
+                onResult={(text) => updateForm({ ctaButtonText: text })}
+                eventContext={eventContext}
+                compact
+              />
+            </div>
             <Input value={form.ctaButtonText} onChange={(e) => updateForm({ ctaButtonText: e.target.value })} placeholder="Reserveer nu" />
           </div>
           <div className="space-y-2">
@@ -96,15 +107,33 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
             Deelteksten
           </div>
           {form.title && (
-            <AiAssistButton onClick={handleGenerateShareTexts} loading={loading === "generate_share_texts"} label="Genereer" />
+            <AiAssistButton onClick={handleGenerateShareTexts} loading={loading === "generate_share_texts"} label="Genereer alle" />
           )}
         </div>
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">WhatsApp tekst</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-muted-foreground">WhatsApp tekst</Label>
+            <AiFieldActions
+              fieldName="WhatsApp tekst"
+              currentText={form.whatsappText}
+              onResult={(text) => updateForm({ whatsappText: text })}
+              eventContext={eventContext}
+              compact
+            />
+          </div>
           <Textarea value={form.whatsappText} onChange={(e) => updateForm({ whatsappText: e.target.value })} placeholder={`Check dit event: ${form.title}`} rows={2} />
         </div>
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">Social media tekst</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-muted-foreground">Social media tekst</Label>
+            <AiFieldActions
+              fieldName="social media tekst"
+              currentText={form.socialText}
+              onResult={(text) => updateForm({ socialText: text })}
+              eventContext={eventContext}
+              compact
+            />
+          </div>
           <Textarea value={form.socialText} onChange={(e) => updateForm({ socialText: e.target.value })} placeholder={`${form.title} — kom je ook?`} rows={2} />
         </div>
       </div>
@@ -128,12 +157,30 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
           </div>
         </div>
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">SEO titel (max 60 tekens)</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-muted-foreground">SEO titel (max 60 tekens)</Label>
+            <AiFieldActions
+              fieldName="SEO titel"
+              currentText={form.seoTitle}
+              onResult={(text) => updateForm({ seoTitle: text })}
+              eventContext={eventContext}
+              compact
+            />
+          </div>
           <Input value={form.seoTitle} onChange={(e) => updateForm({ seoTitle: e.target.value })} placeholder={form.title || "SEO titel"} maxLength={60} />
           <p className="text-[11px] text-muted-foreground">{form.seoTitle.length}/60</p>
         </div>
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">SEO beschrijving (max 160 tekens)</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-muted-foreground">SEO beschrijving (max 160 tekens)</Label>
+            <AiFieldActions
+              fieldName="SEO beschrijving"
+              currentText={form.seoDescription}
+              onResult={(text) => updateForm({ seoDescription: text })}
+              eventContext={eventContext}
+              compact
+            />
+          </div>
           <Textarea value={form.seoDescription} onChange={(e) => updateForm({ seoDescription: e.target.value })} placeholder={form.shortDescription || "SEO beschrijving"} rows={2} maxLength={160} />
           <p className="text-[11px] text-muted-foreground">{form.seoDescription.length}/160</p>
         </div>

@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AiPublishCheck } from "./AiPublishCheck";
 import type { EventFormState, StepValidation } from "./useEventForm";
 
 interface StepPublishProps {
@@ -19,7 +20,6 @@ interface StepPublishProps {
 }
 
 export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSave, onPublish, validation }: StepPublishProps) {
-  // Build preview summary
   const summary = [
     { label: "Titel", value: form.title, required: true },
     { label: "Datum", value: form.startDate ? new Date(form.startDate).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : "", required: true },
@@ -36,6 +36,9 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
         <h2 className="text-xl font-display font-bold text-foreground">Publiceren</h2>
         <p className="text-sm text-muted-foreground">Controleer je evenement en kies hoe je het wilt publiceren.</p>
       </div>
+
+      {/* AI Publish Check */}
+      <AiPublishCheck form={form} />
 
       {/* Preview summary */}
       <div className="rounded-xl bg-card border border-border p-5 space-y-3">
