@@ -30,7 +30,7 @@ export const nl = {
     dashboard: "Dashboard",
     events: "Evenementen",
     templates: "Sjablonen",
-    distribution: "Distributie",
+    distribution: "Delen & Posten",
     widgets: "Widgets",
     categories: "Categorieën",
     media: "Media",
