@@ -25,6 +25,7 @@ const statusFilters = [
   { value: "scheduled", label: "Ingepland" },
   { value: "ended", label: "Afgelopen" },
   { value: "archived", label: "Gearchiveerd" },
+  { value: "recurring", label: "Terugkerend" },
 ];
 
 const sortOptions = [
@@ -120,11 +121,20 @@ export default function EventsPage() {
     .filter((e) => {
       if (search) {
         const q = search.toLowerCase();
-        return e.title.toLowerCase().includes(q) || e.short_description?.toLowerCase().includes(q) || e.id.toLowerCase().includes(q);
+        const tagsMatch = e.tags?.some(tag => tag.toLowerCase().includes(q));
+        return e.title.toLowerCase().includes(q) 
+          || e.short_description?.toLowerCase().includes(q) 
+          || e.id.toLowerCase().includes(q)
+          || e.organizer_name?.toLowerCase().includes(q)
+          || tagsMatch;
       }
       return true;
     })
-    .filter((e) => statusFilter === "all" || e.status === statusFilter)
+    .filter((e) => {
+      if (statusFilter === "all") return true;
+      if (statusFilter === "recurring") return e.is_recurring;
+      return e.status === statusFilter;
+    })
     .filter((e) => categoryFilter === "all" || e.category_id === categoryFilter)
     .sort((a, b) => {
       switch (sortBy) {

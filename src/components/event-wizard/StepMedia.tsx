@@ -1,10 +1,12 @@
-import { useRef } from "react";
 import { Image, Upload, Check, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
+import { AiAssistButton } from "@/components/AiAssistButton";
+import { useAiAssist } from "@/hooks/useAiAssist";
 import type { EventFormState } from "./useEventForm";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -19,6 +21,7 @@ interface StepMediaProps {
   fileInputRef: React.RefObject<HTMLInputElement>;
   openMediaPicker: () => void;
   handleMediaUpload: (files: FileList | null) => void;
+  categories?: Pick<Tables<"categories">, "id" | "name" | "slug">[];
 }
 
 export function StepMedia({
@@ -26,12 +29,48 @@ export function StepMedia({
   mediaPickerOpen, setMediaPickerOpen,
   mediaItems, mediaLoading, uploading,
   fileInputRef, openMediaPicker, handleMediaUpload,
+  categories = [],
 }: StepMediaProps) {
+  const { run, loading } = useAiAssist();
+  const categoryName = categories.find((c) => c.id === form.category)?.name || "";
+
+  const handleGenerateFullDescription = () => {
+    run({
+      task: "generate_description",
+      context: { title: form.title, category: categoryName, organizer: form.organizer, date: form.startDate, venue: form.venue },
+      onResult: (result) => {
+        if (result.fullDescription) updateForm({ fullDescription: result.fullDescription });
+      },
+    });
+  };
+
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-xl font-display font-bold text-foreground">Afbeelding & sponsors</h2>
-        <p className="text-sm text-muted-foreground">Voeg een uitgelichte afbeelding toe en eventuele sponsors.</p>
+        <h2 className="text-xl font-display font-bold text-foreground">Content & media</h2>
+        <p className="text-sm text-muted-foreground">Voeg een beschrijving, afbeelding en eventuele sponsors toe.</p>
+      </div>
+
+      {/* Full description */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium">Uitgebreide beschrijving</Label>
+          {form.title && (
+            <AiAssistButton
+              onClick={handleGenerateFullDescription}
+              loading={loading === "generate_description"}
+              label="Genereer"
+            />
+          )}
+        </div>
+        <Textarea
+          value={form.fullDescription}
+          onChange={(e) => updateForm({ fullDescription: e.target.value })}
+          placeholder="Uitgebreide beschrijving voor de evenementpagina. Vertel bezoekers wat ze kunnen verwachten..."
+          rows={6}
+          className="min-h-[120px]"
+        />
+        <p className="text-[11px] text-muted-foreground">Wordt getoond op de volledige evenementpagina</p>
       </div>
 
       {/* Featured Image */}
@@ -49,10 +88,10 @@ export function StepMedia({
           </div>
         ) : (
           <div
-            className="border-2 border-dashed border-border rounded-xl p-12 text-center hover:border-primary/50 transition-all cursor-pointer bg-secondary/10 max-w-md"
+            className="border-2 border-dashed border-border rounded-xl p-10 text-center hover:border-primary/50 transition-all cursor-pointer bg-secondary/10 max-w-md"
             onClick={openMediaPicker}
           >
-            <Image className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
+            <Image className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
             <p className="text-sm font-medium text-foreground mb-1">Kies of upload een afbeelding</p>
             <p className="text-xs text-muted-foreground">Klik om je mediabibliotheek te openen</p>
           </div>
@@ -63,7 +102,7 @@ export function StepMedia({
       <div className="space-y-4">
         <div>
           <Label className="text-sm font-medium">Sponsoren & Partners</Label>
-          <p className="text-xs text-muted-foreground mt-0.5">Voeg sponsors toe die op de evenementpagina worden getoond.</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Worden getoond op de evenementpagina.</p>
         </div>
         {form.sponsors.map((sp, i) => (
           <div key={i} className="rounded-lg border border-border p-3 space-y-2">
@@ -105,7 +144,7 @@ export function StepMedia({
           ) : mediaItems.length === 0 ? (
             <div className="text-center py-8">
               <Image className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Nog geen media. Klik op "Upload afbeelding" hierboven.</p>
+              <p className="text-sm text-muted-foreground">Nog geen media. Upload een afbeelding hierboven.</p>
             </div>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">

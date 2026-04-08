@@ -1,15 +1,11 @@
-import { Globe, CalendarClock, Star, Send, Save, Eye } from "lucide-react";
+import { Globe, CalendarClock, Star, Send, Save, Eye, ExternalLink, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AiAssistButton } from "@/components/AiAssistButton";
-import { useAiAssist } from "@/hooks/useAiAssist";
-import type { EventFormState } from "./useEventForm";
+import type { EventFormState, StepValidation } from "./useEventForm";
 
 interface StepPublishProps {
   form: EventFormState;
@@ -19,102 +15,65 @@ interface StepPublishProps {
   saving: boolean;
   onSave: () => void;
   onPublish: () => void;
+  validation: StepValidation;
 }
 
-export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSave, onPublish }: StepPublishProps) {
-  const { run, loading } = useAiAssist();
+export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSave, onPublish, validation }: StepPublishProps) {
+  // Build preview summary
+  const summary = [
+    { label: "Titel", value: form.title, required: true },
+    { label: "Datum", value: form.startDate ? new Date(form.startDate).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : "", required: true },
+    { label: "Tijd", value: [form.startTime?.slice(0, 5), form.endTime?.slice(0, 5)].filter(Boolean).join(" — "), required: true },
+    { label: "Locatie", value: form.venue },
+    { label: "Beschrijving", value: form.shortDescription ? `${form.shortDescription.slice(0, 80)}${form.shortDescription.length > 80 ? "..." : ""}` : "" },
+  ];
 
-  const handleGenerateSeo = () => {
-    run({
-      task: "generate_seo",
-      context: {
-        title: form.title,
-        description: form.shortDescription,
-        venue: "",
-        date: form.startDate,
-      },
-      onResult: (result) => {
-        if (result.seoTitle) updateForm({ seoTitle: result.seoTitle });
-        if (result.seoDescription) updateForm({ seoDescription: result.seoDescription });
-      },
-    });
-  };
-
-  const handleGenerateShareTexts = () => {
-    run({
-      task: "generate_share_texts",
-      context: {
-        title: form.title,
-        description: form.shortDescription,
-        date: form.startDate,
-        url: `https://txeventshare.nl/e/${form.slug}`,
-      },
-      onResult: (result) => {
-        if (result.whatsappText) updateForm({ whatsappText: result.whatsappText });
-        if (result.socialText) updateForm({ socialText: result.socialText });
-      },
-    });
-  };
+  const isReady = validation.isValid;
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-xl font-display font-bold text-foreground">Publiceren & delen</h2>
-        <p className="text-sm text-muted-foreground">Configureer SEO, deelteksten en publicatie-instellingen.</p>
+        <h2 className="text-xl font-display font-bold text-foreground">Publiceren</h2>
+        <p className="text-sm text-muted-foreground">Controleer je evenement en kies hoe je het wilt publiceren.</p>
       </div>
 
-      {/* SEO */}
-      <div className="rounded-xl bg-card border border-border p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-foreground">SEO & URL</p>
-          {form.title && (
-            <AiAssistButton
-              onClick={handleGenerateSeo}
-              loading={loading === "generate_seo"}
-              label="Genereer SEO"
-              tooltip="Genereer SEO-titel en beschrijving met AI"
-            />
-          )}
-        </div>
+      {/* Preview summary */}
+      <div className="rounded-xl bg-card border border-border p-5 space-y-3">
+        <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Eye className="w-4 h-4 text-primary" />
+          Samenvatting
+        </p>
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">URL slug</Label>
-          <div className="flex items-center gap-0">
-            <span className="text-xs text-muted-foreground bg-secondary px-3 py-2.5 rounded-l-lg border border-r-0 border-border whitespace-nowrap">txeventshare.nl/e/</span>
-            <Input value={form.slug} onChange={(e) => updateForm({ slug: e.target.value })} className="rounded-l-none" />
+          {summary.map((item) => (
+            <div key={item.label} className="flex items-start gap-3 text-sm">
+              <span className="text-xs text-muted-foreground w-20 shrink-0 pt-0.5">{item.label}</span>
+              <span className={`${item.value ? "text-foreground" : item.required ? "text-destructive" : "text-muted-foreground"}`}>
+                {item.value || (item.required ? "⚠️ Niet ingevuld" : "—")}
+              </span>
+            </div>
+          ))}
+        </div>
+        {form.featuredImageUrl && (
+          <div className="mt-3">
+            <img src={form.featuredImageUrl} alt="Preview" className="w-full max-w-xs rounded-lg border border-border aspect-video object-cover" />
           </div>
-        </div>
-        <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">SEO titel (max 60 tekens)</Label>
-          <Input value={form.seoTitle} onChange={(e) => updateForm({ seoTitle: e.target.value })} placeholder={form.title || "SEO titel"} maxLength={60} />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">SEO beschrijving (max 160 tekens)</Label>
-          <Textarea value={form.seoDescription} onChange={(e) => updateForm({ seoDescription: e.target.value })} placeholder={form.shortDescription || "SEO beschrijving"} rows={2} maxLength={160} />
-        </div>
+        )}
       </div>
 
-      {/* Share texts */}
-      <div className="rounded-xl bg-card border border-border p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-foreground">Deelteksten</p>
-          {form.title && (
-            <AiAssistButton
-              onClick={handleGenerateShareTexts}
-              loading={loading === "generate_share_texts"}
-              label="Genereer deelteksten"
-              tooltip="Genereer WhatsApp en social media teksten met AI"
-            />
-          )}
+      {/* Validation errors */}
+      {!isReady && (
+        <div className="rounded-xl bg-destructive/5 border border-destructive/20 p-4 space-y-2">
+          <p className="text-sm font-semibold text-destructive flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" />
+            Nog niet klaar om te publiceren
+          </p>
+          <ul className="space-y-1">
+            {validation.errors.map((err, i) => (
+              <li key={i} className="text-xs text-destructive/80">• {err}</li>
+            ))}
+          </ul>
         </div>
-        <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">WhatsApp tekst</Label>
-          <Textarea value={form.whatsappText} onChange={(e) => updateForm({ whatsappText: e.target.value })} placeholder={`Check dit event: ${form.title}`} rows={2} />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">Social media tekst</Label>
-          <Textarea value={form.socialText} onChange={(e) => updateForm({ socialText: e.target.value })} placeholder={`${form.title} — kom je ook?`} rows={2} />
-        </div>
-      </div>
+      )}
 
       {/* Scheduling */}
       <div className="rounded-xl bg-card border border-border p-5 space-y-4">
@@ -124,7 +83,7 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground">Ingepland publiceren</p>
-            <p className="text-xs text-muted-foreground">Optioneel: plan wanneer dit evenement automatisch live gaat</p>
+            <p className="text-xs text-muted-foreground">Optioneel: kies een datum en tijd waarop het event automatisch live gaat</p>
           </div>
         </div>
         <Input type="datetime-local" value={form.publishAt} onChange={(e) => updateForm({ publishAt: e.target.value })} className="max-w-xs" />
@@ -142,8 +101,8 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
             <Globe className="w-4 h-4 text-accent" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">Zichtbaarheid ontdekkingspagina</p>
-            <p className="text-xs text-muted-foreground">Bepaal of dit event zichtbaar is op de publieke eventpagina</p>
+            <p className="text-sm font-semibold text-foreground">Zichtbaarheid publieke lijst</p>
+            <p className="text-xs text-muted-foreground">Bepaal of dit event zichtbaar is op de publieke ontdekkingspagina</p>
           </div>
         </div>
         <Select value={form.showOnDiscovery} onValueChange={(v) => updateForm({ showOnDiscovery: v })}>
@@ -168,7 +127,7 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
               <p className="text-xs text-muted-foreground">Laat dit event opvallen op de ontdekkingspagina</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button size="sm" variant="outline" className="gap-2 border-highlight/50 hover:bg-highlight/10"
               onClick={async () => {
                 const { data } = await supabase.functions.invoke("create-boost-checkout", { body: { eventId, boostDays: 7 } });
@@ -188,41 +147,34 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
               <Star className="w-3.5 h-3.5" />14 dagen — €12,95
             </Button>
           </div>
-          <p className="text-[11px] text-muted-foreground">Pro-plan klanten krijgen 2 gratis boosts per maand.</p>
         </div>
       )}
 
       {/* Publish actions */}
       <div className="rounded-xl bg-primary/5 border border-primary/20 p-5 space-y-4">
-        <p className="text-sm font-semibold text-foreground">Klaar om te publiceren?</p>
+        <p className="text-sm font-semibold text-foreground">
+          {isReady ? "✅ Klaar om te publiceren" : "Sla eerst op als concept"}
+        </p>
         <p className="text-xs text-muted-foreground">
           {form.publishAt
             ? "Je evenement wordt ingepland en automatisch gepubliceerd op de ingestelde datum."
             : "Je evenement gaat direct live na publicatie."
           }
         </p>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <Button variant="outline" onClick={onSave} disabled={saving} className="gap-2">
             <Save className="w-4 h-4" />
             {saving ? "Opslaan..." : "Opslaan als concept"}
           </Button>
-          <Button onClick={onPublish} disabled={saving} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button onClick={onPublish} disabled={saving || !isReady} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
             <Send className="w-4 h-4" />
             {form.publishAt ? "Inplannen" : "Publiceren"}
           </Button>
-        </div>
-      </div>
-
-      {/* AI Assistant hint */}
-      <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-            <span className="text-lg">✨</span>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-foreground">AI-assistent</p>
-            <p className="text-xs text-muted-foreground">Gebruik de ✨-knoppen om beschrijvingen, SEO-teksten en deelteksten automatisch te genereren</p>
-          </div>
+          {isEditing && eventId && (
+            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={() => window.open(`/e/${form.slug}`, "_blank")}>
+              <ExternalLink className="w-3.5 h-3.5" />Preview
+            </Button>
+          )}
         </div>
       </div>
 
@@ -231,8 +183,8 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center"><span className="text-lg">🎟️</span></div>
           <div>
-            <p className="text-sm font-medium text-foreground flex items-center gap-2">Ticketing<span className="text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">Toekomstige module</span></p>
-            <p className="text-xs text-muted-foreground">Ticketverkoop, QR-scanning & betalingen — binnenkort beschikbaar</p>
+            <p className="text-sm font-medium text-foreground flex items-center gap-2">Ticketing<span className="text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">Binnenkort</span></p>
+            <p className="text-xs text-muted-foreground">Ticketverkoop, QR-scanning & betalingen</p>
           </div>
         </div>
       </div>
