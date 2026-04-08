@@ -8,12 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CreditCard, Search } from "lucide-react";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
+import { getEffectivePlanId, hasActivePlanOverride } from "@/lib/effectivePlan";
 
 interface SubRow {
   id: string; tenant_id: string; tenant_name: string;
   plan_id: string; status: string; created_at: string;
   current_period_end: string | null; stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
+  effective_plan_id: string;
+  has_active_override: boolean;
 }
 
 export default function AdminSubscriptionsPage() {
@@ -25,14 +28,23 @@ export default function AdminSubscriptionsPage() {
 
   useEffect(() => {
     async function fetch() {
-      const [subsRes, tenantsRes] = await Promise.all([
+      const [subsRes, tenantsRes, overridesRes] = await Promise.all([
         supabase.from("subscriptions").select("*"),
         supabase.from("tenants").select("id, name"),
+        supabase.from("plan_overrides").select("tenant_id, override_plan_slug, ends_at, is_active").eq("is_active", true),
       ]);
       const tMap: Record<string, string> = {};
       (tenantsRes.data || []).forEach((t) => { tMap[t.id] = t.name; });
+      const overrideMap = new Map(
+        (overridesRes.data || [])
+          .filter((override) => hasActivePlanOverride(override))
+          .map((override) => [override.tenant_id, override])
+      );
       setSubs((subsRes.data || []).map((s: any) => ({
-        ...s, tenant_name: tMap[s.tenant_id] || "Onbekend",
+        ...s,
+        tenant_name: tMap[s.tenant_id] || "Onbekend",
+        effective_plan_id: getEffectivePlanId(s.plan_id, overrideMap.get(s.tenant_id)),
+        has_active_override: hasActivePlanOverride(overrideMap.get(s.tenant_id)),
       })));
       setLoading(false);
     }
@@ -42,7 +54,7 @@ export default function AdminSubscriptionsPage() {
   const filtered = useMemo(() => {
     return subs.filter((s) => {
       const matchSearch = !search || s.tenant_name.toLowerCase().includes(search.toLowerCase());
-      const matchPlan = planFilter === "all" || s.plan_id === planFilter;
+      const matchPlan = planFilter === "all" || s.effective_plan_id === planFilter;
       const matchStatus = statusFilter === "all" || s.status === statusFilter;
       return matchSearch && matchPlan && matchStatus;
     });
@@ -110,7 +122,10 @@ export default function AdminSubscriptionsPage() {
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">{s.tenant_name}</TableCell>
                   <TableCell>
-                    <Badge variant={s.plan_id === "pro" ? "default" : s.plan_id === "basic" ? "secondary" : "outline"} className="capitalize">{s.plan_id}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={s.effective_plan_id === "pro" ? "default" : s.effective_plan_id === "basic" ? "secondary" : "outline"} className="capitalize">{s.effective_plan_id}</Badge>
+                      {s.has_active_override && <Badge variant="outline">Override</Badge>}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant={s.status === "active" ? "default" : "destructive"} className="capitalize">

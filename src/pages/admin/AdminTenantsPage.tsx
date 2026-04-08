@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { getEffectivePlanId, hasActivePlanOverride } from "@/lib/effectivePlan";
 
 interface TenantRow {
   id: string;
@@ -27,6 +28,8 @@ interface TenantRow {
   business_type: string | null;
   city: string | null;
   created_at: string;
+  effective_plan_id: string;
+  has_active_override: boolean;
 }
 
 export default function AdminTenantsPage() {
@@ -49,10 +52,25 @@ export default function AdminTenantsPage() {
   });
 
   async function fetchTenants() {
-    const { data } = await supabase.from("tenants")
-      .select("id, name, slug, plan_id, email, phone, status, contact_person, business_type, city, created_at")
-      .order("created_at", { ascending: false });
-    setTenants((data as TenantRow[]) || []);
+    const [tenantsRes, overridesRes] = await Promise.all([
+      supabase.from("tenants")
+        .select("id, name, slug, plan_id, email, phone, status, contact_person, business_type, city, created_at")
+        .order("created_at", { ascending: false }),
+      supabase.from("plan_overrides").select("tenant_id, override_plan_slug, ends_at, is_active").eq("is_active", true),
+    ]);
+    const overrideMap = new Map(
+      (overridesRes.data || [])
+        .filter((override) => hasActivePlanOverride(override))
+        .map((override) => [override.tenant_id, override])
+    );
+    setTenants(((tenantsRes.data || []) as Omit<TenantRow, "effective_plan_id" | "has_active_override">[]).map((tenant) => {
+      const override = overrideMap.get(tenant.id);
+      return {
+        ...tenant,
+        effective_plan_id: getEffectivePlanId(tenant.plan_id, override),
+        has_active_override: hasActivePlanOverride(override),
+      };
+    }));
     setLoading(false);
   }
 
@@ -64,7 +82,7 @@ export default function AdminTenantsPage() {
         (t.email || "").toLowerCase().includes(search.toLowerCase()) ||
         (t.contact_person || "").toLowerCase().includes(search.toLowerCase());
       const matchStatus = statusFilter === "all" || t.status === statusFilter;
-      const matchPlan = planFilter === "all" || t.plan_id === planFilter;
+      const matchPlan = planFilter === "all" || t.effective_plan_id === planFilter;
       return matchSearch && matchStatus && matchPlan;
     });
   }, [tenants, search, statusFilter, planFilter]);
@@ -237,7 +255,10 @@ export default function AdminTenantsPage() {
                     <div className="text-xs text-muted-foreground">{t.email || ""}</div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={t.plan_id === "pro" ? "default" : t.plan_id === "basic" ? "secondary" : "outline"} className="capitalize">{t.plan_id}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={t.effective_plan_id === "pro" ? "default" : t.effective_plan_id === "basic" ? "secondary" : "outline"} className="capitalize">{t.effective_plan_id}</Badge>
+                      {t.has_active_override && <Badge variant="outline">Override</Badge>}
+                    </div>
                   </TableCell>
                   <TableCell>{statusBadge(t.status || "active")}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">

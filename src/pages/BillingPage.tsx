@@ -24,12 +24,13 @@ const plans = [
 ];
 
 export default function BillingPage() {
-  const { planId } = usePlan();
+  const { planId, effectivePlanId, hasOverride, overrideEndsAt } = usePlan();
   const { tenantId } = useTenant();
   const [loading, setLoading] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const [searchParams] = useSearchParams();
   const [usage, setUsage] = useState({ events: 0, widgets: 0, team: 0 });
+  const displayPlanId = effectivePlanId;
 
   useEffect(() => {
     if (!tenantId) return;
@@ -110,9 +111,15 @@ export default function BillingPage() {
               <CreditCard className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h3 className="font-display font-bold text-foreground">{planId.charAt(0).toUpperCase() + planId.slice(1)} plan</h3>
+              <h3 className="font-display font-bold text-foreground">{displayPlanId.charAt(0).toUpperCase() + displayPlanId.slice(1)} plan</h3>
               <p className="text-sm text-muted-foreground">
-                {planId === "free" ? "Gratis · Geen factuurperiode" : planId === "basic" ? "€29/maand" : "€79/maand"}
+                {hasOverride
+                  ? `Tijdelijke override${overrideEndsAt ? ` · tot ${new Date(overrideEndsAt).toLocaleDateString("nl-NL")}` : ""} · basisabonnement ${planId}`
+                  : displayPlanId === "free"
+                    ? "Gratis · Geen factuurperiode"
+                    : displayPlanId === "basic"
+                      ? "€29/maand"
+                      : "€79/maand"}
               </p>
             </div>
           </div>
@@ -140,9 +147,9 @@ export default function BillingPage() {
         <h2 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider mb-4">Alle plannen vergelijken</h2>
         <div className="grid md:grid-cols-3 gap-4">
           {plans.map((plan, i) => {
-            const isCurrent = plan.id === planId;
-            const isUpgrade = (planId === "free" && plan.id !== "free") || (planId === "basic" && plan.id === "pro");
-            const isDowngrade = (planId === "pro" && plan.id !== "pro") || (planId === "basic" && plan.id === "free");
+            const isCurrent = plan.id === displayPlanId;
+            const isUpgrade = (displayPlanId === "free" && plan.id !== "free") || (displayPlanId === "basic" && plan.id === "pro");
+            const isDowngrade = (displayPlanId === "pro" && plan.id !== "pro") || (displayPlanId === "basic" && plan.id === "free");
             const isLoading = loading === plan.id;
             return (
               <motion.div
