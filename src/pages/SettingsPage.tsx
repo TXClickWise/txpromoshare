@@ -106,6 +106,7 @@ export default function SettingsPage() {
     }
   }
 
+  async function saveVenue() {
     if (!tenantId || !venueName.trim()) {
       toast.error("Vul minimaal een naam in");
       return;
