@@ -82,7 +82,7 @@ export function OccurrencesTab({ eventId, tenantId, defaultStartTime, defaultEnd
     }
   };
 
-  const updateOccurrence = async (id: string, updates: Record<string, unknown>) => {
+  const updateOccurrence = async (id: string, updates: { occurrence_date?: string; start_time?: string | null; end_time?: string | null; status?: string; label?: string | null }) => {
     const { error } = await supabase
       .from("event_occurrences")
       .update(updates)
@@ -120,7 +120,7 @@ export function OccurrencesTab({ eventId, tenantId, defaultStartTime, defaultEnd
     if (selected.size === 0) { toast.error("Selecteer eerst occurrences"); return; }
     const ids = Array.from(selected);
 
-    let updates: Record<string, unknown> = {};
+    let updates: { status?: string; start_time?: string | null; end_time?: string | null } = {};
     switch (bulkAction) {
       case "hide": updates = { status: "hidden" }; break;
       case "cancel": updates = { status: "cancelled" }; break;
