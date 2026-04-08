@@ -1,16 +1,16 @@
-import { Share2, MessageCircle, Smartphone, Zap, BarChart3, ArrowRight } from "lucide-react";
+import { Share2, MessageCircle, Smartphone, Zap, BarChart3, ArrowRight, Sparkles, Loader2, Globe, Mail, Instagram, QrCode, Code2, Shield } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/EmptyState";
 import { ChannelBar } from "@/components/distribution/ChannelBar";
 import { ShareLinkCard } from "@/components/distribution/ShareLinkCard";
 import { ShareTextCard } from "@/components/distribution/ShareTextCard";
 import { DistributionStats } from "@/components/distribution/DistributionStats";
 import { QRCodeDialog } from "@/components/distribution/QRCodeDialog";
+import { QualityCheck } from "@/components/distribution/QualityCheck";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -23,8 +23,12 @@ export default function DistributionPage() {
   const { tenantId, tenant } = useTenant();
   const { user } = useAuth();
   const [selectedEvent, setSelectedEvent] = useState("");
-  const [activeTab, setActiveTab] = useState("share");
   const [showQR, setShowQR] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [rewriting, setRewriting] = useState<string | null>(null);
+
+  // Channel-specific texts state
+  const [channelTexts, setChannelTexts] = useState<Record<string, string>>({});
 
   const { data: publishedEvents = [], isLoading } = useQuery({
     queryKey: ["events-published", tenantId],
@@ -58,7 +62,6 @@ export default function DistributionPage() {
     enabled: !!tenantId && !!selectedEvent,
   });
 
-  // Auto-select first event
   if (publishedEvents.length > 0 && !selectedEvent) {
     setSelectedEvent(publishedEvents[0].id);
   }
@@ -85,14 +88,23 @@ export default function DistributionPage() {
   }
 
   const shareUrl = `https://txeventshare.nl/e/${event.slug}`;
+  const dateStr = new Date(event.start_date).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" });
+  const timeStr = event.start_time?.slice(0, 5) || "";
 
-  const whatsappText = event.whatsapp_share_text ||
-    `🎉 ${event.title}\n📅 ${new Date(event.start_date).toLocaleDateString("nl-NL")} om ${event.start_time}\n\n👉 Meer info:\n${shareUrl}`;
+  // Default texts per channel
+  const defaultTexts = {
+    whatsapp: event.whatsapp_share_text ||
+      `🎉 ${event.title}\n📅 ${dateStr} om ${timeStr}\n\n👉 Meer info & aanmelden:\n${shareUrl}`,
+    instagram: event.social_share_text ||
+      `${event.title} 🎉\n\n📅 ${dateStr} | ${timeStr}\n${event.short_description || ""}\n\n👉 Link in bio\n\n#event #horeca #uitagenda`,
+    teaser: event.short_description || `${event.title} — ${dateStr}. Wees erbij!`,
+    newsletter: `Binnenkort in de agenda: ${event.title}!\n\n${event.short_description || `Op ${dateStr} om ${timeStr} is het zover.`}\n\nBekijk alle details en meld je aan: ${shareUrl}`,
+    website: `<strong>${event.title}</strong> — ${dateStr} om ${timeStr}. ${event.short_description || "Bekijk de details en schrijf je in."} <a href="${shareUrl}">Meer info →</a>`,
+    promo: `${event.title}\n\n${event.short_description || ""}\n\n📅 ${dateStr}\n⏰ ${timeStr}\n\nMeer weten? Bekijk alle details op:\n${shareUrl}`,
+  };
 
-  const socialText = event.social_share_text ||
-    `${event.title} 🎉\n📅 ${new Date(event.start_date).toLocaleDateString("nl-NL")} | ${event.start_time}\n\nMeer info: ${shareUrl}`;
-
-  const emailText = `Beste,\n\nGraag nodigen wij u uit voor ${event.title}.\n\n📅 ${new Date(event.start_date).toLocaleDateString("nl-NL")} om ${event.start_time}\n\n${event.short_description || ""}\n\nBekijk alle details: ${shareUrl}\n\nMet vriendelijke groet`;
+  const getText = (channel: string) => channelTexts[channel] || defaultTexts[channel as keyof typeof defaultTexts] || "";
+  const setText = (channel: string, text: string) => setChannelTexts((prev) => ({ ...prev, [channel]: text }));
 
   const trackAction = async (channel: string) => {
     if (!tenantId || !user) return;
@@ -105,19 +117,94 @@ export default function DistributionPage() {
     });
   };
 
+  // AI: generate all channel texts at once
+  const handleGenerateAll = async () => {
+    setGenerating(true);
+    try {
+      const prompt = `Genereer promotieteksten voor dit evenement:
+Titel: ${event.title}
+Datum: ${dateStr}
+Tijd: ${timeStr}
+Beschrijving: ${event.short_description || "Geen beschrijving"}
+Volledige beschrijving: ${event.full_description || "Geen"}
+Link: ${shareUrl}
+Organisatie: ${tenant?.name || ""}
+${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}
+${tenant?.tagline ? `Tagline: ${tenant.tagline}` : ""}`;
+
+      const { data, error } = await supabase.functions.invoke("ai-assist", {
+        body: { prompt, task: "distribution_content" },
+      });
+      if (error) throw error;
+
+      const parsed = JSON.parse(data.result);
+      setChannelTexts({
+        whatsapp: parsed.whatsapp || getText("whatsapp"),
+        instagram: parsed.instagram || getText("instagram"),
+        teaser: parsed.teaser || getText("teaser"),
+        newsletter: parsed.newsletter || getText("newsletter"),
+        website: parsed.website || getText("website"),
+        promo: parsed.promo || getText("promo"),
+      });
+      toast.success("Alle teksten gegenereerd!");
+    } catch (err: any) {
+      console.error("AI generate error:", err);
+      toast.error("Genereren mislukt. Probeer het opnieuw.");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // AI: rewrite single channel text
+  const handleRewrite = async (text: string, instruction: string): Promise<string> => {
+    setRewriting(instruction);
+    try {
+      const prompt = `Herschrijf deze tekst. Instructie: "${instruction}"
+
+Oorspronkelijke tekst:
+${text}
+
+Context:
+Event: ${event.title}
+Datum: ${dateStr}
+Link: ${shareUrl}
+${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
+
+      const { data, error } = await supabase.functions.invoke("ai-assist", {
+        body: { prompt, task: "rewrite_channel" },
+      });
+      if (error) throw error;
+      toast.success("Tekst herschreven");
+      return data.result;
+    } catch {
+      toast.error("Herschrijven mislukt");
+      return text;
+    } finally {
+      setRewriting(null);
+    }
+  };
+
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(getText("whatsapp"))}`;
+
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground">{t.distribution.title}</h1>
-        <p className="text-sm text-muted-foreground mt-1">Kies een evenement en deel het overal — in één klik.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-foreground">{t.distribution.title}</h1>
+          <p className="text-sm text-muted-foreground mt-1">Bereid je content voor en deel je event overal — in één klik.</p>
+        </div>
+        <Button onClick={handleGenerateAll} disabled={generating} className="gap-2 shrink-0">
+          {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+          {generating ? "Genereren..." : "Genereer alle teksten"}
+        </Button>
       </div>
 
       {/* Event selector */}
       <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border shadow-card">
         <Zap className="w-4 h-4 text-primary shrink-0" />
-        <span className="text-sm font-medium text-foreground shrink-0">Evenement:</span>
-        <Select value={selectedEvent} onValueChange={setSelectedEvent}>
+        <span className="text-sm font-medium text-foreground shrink-0">Event:</span>
+        <Select value={selectedEvent} onValueChange={(v) => { setSelectedEvent(v); setChannelTexts({}); }}>
           <SelectTrigger className="max-w-sm">
             <SelectValue />
           </SelectTrigger>
@@ -140,89 +227,158 @@ export default function DistributionPage() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
         <ChannelBar
           shareUrl={shareUrl}
-          whatsappText={whatsappText}
-          socialText={socialText}
+          whatsappText={getText("whatsapp")}
+          socialText={getText("instagram")}
           eventTitle={event.title}
-          onChannelClick={(ch) => {
-            trackAction(ch);
-          }}
+          onChannelClick={trackAction}
           onShowQR={() => setShowQR(true)}
         />
       </motion.div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="share" className="gap-2 text-xs"><Share2 className="w-3.5 h-3.5" />Teksten</TabsTrigger>
-          <TabsTrigger value="widgets" className="gap-2 text-xs"><Zap className="w-3.5 h-3.5" />Widgets</TabsTrigger>
-          <TabsTrigger value="stats" className="gap-2 text-xs"><BarChart3 className="w-3.5 h-3.5" />Statistieken</TabsTrigger>
-        </TabsList>
+      {/* Quality Check */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+        <QualityCheck
+          event={event}
+          texts={{
+            whatsapp: getText("whatsapp"),
+            social: getText("instagram"),
+            newsletter: getText("newsletter"),
+            website: getText("website"),
+          }}
+        />
+      </motion.div>
 
-        <TabsContent value="share" className="mt-4 space-y-4">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <ShareLinkCard url={shareUrl} eventId={event.id} />
-          </motion.div>
-          <div className="grid md:grid-cols-2 gap-4">
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-              <ShareTextCard
-                icon={<MessageCircle className="w-4 h-4 text-green-600" />}
-                title="WhatsApp bericht"
-                description="Klaar om te sturen naar je gasten of groepen"
-                text={whatsappText}
-                onTextChange={() => toast.success("WhatsApp tekst opgeslagen")}
-                actions={
-                  <a href={`https://wa.me/?text=${encodeURIComponent(whatsappText)}`} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" className="gap-2 bg-green-600 text-white hover:bg-green-700 border-0">
-                      <Smartphone className="w-3.5 h-3.5" />Stuur via WhatsApp
-                    </Button>
-                  </a>
-                }
-              />
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <ShareTextCard
-                icon={<Share2 className="w-4 h-4 text-primary" />}
-                title="Social media tekst"
-                description="Voor Instagram, Facebook, LinkedIn of X"
-                text={socialText}
-                onTextChange={() => toast.success("Social tekst opgeslagen")}
-              />
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="md:col-span-2">
-              <ShareTextCard
-                icon={<span className="text-sm">✉️</span>}
-                title="E-mail tekst"
-                description="Kopieer en plak in je eigen e-mail of nieuwsbrief"
-                text={emailText}
-                onTextChange={() => toast.success("E-mail tekst opgeslagen")}
-              />
-            </motion.div>
-          </div>
-        </TabsContent>
+      {/* Event Link & QR */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+        <ShareLinkCard url={shareUrl} eventId={event.id} />
+      </motion.div>
 
-        <TabsContent value="widgets" className="mt-4 space-y-4">
-          <div className="p-6 rounded-xl bg-card border border-border shadow-card text-center space-y-4">
-            <Zap className="w-8 h-8 text-primary mx-auto" />
-            <div>
-              <h3 className="font-display font-semibold text-foreground mb-1">Widgets beheren</h3>
-              <p className="text-xs text-muted-foreground max-w-md mx-auto">
-                Maak en configureer je embed widgets op de Widgets pagina. Daar kun je het type kiezen, de stijl aanpassen en de embed-code kopiëren.
-              </p>
-            </div>
-            <Link to="/app/widgets">
-              <Button className="gap-2">
-                Naar Widgets <ArrowRight className="w-4 h-4" />
+      {/* Channel-specific content sections */}
+      <div className="space-y-3">
+        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
+          <MessageCircle className="w-4 h-4 text-green-600" />
+          WhatsApp
+        </h2>
+        <ShareTextCard
+          icon={<MessageCircle className="w-4 h-4 text-green-600" />}
+          title="WhatsApp bericht"
+          description="Klaar om te sturen naar gasten of groepen"
+          text={getText("whatsapp")}
+          onTextChange={(t) => setText("whatsapp", t)}
+          charLimit={500}
+          onAiRewrite={handleRewrite}
+          aiLoading={!!rewriting}
+          actions={
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+              <Button size="sm" className="gap-2 bg-green-600 text-white hover:bg-green-700 border-0 text-xs">
+                <Smartphone className="w-3.5 h-3.5" />WhatsApp
               </Button>
-            </Link>
-          </div>
-        </TabsContent>
+            </a>
+          }
+        />
+      </div>
 
-        <TabsContent value="stats" className="mt-4 space-y-4">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <DistributionStats stats={stats} />
-          </motion.div>
-        </TabsContent>
-      </Tabs>
+      <div className="space-y-3">
+        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
+          <Instagram className="w-4 h-4 text-pink-600" />
+          Social media
+        </h2>
+        <div className="grid md:grid-cols-2 gap-3">
+          <ShareTextCard
+            icon={<Instagram className="w-4 h-4 text-pink-600" />}
+            title="Instagram / Facebook post"
+            description="Met hashtags en emoji's"
+            text={getText("instagram")}
+            onTextChange={(t) => setText("instagram", t)}
+            charLimit={2200}
+            onAiRewrite={handleRewrite}
+            aiLoading={!!rewriting}
+          />
+          <ShareTextCard
+            icon={<Share2 className="w-4 h-4 text-primary" />}
+            title="Korte teaser"
+            description="Voor stories, X/Twitter of advertenties"
+            text={getText("teaser")}
+            onTextChange={(t) => setText("teaser", t)}
+            charLimit={160}
+            onAiRewrite={handleRewrite}
+            aiLoading={!!rewriting}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
+          <Globe className="w-4 h-4 text-blue-600" />
+          Website & nieuwsbrief
+        </h2>
+        <div className="grid md:grid-cols-2 gap-3">
+          <ShareTextCard
+            icon={<Globe className="w-4 h-4 text-blue-600" />}
+            title="Website promo snippet"
+            description="HTML-klaar voor je website"
+            text={getText("website")}
+            onTextChange={(t) => setText("website", t)}
+            onAiRewrite={handleRewrite}
+            aiLoading={!!rewriting}
+          />
+          <ShareTextCard
+            icon={<Mail className="w-4 h-4 text-orange-600" />}
+            title="Nieuwsbrief introductie"
+            description="Kopieer en plak in je mailing tool"
+            text={getText("newsletter")}
+            onTextChange={(t) => setText("newsletter", t)}
+            onAiRewrite={handleRewrite}
+            aiLoading={!!rewriting}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
+          <Share2 className="w-4 h-4 text-primary" />
+          Uitgebreide promotietekst
+        </h2>
+        <ShareTextCard
+          icon={<Share2 className="w-4 h-4 text-primary" />}
+          title="Langere promotietekst"
+          description="Voor persberichten, uitnodigingen of uitgebreide promotie"
+          text={getText("promo")}
+          onTextChange={(t) => setText("promo", t)}
+          onAiRewrite={handleRewrite}
+          aiLoading={!!rewriting}
+        />
+      </div>
+
+      {/* Widgets section */}
+      <div className="space-y-3">
+        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
+          <Code2 className="w-4 h-4 text-primary" />
+          Widgets & embeds
+        </h2>
+        <div className="p-5 rounded-xl bg-card border border-border shadow-card flex flex-col sm:flex-row items-center gap-4">
+          <div className="flex-1">
+            <h3 className="font-display font-semibold text-foreground text-sm mb-1">Embed op je website</h3>
+            <p className="text-xs text-muted-foreground">
+              Plaats een agenda- of eventwidget op je eigen website. Altijd up-to-date, in jouw huisstijl.
+            </p>
+          </div>
+          <Link to="/app/widgets">
+            <Button variant="outline" className="gap-2 shrink-0">
+              Widgets beheren <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Stats section */}
+      <div className="space-y-3">
+        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
+          <BarChart3 className="w-4 h-4 text-primary" />
+          Statistieken
+        </h2>
+        <DistributionStats stats={stats} />
+      </div>
 
       {/* QR Dialog */}
       <QRCodeDialog
