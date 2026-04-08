@@ -3,8 +3,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
-import { AiAssistButton } from "@/components/AiAssistButton";
-import { useAiAssist } from "@/hooks/useAiAssist";
+import { AiFieldActions } from "./AiFieldActions";
+import { AiQuickStart } from "./AiQuickStart";
 import type { EventFormState } from "./useEventForm";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -15,18 +15,8 @@ interface StepBasicsProps {
 }
 
 export function StepBasics({ form, updateForm, categories }: StepBasicsProps) {
-  const { run, loading } = useAiAssist();
   const categoryName = categories.find((c) => c.id === form.category)?.name || "";
-
-  const handleGenerateDescription = () => {
-    run({
-      task: "generate_description",
-      context: { title: form.title, category: categoryName, organizer: form.organizer, date: form.startDate, venue: form.venue },
-      onResult: (result) => {
-        if (result.shortDescription) updateForm({ shortDescription: result.shortDescription });
-      },
-    });
-  };
+  const eventContext = { title: form.title, category: categoryName };
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
@@ -34,6 +24,11 @@ export function StepBasics({ form, updateForm, categories }: StepBasicsProps) {
         <h2 className="text-xl font-display font-bold text-foreground">Basis</h2>
         <p className="text-sm text-muted-foreground">Geef je evenement een naam en korte omschrijving.</p>
       </div>
+
+      {/* AI Quick Start - only show for new events without title */}
+      {!form.title.trim() && (
+        <AiQuickStart updateForm={updateForm} categories={categories} />
+      )}
 
       <div className="space-y-5">
         <div className="space-y-2">
@@ -50,7 +45,15 @@ export function StepBasics({ form, updateForm, categories }: StepBasicsProps) {
         </div>
 
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-muted-foreground">Ondertitel <span className="text-xs">(optioneel)</span></Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-muted-foreground">Ondertitel <span className="text-xs">(optioneel)</span></Label>
+            <AiFieldActions
+              fieldName="ondertitel"
+              currentText={form.subtitle}
+              onResult={(text) => updateForm({ subtitle: text })}
+              eventContext={eventContext}
+            />
+          </div>
           <Input value={form.subtitle} onChange={(e) => updateForm({ subtitle: e.target.value })} placeholder="Bijv. met DJ Marco & Friends" />
         </div>
 
@@ -76,13 +79,12 @@ export function StepBasics({ form, updateForm, categories }: StepBasicsProps) {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-sm font-medium">Korte beschrijving</Label>
-            {form.title && (
-              <AiAssistButton
-                onClick={handleGenerateDescription}
-                loading={loading === "generate_description"}
-                label="Genereer"
-              />
-            )}
+            <AiFieldActions
+              fieldName="korte beschrijving"
+              currentText={form.shortDescription}
+              onResult={(text) => updateForm({ shortDescription: text })}
+              eventContext={eventContext}
+            />
           </div>
           <Textarea
             value={form.shortDescription}

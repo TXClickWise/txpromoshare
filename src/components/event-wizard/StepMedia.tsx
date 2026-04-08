@@ -1,15 +1,13 @@
-import { Image, Upload, Check, Plus, Trash2 } from "lucide-react";
+import { Image, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { motion } from "framer-motion";
-import { AiAssistButton } from "@/components/AiAssistButton";
-import { useAiAssist } from "@/hooks/useAiAssist";
+import { AiFieldActions } from "./AiFieldActions";
 import MediaPicker from "@/components/MediaPicker";
 import type { EventFormState } from "./useEventForm";
 import type { Tables } from "@/integrations/supabase/types";
-import { useState } from "react";
 
 interface StepMediaProps {
   form: EventFormState;
@@ -32,18 +30,8 @@ export function StepMedia({
   fileInputRef, openMediaPicker, handleMediaUpload,
   categories = [],
 }: StepMediaProps) {
-  const { run, loading } = useAiAssist();
   const categoryName = categories.find((c) => c.id === form.category)?.name || "";
-
-  const handleGenerateFullDescription = () => {
-    run({
-      task: "generate_description",
-      context: { title: form.title, category: categoryName, organizer: form.organizer, date: form.startDate, venue: form.venue },
-      onResult: (result) => {
-        if (result.fullDescription) updateForm({ fullDescription: result.fullDescription });
-      },
-    });
-  };
+  const eventContext = { title: form.title, category: categoryName, description: form.shortDescription };
 
   const handleImageSelect = (mediaId: string, url: string) => {
     updateForm({ featuredImageId: mediaId, featuredImageUrl: url });
@@ -60,13 +48,12 @@ export function StepMedia({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-sm font-medium">Uitgebreide beschrijving</Label>
-          {form.title && (
-            <AiAssistButton
-              onClick={handleGenerateFullDescription}
-              loading={loading === "generate_description"}
-              label="Genereer"
-            />
-          )}
+          <AiFieldActions
+            fieldName="uitgebreide beschrijving"
+            currentText={form.fullDescription}
+            onResult={(text) => updateForm({ fullDescription: text })}
+            eventContext={eventContext}
+          />
         </div>
         <Textarea
           value={form.fullDescription}
