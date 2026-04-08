@@ -38,8 +38,8 @@ export default function AdminPlansPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [selected, setSelected] = useState<PlanRow | null>(null);
   const [form, setForm] = useState({
-    name: "", slug: "", description: "", monthly_price_cents: 0,
-    yearly_price_cents: 0, is_active: true, is_public: true, is_featured: false,
+    name: "", slug: "", description: "", monthly_price_eur: "0.00",
+    yearly_price_eur: "0.00", is_active: true, is_public: true, is_featured: false,
     sort_order: 0, notes: "", features: "[]", limits: JSON.stringify(defaultLimits, null, 2),
     stripe_monthly_price_id: "", stripe_yearly_price_id: "",
   });
@@ -61,7 +61,8 @@ export default function AdminPlansPage() {
       setSelected(plan);
       setForm({
         name: plan.name, slug: plan.slug, description: plan.description || "",
-        monthly_price_cents: plan.monthly_price_cents, yearly_price_cents: plan.yearly_price_cents || 0,
+        monthly_price_eur: (plan.monthly_price_cents / 100).toFixed(2),
+        yearly_price_eur: ((plan.yearly_price_cents || 0) / 100).toFixed(2),
         is_active: plan.is_active, is_public: plan.is_public, is_featured: plan.is_featured,
         sort_order: plan.sort_order, notes: plan.notes || "",
         features: JSON.stringify(plan.features, null, 2),
@@ -72,8 +73,8 @@ export default function AdminPlansPage() {
     } else {
       setSelected(null);
       setForm({
-        name: "", slug: "", description: "", monthly_price_cents: 0,
-        yearly_price_cents: 0, is_active: true, is_public: true, is_featured: false,
+        name: "", slug: "", description: "", monthly_price_eur: "0.00",
+        yearly_price_eur: "0.00", is_active: true, is_public: true, is_featured: false,
         sort_order: plans.length, notes: "", features: "[]",
         limits: JSON.stringify(defaultLimits, null, 2),
         stripe_monthly_price_id: "", stripe_yearly_price_id: "",
@@ -89,8 +90,8 @@ export default function AdminPlansPage() {
 
     const payload = {
       name: form.name, slug: form.slug, description: form.description || null,
-      monthly_price_cents: form.monthly_price_cents,
-      yearly_price_cents: form.yearly_price_cents || null,
+      monthly_price_cents: Math.round(parseFloat(form.monthly_price_eur || "0") * 100),
+      yearly_price_cents: parseFloat(form.yearly_price_eur || "0") > 0 ? Math.round(parseFloat(form.yearly_price_eur) * 100) : null,
       is_active: form.is_active, is_public: form.is_public, is_featured: form.is_featured,
       sort_order: form.sort_order, notes: form.notes || null,
       features, limits,
@@ -180,8 +181,8 @@ export default function AdminPlansPage() {
             </div>
             <div className="space-y-2"><Label>Beschrijving</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
             <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2"><Label>Prijs/maand (centen)</Label><Input type="number" value={form.monthly_price_cents} onChange={(e) => setForm({ ...form, monthly_price_cents: +e.target.value })} /></div>
-              <div className="space-y-2"><Label>Prijs/jaar (centen)</Label><Input type="number" value={form.yearly_price_cents} onChange={(e) => setForm({ ...form, yearly_price_cents: +e.target.value })} /></div>
+              <div className="space-y-2"><Label>Prijs/maand (€)</Label><Input type="number" step="0.01" min="0" value={form.monthly_price_eur} onChange={(e) => setForm({ ...form, monthly_price_eur: e.target.value })} placeholder="29.00" /></div>
+              <div className="space-y-2"><Label>Prijs/jaar (€)</Label><Input type="number" step="0.01" min="0" value={form.yearly_price_eur} onChange={(e) => setForm({ ...form, yearly_price_eur: e.target.value })} placeholder="279.00" /></div>
               <div className="space-y-2"><Label>Sorteer</Label><Input type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: +e.target.value })} /></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
