@@ -1,14 +1,15 @@
 import { Image, Upload, Check, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
 import { AiAssistButton } from "@/components/AiAssistButton";
 import { useAiAssist } from "@/hooks/useAiAssist";
+import MediaPicker from "@/components/MediaPicker";
 import type { EventFormState } from "./useEventForm";
 import type { Tables } from "@/integrations/supabase/types";
+import { useState } from "react";
 
 interface StepMediaProps {
   form: EventFormState;
@@ -44,6 +45,10 @@ export function StepMedia({
     });
   };
 
+  const handleImageSelect = (mediaId: string, url: string) => {
+    updateForm({ featuredImageId: mediaId, featuredImageUrl: url });
+  };
+
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
       <div className="space-y-1">
@@ -75,25 +80,28 @@ export function StepMedia({
 
       {/* Featured Image */}
       <div className="space-y-3">
-        <Label className="text-sm font-medium">Uitgelichte afbeelding</Label>
+        <div>
+          <Label className="text-sm font-medium">Uitgelichte afbeelding</Label>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Aanbevolen: 16:9 verhouding • min. 1200×675px</p>
+        </div>
         {form.featuredImageUrl ? (
           <div className="relative rounded-xl border border-border overflow-hidden bg-secondary/20 max-w-md">
             <div className="aspect-video">
               <img src={form.featuredImageUrl} alt="Featured" className="w-full h-full object-cover" />
             </div>
             <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-colors flex items-center justify-center gap-3 opacity-0 hover:opacity-100">
-              <Button size="sm" variant="secondary" onClick={openMediaPicker}>Wijzigen</Button>
+              <Button size="sm" variant="secondary" onClick={() => setMediaPickerOpen(true)}>Wijzigen</Button>
               <Button size="sm" variant="destructive" onClick={() => updateForm({ featuredImageId: null, featuredImageUrl: null })}>Verwijderen</Button>
             </div>
           </div>
         ) : (
           <div
             className="border-2 border-dashed border-border rounded-xl p-10 text-center hover:border-primary/50 transition-all cursor-pointer bg-secondary/10 max-w-md"
-            onClick={openMediaPicker}
+            onClick={() => setMediaPickerOpen(true)}
           >
             <Image className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
             <p className="text-sm font-medium text-foreground mb-1">Kies of upload een afbeelding</p>
-            <p className="text-xs text-muted-foreground">Klik om je mediabibliotheek te openen</p>
+            <p className="text-xs text-muted-foreground">Uit je bibliotheek, stockfoto's of upload nieuw</p>
           </div>
         )}
       </div>
@@ -124,51 +132,14 @@ export function StepMedia({
         </Button>
       </div>
 
-      {/* Media Picker Dialog */}
-      <Dialog open={mediaPickerOpen} onOpenChange={setMediaPickerOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Kies een afbeelding</DialogTitle>
-          </DialogHeader>
-          <div className="flex gap-2 mb-4">
-            <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleMediaUpload(e.target.files)} />
-            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-2">
-              <Upload className="w-4 h-4" />
-              {uploading ? "Uploaden..." : "Upload afbeelding"}
-            </Button>
-          </div>
-          {mediaLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
-            </div>
-          ) : mediaItems.length === 0 ? (
-            <div className="text-center py-8">
-              <Image className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Nog geen media. Upload een afbeelding hierboven.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-              {mediaItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    updateForm({ featuredImageId: item.id, featuredImageUrl: item.original_url });
-                    setMediaPickerOpen(false);
-                  }}
-                  className={`relative rounded-lg border-2 overflow-hidden aspect-square transition-colors ${form.featuredImageId === item.id ? "border-primary" : "border-border hover:border-primary/50"}`}
-                >
-                  <img src={item.original_url || ""} alt={item.alt_text || item.filename} className="w-full h-full object-cover" />
-                  {form.featuredImageId === item.id && (
-                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                      <Check className="w-6 h-6 text-primary" />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Unified Media Picker */}
+      <MediaPicker
+        open={mediaPickerOpen}
+        onOpenChange={setMediaPickerOpen}
+        onSelect={handleImageSelect}
+        selectedId={form.featuredImageId}
+        role="featured"
+      />
     </motion.div>
   );
 }
