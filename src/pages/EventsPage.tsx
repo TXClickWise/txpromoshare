@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { Copy, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Plus, Search, LayoutGrid, List, Calendar, Filter, Clock, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
@@ -28,7 +29,16 @@ export default function EventsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [events, setEvents] = useState<Tables<"events">[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const { tenantId } = useTenant();
+
+  const copyEventId = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(id);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   async function fetchEvents() {
     if (!tenantId) return;
@@ -132,6 +142,13 @@ export default function EventsPage() {
                       {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.start_time?.slice(0, 5)}
                     </span>
                   </div>
+                  <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border">
+                    <span className="text-[10px] text-muted-foreground font-medium">ID:</span>
+                    <code className="text-[10px] bg-secondary px-1.5 py-0.5 rounded font-mono text-muted-foreground truncate flex-1">{event.id}</code>
+                    <button onClick={(e) => copyEventId(e, event.id)} className="shrink-0 p-1 rounded hover:bg-secondary transition-colors" title="Kopieer Event ID">
+                      {copiedId === event.id ? <Check className="w-3 h-3 text-accent" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
+                    </button>
+                  </div>
                 </div>
               </Link>
             </motion.div>
@@ -153,6 +170,13 @@ export default function EventsPage() {
                       {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.start_time?.slice(0, 5)}
                     </span>
                   </p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="text-[10px] text-muted-foreground font-medium">ID:</span>
+                    <code className="text-[10px] bg-secondary px-1.5 py-0.5 rounded font-mono text-muted-foreground truncate max-w-[200px]">{event.id}</code>
+                    <button onClick={(e) => copyEventId(e, event.id)} className="shrink-0 p-0.5 rounded hover:bg-secondary transition-colors" title="Kopieer Event ID">
+                      {copiedId === event.id ? <Check className="w-3 h-3 text-accent" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
+                    </button>
+                  </div>
                 </div>
                 <EventStatusBadge status={event.status} />
                 <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} onRefresh={fetchEvents} />
