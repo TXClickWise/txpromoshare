@@ -80,9 +80,12 @@ export function useClickWiseIntegration() {
           sync_settings: { rules: defaultRules } as any,
           credentials_encrypted: Object.keys(creds).length > 0 ? creds : undefined,
         };
-        const { error } = await supabase.from("integration_connections").upsert(insertData, {
-          onConflict: "tenant_id,provider",
-        });
+        const { error } = connection?.id
+          ? await supabase
+              .from("integration_connections")
+              .update(insertData)
+              .eq("id", connection.id)
+          : await supabase.from("integration_connections").insert([insertData]);
         if (error) throw error;
       }
       toast.success("ClickWise verbonden!");
