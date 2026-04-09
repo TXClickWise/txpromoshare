@@ -360,7 +360,8 @@ Deno.serve(async (req) => {
         // === 3. Recurring occurrences sync ===
         let occurrenceSyncCount = 0;
         let occurrenceFailCount = 0;
-        if (eventRow.is_recurring && ghlContactId) {
+        const shouldSyncOccurrences = event_type === "event.published" || event_type === "event.ended";
+        if (eventRow.is_recurring && ghlContactId && shouldSyncOccurrences) {
           const { data: occurrences } = await supabase
             .from("event_occurrences")
             .select("*")
