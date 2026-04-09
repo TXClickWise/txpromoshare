@@ -1,99 +1,68 @@
 
 
-## Plan: Publieke Evenementen Ontdekkingspagina + Boost Verdienmodel
+## Analyse
 
-### Overzicht
+**Doel**: Automatisch ClickWise synchroniseren wanneer events gepubliceerd, gewijzigd of beëindigd worden, zonder handmatige actie.
 
-We bouwen drie dingen: (1) database-uitbreidingen voor discovery en boost, (2) een publieke ontdekkingspagina `/evenementen`, (3) een boost-betaalflow via Stripe, en (4) zichtbaarheidsinstellingen in de app.
+**Aannames**: De `clickwise-sync` edge function en `useClickWiseIntegration` hook werken correct. We hoeven alleen de trigger-logica toe te voegen op de juiste plekken.
 
----
+**Scope**: Een herbruikbare helper-functie + integratie in 3 plekken waar event-statuswijzigingen plaatsvinden.
 
-### Stap 1 — Stripe producten aanmaken
+**Betrokken bestanden**:
+- `src/lib/clickwise-sync.ts` (nieuw) — helper functie
+- `src/components/event-wizard/useEventForm.ts` — publish & save
+- `src/components/EventActionMenu.tsx` — archiveren, republish, beëindigen
+- `src/pages/admin/AdminTenantsPage.tsx` — niet nodig (cron-jobs)
 
-Twee Stripe producten + prijzen (one-time payment):
-- **Event Boost 7 dagen** — €6,95 (695 cent)
-- **Event Boost 14 dagen** — €12,95 (1295 cent)
-
----
-
-### Stap 2 — Database migratie
-
-Toevoegen aan `tenants`:
-- `show_on_discovery` boolean NOT NULL DEFAULT true
-
-Toevoegen aan `events`:
-- `show_on_discovery` boolean DEFAULT NULL (NULL = volg tenant)
-- `is_featured` boolean NOT NULL DEFAULT false
-- `featured_until` timestamptz DEFAULT NULL
-
-Nieuwe tabel `boost_credits`:
-- `id`, `tenant_id`, `remaining`, `granted_at`, `expires_at`
-
-RLS: anon SELECT op events bestaat al. Venues krijgt anon SELECT voor published events. `boost_credits` tenant-member SELECT + platform admin ALL.
-
-Database function `get_discoverable_events(...)` (SECURITY DEFINER) die published events joint met tenant discovery-vlaggen, venues en media, en featured events bovenaan sorteert.
+**Risico's**: Sync mag nooit de event-flow blokkeren. Fouten worden getoast maar blokkeren niet.
 
 ---
 
-### Stap 3 — Edge Function `create-boost-checkout`
+## Stappenplan
 
-- Ontvangt `{ eventId, boostDays: 7 | 14 }`
-- Controleert of Pro-klant nog gratis boost-credits heeft → zo ja, activeer direct zonder betaling
-- Anders: maakt Stripe Checkout session (mode: "payment") met juiste price ID
-- `success_url` = `/app/events/{id}?boosted=true`
-- Na betaling: webhook of success-page logica zet `is_featured = true` en `featured_until = now() + boostDays` (of tot event eindigt, wat eerder is)
+### Stap 1: Maak `src/lib/clickwise-sync.ts`
 
----
+Een fire-and-forget helper die:
+1. De `integration_connections` tabel checkt voor een actieve ClickWise-koppeling voor de tenant
+2. De `sync_settings.rules` checkt of de betreffende event_type aan staat
+3. De `clickwise-sync` edge function aanroept
+4. Bij fout alleen console.error logt (geen blokkerende fout)
 
-### Stap 4 — Publieke ontdekkingspagina `/evenementen`
+Mapping van regels:
+- `event.published` → `rules.event_published`
+- `event.updated` → `rules.event_updated`
+- `event.ended` → `rules.event_ended`
 
-Nieuwe pagina `src/pages/DiscoverEventsPage.tsx`:
-- Route binnen `PublicLayout`
-- Roept `get_discoverable_events()` aan via RPC
-- **Filters**: zoekbalk, categorie, stad, datum (vandaag / dit weekend / deze week / deze maand)
-- **Sortering**: featured events eerst (met badge), dan vandaag, dan chronologisch
-- **Event cards**: thumbnail (100px), titel, datum/tijd, locatie, categorie-badge, organisator
-- SEO meta tags
-- Link in PublicLayout navigatie
+### Stap 2: Integreer in `useEventForm.ts`
 
----
+- Na succesvolle `handlePublish`: roep `triggerClickWiseSync("event.published", eventId, eventData)` aan
+- Na succesvolle `handleSave` (als event al published is): roep `triggerClickWiseSync("event.updated", eventId, eventData)` aan
 
-### Stap 5 — Zichtbaarheidsinstellingen
+### Stap 3: Integreer in `EventActionMenu.tsx`
 
-**SettingsPage.tsx** — nieuwe sectie "Zichtbaarheid":
-- Toggle: "Toon evenementen op de publieke evenementenpagina"
-
-**CreateEventPage.tsx** — nieuw veld:
-- Driewaardige select: "Volg organisatie-instelling" / "Altijd tonen" / "Altijd verbergen"
-- "Uitlichten" knop → opent boost-betaaldialoog met 7/14 dagen keuze
+- Na `archiveEvent`: trigger `event.ended`
+- Na `republishEvent`: trigger `event.published`
 
 ---
 
-### Stap 6 — Pro-plan gratis boosts
+## Technische details
 
-- Bij start van elke maand: cron job of on-demand check geeft Pro-tenants 2 boost-credits
-- CreateEventPage toont "Je hebt X gratis boosts over" als tenant Pro is
-- Bij gebruik gratis boost: `is_featured` direct activeren, credit aftrekken
+De helper `triggerClickWiseSync` is volledig async/fire-and-forget:
 
----
+```typescript
+// src/lib/clickwise-sync.ts
+export async function triggerClickWiseSync(
+  tenantId: string,
+  eventType: "event.published" | "event.updated" | "event.ended",
+  eventId: string,
+  eventData?: Record<string, unknown>
+) {
+  // 1. Check connection exists & is active
+  // 2. Check sync rule is enabled
+  // 3. Call edge function
+  // All wrapped in try/catch — never throws
+}
+```
 
-### Bestanden
-
-| Actie | Bestand |
-|-------|---------|
-| Nieuw | `src/pages/DiscoverEventsPage.tsx` |
-| Nieuw | `supabase/functions/create-boost-checkout/index.ts` |
-| Edit | `src/App.tsx` — route `/evenementen` |
-| Edit | `src/components/PublicLayout.tsx` — nav-link |
-| Edit | `src/pages/CreateEventPage.tsx` — discovery toggle + boost knop |
-| Edit | `src/pages/SettingsPage.tsx` — discovery toggle |
-| Edit | `src/lib/plans.ts` — `freeBoostsPerMonth` in PlanLimits |
-| Migration | Kolommen + tabel + RPC function + RLS |
-
-### Technische details
-
-- Discovery-filter logica: `WHERE status = 'published' AND (e.show_on_discovery IS TRUE OR (e.show_on_discovery IS NULL AND t.show_on_discovery IS TRUE))`
-- Featured sortering: `ORDER BY (is_featured AND featured_until > now()) DESC, start_date ASC`
-- Boost activatie na Stripe: via success URL parameter + edge function verificatie (geen webhook nodig)
-- Anon RLS op venues: nodig voor stad-filter op ontdekkingspagina
+Geen nieuwe database-migraties nodig. Geen nieuwe edge functions. Alleen client-side trigger-logica.
 
