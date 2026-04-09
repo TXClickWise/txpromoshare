@@ -1,30 +1,29 @@
 
 
-## Plan: Fix "Calendar is inactive" voor events in de toekomst
+## Plan: Fix "Slot not available" voor Retro Brothers event
 
-### Probleem-analyse
+### Diagnose
 
-Het is geen kalender-ID probleem. De fout is `"Calendar is inactive"` van GHL, en het treedt **alleen** op bij het Retro Brothers event (29 mei 2026). Andere events op korte termijn (april 2026) syncen prima met exact dezelfde kalender-ID en credentials.
+De `calendarId` is nu correct (`TiRSCHmHCYXM16aZbq7g`). Het probleem is een **andere GHL-fout**: `"The slot you have selected is no longer available."` Dit treedt op omdat GHL Event Calendars werken met **beschikbare slots** — je kunt alleen appointments boeken op tijden die de kalender als beschikbaar markeert.
 
-De meest waarschijnlijke oorzaak: de GHL Event Calendar heeft een actieve datumrange die niet ver genoeg in de toekomst reikt. GHL ignoreert `ignoreDateRange: true` bij bepaalde kalendertypen of versies.
+Het Retro Brothers event (29 mei 2026, 21:00-02:00) valt waarschijnlijk buiten de beschikbare uren van de kalender.
 
-### Stappen
+### Twee-sporige oplossing
 
-1. **Directe workaround in de Edge Function**
-   - Wanneer GHL 400 retourneert met "Calendar is inactive", probeer de request opnieuw **zonder** `ignoreDateRange` (sommige GHL-versies interpreteren dit veld verkeerd)
-   - Als dat ook faalt, log een duidelijke foutmelding: "De ClickWise kalender accepteert geen afspraken op deze datum. Controleer het datumbereik van je kalender in ClickWise."
+**Spoor 1: ClickWise/GHL kalender-instellingen (handmatig)**
+- De "Evenementen Kalender" in GHL moet zo worden ingesteld dat **avond-/nachtslots** beschikbaar zijn (bijv. 00:00-23:59 of 24/7)
+- Controleer: Calendar Settings → Availability → zorg dat de uren alle dagdelen dekken, inclusief avond en nacht
+- Dit verklaart ook waarom events overdag (12:00-13:00) wél syncen maar avondevents falen
 
-2. **Verbeterde foutmelding naar de gebruiker**
-   - In plaats van een generieke "Sync mislukt" toast, toon de specifieke reden: "Kalender inactief voor deze datum — pas het datumbereik aan in ClickWise"
-
-3. **Handmatige actie nodig in ClickWise**
-   - Je moet in de ClickWise/GHL sub-account de kalender-instellingen controleren en het datumbereik verruimen zodat mei 2026 en verder geaccepteerd worden
-   - Dit is een instelling in het ClickWise/GHL dashboard, niet iets dat via de API aangepast kan worden
+**Spoor 2: Code-aanpassing — gebruik `ignoreFreeSlotValidation` flag**
+- GHL ondersteunt een `ignoreFreeSlotValidation: true` parameter bij het aanmaken van appointments, waarmee slot-beschikbaarheid wordt overgeslagen
+- Dit is precies wat nodig is: TX EventShare pusht events naar de kalender ongeacht de slot-configuratie
 
 ### Bestanden
 
 | Bestand | Wijziging |
 |---|---|
-| `supabase/functions/clickwise-sync/index.ts` | Retry zonder `ignoreDateRange`, betere foutmelding |
-| `src/hooks/useClickWiseIntegration.ts` | Specifiekere error toast bij "inactive" fout |
+| `supabase/functions/clickwise-sync/index.ts` | Voeg `ignoreFreeSlotValidation: true` toe aan het appointment request body in de `syncAppointment` functie |
+
+Dit is een kleine wijziging (1 regel) in de `appointmentBody` object rond lijn 121-135.
 
