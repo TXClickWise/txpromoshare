@@ -170,7 +170,7 @@ export const nl = {
         "10 teamleden",
         "Geavanceerde branding",
         "Meerdere locaties",
-        "ClickWise CRM integratie",
+        "ClickWise koppeling (apart abo)",
         "Geavanceerde distributie",
         "Geavanceerde analytics",
         "Prioriteit support",
@@ -208,7 +208,7 @@ export const nl = {
     title: "Integraties",
     clickwise: {
       title: "ClickWise",
-      description: "Verbind je CRM en marketing automation",
+      description: "Automatische reminders, opvolging en promotie op de automatische piloot",
       connected: "Verbonden",
       disconnected: "Niet verbonden",
     },
