@@ -119,6 +119,7 @@ async function syncAppointment(
     appointmentStatus: opts.appointmentStatus,
     ignoreDateRange: true,
     toNotify: false,
+    selectedTimezone: "Europe/Amsterdam",
   };
 
   let result: { ok: boolean; status: number; body: string };
