@@ -493,13 +493,16 @@ export function useEventForm() {
       return false;
     }
     setIsDirty(false);
+    const syncEventType = isEditing && loadedStatusRef.current === "published"
+      ? "event.updated"
+      : "event.published";
     toast.success(
       status === "scheduled" ? "Evenement ingepland! 📅" : "Evenement gepubliceerd! 🎉",
       { description: status === "scheduled" ? "Het event gaat automatisch live op de ingestelde datum." : "Je event is nu zichtbaar voor bezoekers." }
     );
     logAudit({ tenantId, entityType: "event", action: status === "scheduled" ? "scheduled" : "published", entityId: eventId });
     if (status === "published" && eventId) {
-      triggerClickWiseSync(tenantId, "event.published", eventId, { title: form.title, slug: form.slug });
+      triggerClickWiseSync(tenantId, syncEventType, eventId, { title: form.title, slug: form.slug });
     }
     navigate("/app/events");
     return true;
