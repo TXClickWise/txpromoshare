@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
     const credentials = connection.credentials_encrypted as any;
     const connectionApiKey = credentials?.api_key;
     const apiKey = connectionApiKey || CLICKWISE_API_KEY;
-    const calendarId = credentials?.calendar_id || "TiR5CHmHCYXM16aZbq7g";
+    const calendarId = credentials?.calendar_id || "TiRSCHmHCYXM16aZbq7g";
 
     if (!apiKey) {
       await supabase.from("integration_events").insert({
