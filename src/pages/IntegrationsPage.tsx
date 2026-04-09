@@ -109,7 +109,12 @@ export default function IntegrationsPage() {
                     <Input type="password" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="h-9 font-mono text-xs" />
                     <p className="text-[11px] text-muted-foreground">Ga naar Settings → Business Profile → API Keys in je ClickWise sub-account</p>
                   </div>
-                  <Button onClick={() => connect(subaccountId, apiKey)} disabled={!subaccountId.trim() || !apiKey.trim() || syncing} className="gap-2 gradient-hero text-primary-foreground border-0 hover:opacity-90 h-9 w-fit">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground">Calendar ID</label>
+                    <Input placeholder="bijv. TiR5CHmHCYXM16aZbq7g" value={calendarId} onChange={(e) => setCalendarId(e.target.value)} className="h-9 font-mono text-xs" />
+                    <p className="text-[11px] text-muted-foreground">ID van je Event Calendar in ClickWise (Calendars → klik op kalender → URL)</p>
+                  </div>
+                  <Button onClick={() => connect(subaccountId, apiKey, calendarId)} disabled={!subaccountId.trim() || !apiKey.trim() || syncing} className="gap-2 gradient-hero text-primary-foreground border-0 hover:opacity-90 h-9 w-fit">
                     <Link2 className="w-4 h-4" />{syncing ? "Bezig…" : "Verbinden"}
                   </Button>
                 </div>
@@ -146,6 +151,10 @@ export default function IntegrationsPage() {
                           ? formatDistanceToNow(new Date(connection.last_sync_at), { addSuffix: true, locale: nl })
                           : "Nog niet"}
                       </p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground">Calendar ID</span>
+                      <p className="font-mono text-xs">{(connection?.credentials_encrypted as any)?.calendar_id || "TiR5CHmHCYXM16aZbq7g"}</p>
                     </div>
                     <div>
                       <span className="text-xs text-muted-foreground">Verbonden sinds</span>
