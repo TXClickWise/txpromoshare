@@ -1,0 +1,1 @@
+UPDATE public.integration_connections SET credentials_encrypted = jsonb_set(credentials_encrypted, '{calendar_id}', '"TiRSCHmHCYXM16aZbq7g"') WHERE id = '4bf4f4ce-b382-4618-9fd1-62ab279c42be';
