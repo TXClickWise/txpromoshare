@@ -237,6 +237,8 @@ Deno.serve(async (req) => {
             address: addressStr || undefined,
             notes,
             appointmentStatus: event_type === "event.ended" ? "cancelled" : "confirmed",
+            ignoreDateRange: true,
+            toNotify: false,
           };
 
           calResult = await callGHL(
