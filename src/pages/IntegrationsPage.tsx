@@ -25,7 +25,7 @@ export default function IntegrationsPage() {
   const { tenant } = useTenant();
   const [subaccountId, setSubaccountId] = useState("");
   const [apiKey, setApiKey] = useState("");
-  const [calendarId, setCalendarId] = useState("TiR5CHmHCYXM16aZbq7g");
+  const [calendarId, setCalendarId] = useState("TiRSCHmHCYXM16aZbq7g");
   const [activeTab, setActiveTab] = useState("overview");
 
   const isConnected = status === "connected";
@@ -154,7 +154,7 @@ export default function IntegrationsPage() {
                     </div>
                     <div>
                       <span className="text-xs text-muted-foreground">Calendar ID</span>
-                      <p className="font-mono text-xs">{(connection?.credentials_encrypted as any)?.calendar_id || "TiR5CHmHCYXM16aZbq7g"}</p>
+                      <p className="font-mono text-xs">{(connection?.credentials_encrypted as any)?.calendar_id || "TiRSCHmHCYXM16aZbq7g"}</p>
                     </div>
                     <div>
                       <span className="text-xs text-muted-foreground">Verbonden sinds</span>
