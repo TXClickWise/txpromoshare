@@ -71,7 +71,7 @@ async function findExistingAppointmentId(supabase: any, connectionId: string, ev
     .eq("connection_id", connectionId)
     .eq("event_id", eventId)
     .eq("event_type", eventType)
-    .eq("status", "success")
+    .in("status", ["success", "failed"])
     .order("attempted_at", { ascending: false })
     .limit(10);
 
@@ -122,37 +122,88 @@ async function syncAppointment(
   };
 
   let result: { ok: boolean; status: number; body: string };
+  let method: string;
   if (existingId) {
     // PUT to update existing appointment
+    method = "PUT";
     result = await callGHL(
       `${CLICKWISE_API_URL}/calendars/events/appointments/${existingId}`,
       opts.apiKey,
       appointmentBody,
       "PUT",
     );
+    // If PUT returns 404, the appointment was deleted in GHL — fall back to POST
+    if (!result.ok && result.status === 404) {
+      console.log("Existing appointment not found in GHL, falling back to POST");
+      method = "POST";
+      result = await callGHL(
+        `${CLICKWISE_API_URL}/calendars/events/appointments`,
+        opts.apiKey,
+        appointmentBody,
+      );
+    }
   } else {
     // POST to create new appointment
+    method = "POST";
     result = await callGHL(
       `${CLICKWISE_API_URL}/calendars/events/appointments`,
       opts.apiKey,
       appointmentBody,
     );
+    // If POST returns 400 (slot conflict / duplicate), try to find and update existing
+    if (!result.ok && result.status === 400) {
+      console.log("POST returned 400, attempting to find existing appointment via contacts endpoint");
+      // Search for appointments by contact
+      try {
+        const searchRes = await fetch(
+          `${CLICKWISE_API_URL}/contacts/${opts.contactId}/appointments?calendarId=${opts.calendarId}`,
+          {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${opts.apiKey}`,
+              "Version": "2021-07-28",
+            },
+          },
+        );
+        if (searchRes.ok) {
+          const searchData = await searchRes.json();
+          const appointments = searchData?.events || searchData?.appointments || [];
+          if (appointments.length > 0) {
+            // Use the most recent appointment for this contact+calendar
+            const existingAppt = appointments[0];
+            const apptId = existingAppt.id || existingAppt.appointmentId;
+            if (apptId) {
+              console.log("Found existing appointment, updating via PUT:", apptId);
+              method = "PUT";
+              result = await callGHL(
+                `${CLICKWISE_API_URL}/calendars/events/appointments/${apptId}`,
+                opts.apiKey,
+                appointmentBody,
+                "PUT",
+              );
+            }
+          }
+        }
+      } catch (searchErr) {
+        console.error("Failed to search for existing appointments:", searchErr);
+      }
+    }
   }
 
   // Extract appointment ID from response
   let ghlAppointmentId: string | null = existingId;
-  if (!existingId && result.ok) {
+  if (result.ok) {
     try {
       const json = JSON.parse(result.body);
-      ghlAppointmentId = json?.id || json?.appointment?.id || null;
+      ghlAppointmentId = json?.id || json?.appointment?.id || ghlAppointmentId || null;
     } catch { /* */ }
   }
 
   const logPayload: Record<string, unknown> = {
     ...appointmentBody,
     ghl_appointment_id: ghlAppointmentId,
-    _method: existingId ? "PUT" : "POST",
-    _existing_id: existingId || undefined,
+    _method: method,
+    _existing_id: existingId || undefined, 
   };
   if (opts.occurrenceId) logPayload._occurrence_id = opts.occurrenceId;
   if (!result.ok) logPayload._ghl_response = result.body;
