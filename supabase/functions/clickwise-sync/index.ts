@@ -84,6 +84,17 @@ async function findExistingAppointmentId(supabase: any, connectionId: string, ev
   return null;
 }
 
+// Check if a GHL error is "Calendar is inactive"
+function isCalendarInactiveError(body: string): boolean {
+  try {
+    const json = JSON.parse(body);
+    const msg = (json?.message || json?.error || json?.msg || "").toLowerCase();
+    return msg.includes("calendar is inactive") || msg.includes("calendar is not active");
+  } catch {
+    return body.toLowerCase().includes("calendar is inactive");
+  }
+}
+
 // Create or update an appointment in GHL
 async function syncAppointment(
   supabase: any,
@@ -104,7 +115,7 @@ async function syncAppointment(
     logEventType: string;
     occurrenceId?: string;
   },
-): Promise<{ ok: boolean; appointmentId?: string }> {
+): Promise<{ ok: boolean; appointmentId?: string; calendarInactive?: boolean }> {
   const existingId = await findExistingAppointmentId(supabase, opts.connectionId, opts.eventId, opts.occurrenceId || "");
 
   const appointmentBody: Record<string, unknown> = {
@@ -152,7 +163,7 @@ async function syncAppointment(
       appointmentBody,
     );
     // If POST returns 400 (slot conflict / duplicate), try to find and update existing
-    if (!result.ok && result.status === 400) {
+    if (!result.ok && result.status === 400 && !isCalendarInactiveError(result.body)) {
       console.log("POST returned 400, attempting to find existing appointment via contacts endpoint");
       try {
         const searchRes = await fetch(
@@ -195,6 +206,31 @@ async function syncAppointment(
     }
   }
 
+  // === Retry without ignoreDateRange if "Calendar is inactive" ===
+  if (!result.ok && result.status === 400 && isCalendarInactiveError(result.body)) {
+    console.log("Calendar inactive error detected — retrying WITHOUT ignoreDateRange");
+    const retryBody = { ...appointmentBody };
+    delete retryBody.ignoreDateRange;
+
+    const endpoint = existingId
+      ? `${CLICKWISE_API_URL}/calendars/events/appointments/${existingId}`
+      : `${CLICKWISE_API_URL}/calendars/events/appointments`;
+    const retryMethod = existingId ? "PUT" : "POST";
+
+    const retryResult = await callGHL(endpoint, opts.apiKey, retryBody, retryMethod);
+    if (retryResult.ok) {
+      console.log("Retry without ignoreDateRange succeeded!");
+      result = retryResult;
+      method = retryMethod;
+    } else {
+      console.error("Retry without ignoreDateRange also failed:", retryResult.status, retryResult.body);
+      // Keep original result for logging
+    }
+  }
+
+  // Detect calendar inactive for return value
+  const calendarInactive = !result.ok && result.status === 400 && isCalendarInactiveError(result.body);
+
   // Extract appointment ID from response
   let ghlAppointmentId: string | null = existingId;
   if (result.ok) {
@@ -211,7 +247,10 @@ async function syncAppointment(
     _existing_id: existingId || undefined, 
   };
   if (opts.occurrenceId) logPayload._occurrence_id = opts.occurrenceId;
-  if (!result.ok) logPayload._ghl_response = result.body;
+  if (!result.ok) {
+    logPayload._ghl_response = result.body;
+    if (calendarInactive) logPayload._error_hint = "calendar_inactive_for_date";
+  }
 
   await supabase.from("integration_events").insert({
     connection_id: opts.connectionId,
@@ -222,7 +261,7 @@ async function syncAppointment(
     response_status: result.status,
   });
 
-  return { ok: result.ok, appointmentId: ghlAppointmentId || undefined };
+  return { ok: result.ok, appointmentId: ghlAppointmentId || undefined, calendarInactive };
 }
 
 Deno.serve(async (req) => {
@@ -499,6 +538,7 @@ Deno.serve(async (req) => {
           success: contactResult.ok && calResult.ok,
           contact_status: contactResult.ok ? "success" : "failed",
           calendar_status: calResult.ok ? "success" : "failed",
+          calendar_inactive: calResult.calendarInactive || false,
           ghl_contact_status: contactResult.status,
           occurrences_synced: occurrenceSyncCount,
           occurrences_failed: occurrenceFailCount,
