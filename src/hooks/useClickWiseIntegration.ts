@@ -141,10 +141,19 @@ export function useClickWiseIntegration() {
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error);
-      toast.success("Sync voltooid");
+      if (result.calendar_inactive) {
+        toast.warning("De ClickWise kalender accepteert geen afspraken op deze datum. Pas het datumbereik aan in ClickWise.", { duration: 8000 });
+      } else {
+        toast.success("Sync voltooid");
+      }
       await fetchEvents();
     } catch (err: any) {
-      toast.error("Sync mislukt: " + (err.message || "Onbekende fout"));
+      const msg = err.message || "Onbekende fout";
+      if (msg.toLowerCase().includes("inactive")) {
+        toast.error("Kalender inactief voor deze datum — pas het datumbereik aan in ClickWise", { duration: 8000 });
+      } else {
+        toast.error("Sync mislukt: " + msg);
+      }
     } finally {
       setSyncing(false);
     }
