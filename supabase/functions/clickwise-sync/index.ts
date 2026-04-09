@@ -119,6 +119,7 @@ async function syncAppointment(
     appointmentStatus: opts.appointmentStatus,
     ignoreDateRange: true,
     toNotify: false,
+    selectedTimezone: "Europe/Amsterdam",
   };
 
   let result: { ok: boolean; status: number; body: string };
@@ -153,10 +154,9 @@ async function syncAppointment(
     // If POST returns 400 (slot conflict / duplicate), try to find and update existing
     if (!result.ok && result.status === 400) {
       console.log("POST returned 400, attempting to find existing appointment via contacts endpoint");
-      // Search for appointments by contact
       try {
         const searchRes = await fetch(
-          `${CLICKWISE_API_URL}/contacts/${opts.contactId}/appointments?calendarId=${opts.calendarId}`,
+          `${CLICKWISE_API_URL}/contacts/${opts.contactId}/appointments`,
           {
             method: "GET",
             headers: {
@@ -167,11 +167,12 @@ async function syncAppointment(
         );
         if (searchRes.ok) {
           const searchData = await searchRes.json();
+          console.log("Contact appointments response:", JSON.stringify(searchData).substring(0, 500));
           const appointments = searchData?.events || searchData?.appointments || [];
-          if (appointments.length > 0) {
-            // Use the most recent appointment for this contact+calendar
-            const existingAppt = appointments[0];
-            const apptId = existingAppt.id || existingAppt.appointmentId;
+          // Find appointment matching this calendar
+          const matchingAppt = appointments.find((a: any) => a.calendarId === opts.calendarId) || appointments[0];
+          if (matchingAppt) {
+            const apptId = matchingAppt.id || matchingAppt.appointmentId;
             if (apptId) {
               console.log("Found existing appointment, updating via PUT:", apptId);
               method = "PUT";
@@ -182,7 +183,11 @@ async function syncAppointment(
                 "PUT",
               );
             }
+          } else {
+            console.log("No existing appointments found for contact, POST truly failed");
           }
+        } else {
+          console.error("Contact appointments search failed:", searchRes.status);
         }
       } catch (searchErr) {
         console.error("Failed to search for existing appointments:", searchErr);
