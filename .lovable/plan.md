@@ -1,71 +1,65 @@
 
 
-## Analyse
+## Plan: Calendar Appointment Sync toevoegen aan ClickWise integratie
 
-**Doel**: Elke tenant slaat zijn eigen ClickWise sub-account API key op in de database, in plaats van één globale secret te gebruiken.
+### Wat wordt er gebouwd
 
-**Aannames**:
-- Het `credentials_encrypted` veld in `integration_connections` is al beschikbaar (jsonb, nullable)
-- De globale `CLICKWISE_API_KEY` secret kan als fallback blijven bestaan (bijv. voor platform-eigen sync via `CLICKWISE_OWN_SUBACCOUNT_ID`)
-- API keys worden opgeslagen als `{ "api_key": "pit-xxx..." }` in `credentials_encrypted`
-
-**Scope**:
-- Edge function: `clickwise-sync` — lees API key per connection
-- Hook: `useClickWiseIntegration` — stuur API key mee bij connect
-- UI: Integrations page — voeg API key invoerveld toe bij koppeling
-
-**Risico's**:
-- API keys staan als plaintext JSON in de database (acceptabel met RLS, maar niet ideaal voor productie — Vault-encryptie is een toekomstige verbetering)
-- Bestaande Eigeweis-koppeling heeft geen `credentials_encrypted` ingevuld → fallback naar globale secret nodig
+Naast de bestaande contact-sync wordt bij elke event-synchronisatie ook een **appointment** aangemaakt in de GHL Calendar. Dit maakt time-based workflow triggers mogelijk (zoals reminders 2 uur voor aanvang). Daarnaast wordt een **Calendar ID** veld toegevoegd aan de koppelings-UI.
 
 ---
 
-## Stappenplan
+### Stap 1: Edge function uitbreiden — `clickwise-sync/index.ts`
 
-### Stap 1: Edge function aanpassen
-In `clickwise-sync/index.ts`:
-- Lees `credentials_encrypted.api_key` uit de connection record (die al ge-fetched wordt)
-- Gebruik die als `Authorization: Bearer` header
-- Fallback naar globale `CLICKWISE_API_KEY` als `credentials_encrypted` leeg is
+Bij `event.published` / `event.updated` / `event.ended`:
 
-### Stap 2: Hook aanpassen
-In `useClickWiseIntegration.ts`:
-- Pas de `connect()` functie aan zodat naast `subaccountId` ook een `apiKey` parameter wordt meegegeven
-- Sla die op in `credentials_encrypted: { api_key: apiKey }`
+- **Behoud** de bestaande contact-upsert (custom fields blijven werken voor WhatsApp-templates)
+- **Voeg toe**: een tweede API call naar `POST /calendars/events/appointments` met:
+  - `calendarId` uit `credentials_encrypted.calendar_id` (fallback: hardcoded `TiR5CHmHCYXM16aZbq7g`)
+  - `locationId`: subaccount ID
+  - `title`: event titel
+  - `startTime` / `endTime`: ISO datetime samengesteld uit `start_date + start_time` en `end_date + end_time`
+  - `address`: venue adres + stad
+  - `notes`: bevat event URL, beschrijving, WhatsApp-tekst, social-tekst en afbeeldings-URL
+  - `assignedUserId`: leeg (Event Calendar heeft geen host)
+- Bij `event.ended`: optioneel de appointment status updaten of markeren
 
-### Stap 3: UI aanpassen
-Op de Integrations page:
-- Voeg een API key invoerveld toe naast het bestaande sub-account ID veld
-- Toon instructie: "Ga naar Settings → API Keys in je ClickWise sub-account"
+De appointment-sync wordt gelogd als apart `integration_events` record met `event_type: "event.calendar_sync"`.
 
-### Stap 4: Bestaande Eigeweis-koppeling bijwerken
-- Update de bestaande `integration_connections` record voor Eigeweis met `credentials_encrypted: { "api_key": "pit-dcc8b68f-..." }`
+### Stap 2: Hook aanpassen — `useClickWiseIntegration.ts`
+
+De `connect()` functie uitbreiden zodat `calendarId` wordt meegegeven en opgeslagen in `credentials_encrypted`:
+```json
+{ "api_key": "pit-...", "calendar_id": "TiR5CHmHCYXM16aZbq7g" }
+```
+
+### Stap 3: UI aanpassen — `IntegrationsPage.tsx`
+
+- **Connect formulier**: een derde input veld "Calendar ID" toevoegen onder API Key
+- **Verbindingsdetails**: Calendar ID tonen naast Subaccount ID
+- **"Kalender integratie" teaser** verwijderen (is nu geïmplementeerd)
+- Default waarde voor Calendar ID: `TiR5CHmHCYXM16aZbq7g`
 
 ---
 
-## Technische details
+### Technische details
 
-**Edge function wijziging** (kern):
-```typescript
-// Haal API key per connection op
-const connectionApiKey = (connection.credentials_encrypted as any)?.api_key;
-const apiKey = connectionApiKey || CLICKWISE_API_KEY;
-
-if (!apiKey) {
-  // ... error: geen API key geconfigureerd
+**GHL Appointment API call**:
+```text
+POST https://services.leadconnectorhq.com/calendars/events/appointments
+Headers: Authorization: Bearer {api_key}, Version: 2021-07-28
+Body: {
+  calendarId: "TiR5CHmHCYXM16aZbq7g",
+  locationId: "sub_...",
+  title: "Event titel",
+  startTime: "2026-04-15T20:00:00+02:00",
+  endTime: "2026-04-15T23:00:00+02:00",
+  address: "Venue, Stad",
+  notes: "Beschrijving + URL + WhatsApp tekst + afbeelding",
+  status: "confirmed"
 }
 ```
 
-**Connect flow wijziging**:
-```typescript
-async function connect(subaccountId: string, apiKey: string) {
-  // ...
-  await supabase.from("integration_connections").insert([{
-    // ...bestaande velden...
-    credentials_encrypted: { api_key: apiKey },
-  }]);
-}
-```
+**Datetime constructie**: `start_date` (date) + `start_time` (time) → ISO string. Indien geen `end_date`/`end_time`, wordt `start_date + 3 uur` als fallback gebruikt.
 
-Geen database-migraties nodig — `credentials_encrypted` kolom bestaat al.
+**Geen database-migraties nodig** — alles past in de bestaande `credentials_encrypted` jsonb kolom.
 
