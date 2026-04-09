@@ -61,17 +61,12 @@ export function useClickWiseIntegration() {
   useEffect(() => { fetchConnection(); }, [fetchConnection]);
   useEffect(() => { if (connection?.status === "connected") fetchEvents(); }, [connection, fetchEvents]);
 
-  async function connect(subaccountId: string) {
+  async function connect(subaccountId: string, apiKey?: string) {
     if (!tenantId || !user) return;
     setSyncing(true);
     try {
-      // Try auto sub-account creation first
-      const { data: session } = await supabase.auth.getSession();
-      const token = session?.session?.access_token;
-
       if (subaccountId.trim()) {
-        // Manual connection with provided subaccount ID
-        const { error } = await supabase.from("integration_connections").insert([{
+        const insertData: any = {
           tenant_id: tenantId,
           provider: "clickwise" as const,
           status: "connected" as const,
@@ -79,7 +74,11 @@ export function useClickWiseIntegration() {
           connected_by: user.id,
           last_sync_at: new Date().toISOString(),
           sync_settings: { rules: defaultRules } as any,
-        }]);
+        };
+        if (apiKey?.trim()) {
+          insertData.credentials_encrypted = { api_key: apiKey.trim() };
+        }
+        const { error } = await supabase.from("integration_connections").insert([insertData]);
         if (error) throw error;
       }
       toast.success("ClickWise verbonden!");

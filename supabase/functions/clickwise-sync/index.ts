@@ -88,7 +88,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!CLICKWISE_API_KEY) {
+    // Use per-connection API key, fallback to global secret
+    const connectionApiKey = (connection.credentials_encrypted as any)?.api_key;
+    const apiKey = connectionApiKey || CLICKWISE_API_KEY;
+
+    if (!apiKey) {
       await supabase.from("integration_events").insert({
         connection_id,
         event_id: event_id || null,
@@ -196,7 +200,7 @@ Deno.serve(async (req) => {
       const ghlResponse = await fetch(ghlEndpoint, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${CLICKWISE_API_KEY}`,
+          "Authorization": `Bearer ${apiKey}`,
           "Version": "2021-07-28",
           "Content-Type": "application/json",
         },
