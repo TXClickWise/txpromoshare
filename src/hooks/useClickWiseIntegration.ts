@@ -78,7 +78,7 @@ export function useClickWiseIntegration() {
           connected_by: user.id,
           last_sync_at: new Date().toISOString(),
           sync_settings: { rules: defaultRules } as any,
-          credentials_encrypted: Object.keys(creds).length > 0 ? creds : undefined,
+          credentials_encrypted: creds,
         };
         const { error } = connection?.id
           ? await supabase
