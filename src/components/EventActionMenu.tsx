@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { logAudit } from "@/lib/audit";
+import { triggerClickWiseSync } from "@/lib/clickwise-sync";
 import { useTenant } from "@/hooks/useTenant";
 
 interface EventActionMenuProps {
@@ -80,7 +81,10 @@ export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefr
     const { error } = await supabase.from("events").update({ status: "archived" }).eq("id", eventId);
     if (error) { toast.error(error.message); return; }
     toast.success(`"${eventTitle}" gearchiveerd`);
-    if (tenantId) logAudit({ tenantId, entityType: "event", action: "archived", entityId: eventId });
+    if (tenantId) {
+      logAudit({ tenantId, entityType: "event", action: "archived", entityId: eventId });
+      triggerClickWiseSync(tenantId, "event.ended", eventId, { title: eventTitle });
+    }
     onRefresh?.();
   }
 
@@ -88,7 +92,10 @@ export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefr
     const { error } = await supabase.from("events").update({ status: "published" }).eq("id", eventId);
     if (error) { toast.error(error.message); return; }
     toast.success(`"${eventTitle}" opnieuw gepubliceerd`);
-    if (tenantId) logAudit({ tenantId, entityType: "event", action: "published", entityId: eventId });
+    if (tenantId) {
+      logAudit({ tenantId, entityType: "event", action: "published", entityId: eventId });
+      triggerClickWiseSync(tenantId, "event.published", eventId, { title: eventTitle });
+    }
     onRefresh?.();
   }
 

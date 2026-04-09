@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { logAudit } from "@/lib/audit";
+import { triggerClickWiseSync } from "@/lib/clickwise-sync";
 import type { Tables } from "@/integrations/supabase/types";
 import { generatePreviewDates } from "./StepDateTime";
 
@@ -136,6 +137,7 @@ export function useEventForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initialFormRef = useRef<string>("");
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadedStatusRef = useRef<string>("draft");
 
   const updateForm = useCallback((updates: Partial<EventFormState>) => {
     setForm(prev => {
@@ -262,6 +264,7 @@ export function useEventForm() {
         }
         const { data: spData } = await supabase.from("event_sponsors").select("*").eq("event_id", data.id).order("sort_order");
         if (spData) updates.sponsors = spData.map(s => ({ name: s.name, logo_url: s.logo_url || "", website_url: s.website_url || "" }));
+        loadedStatusRef.current = data.status;
         setForm(prev => ({ ...prev, ...updates }));
         setTimeout(() => {
           initialFormRef.current = JSON.stringify({ ...form, ...updates });
@@ -450,6 +453,10 @@ export function useEventForm() {
     initialFormRef.current = JSON.stringify(form);
     toast.success("Concept opgeslagen ✓", { description: "Je kunt later verder werken aan dit event." });
     logAudit({ tenantId, entityType: "event", action: isEditing ? "updated" : "created", entityId: eventId });
+    // If event is already published, trigger update sync
+    if (isEditing && eventId && loadedStatusRef.current === "published") {
+      triggerClickWiseSync(tenantId, "event.updated", eventId, { title: form.title, slug: form.slug });
+    }
     if (!isEditing && eventId) {
       navigate(`/app/events/${eventId}`, { replace: true });
     }
@@ -491,6 +498,9 @@ export function useEventForm() {
       { description: status === "scheduled" ? "Het event gaat automatisch live op de ingestelde datum." : "Je event is nu zichtbaar voor bezoekers." }
     );
     logAudit({ tenantId, entityType: "event", action: status === "scheduled" ? "scheduled" : "published", entityId: eventId });
+    if (status === "published" && eventId) {
+      triggerClickWiseSync(tenantId, "event.published", eventId, { title: form.title, slug: form.slug });
+    }
     navigate("/app/events");
     return true;
   }
