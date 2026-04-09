@@ -78,9 +78,14 @@ export function useClickWiseIntegration() {
           connected_by: user.id,
           last_sync_at: new Date().toISOString(),
           sync_settings: { rules: defaultRules } as any,
-          credentials_encrypted: Object.keys(creds).length > 0 ? creds : undefined,
+          credentials_encrypted: creds,
         };
-        const { error } = await supabase.from("integration_connections").insert([insertData]);
+        const { error } = connection?.id
+          ? await supabase
+              .from("integration_connections")
+              .update(insertData)
+              .eq("id", connection.id)
+          : await supabase.from("integration_connections").insert([insertData]);
         if (error) throw error;
       }
       toast.success("ClickWise verbonden!");
