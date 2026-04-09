@@ -137,6 +137,7 @@ export function useEventForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initialFormRef = useRef<string>("");
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadedStatusRef = useRef<string>("draft");
 
   const updateForm = useCallback((updates: Partial<EventFormState>) => {
     setForm(prev => {
