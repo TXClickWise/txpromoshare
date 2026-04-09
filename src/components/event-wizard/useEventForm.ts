@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { logAudit } from "@/lib/audit";
+import { triggerClickWiseSync } from "@/lib/clickwise-sync";
 import type { Tables } from "@/integrations/supabase/types";
 import { generatePreviewDates } from "./StepDateTime";
 
@@ -450,6 +451,10 @@ export function useEventForm() {
     initialFormRef.current = JSON.stringify(form);
     toast.success("Concept opgeslagen ✓", { description: "Je kunt later verder werken aan dit event." });
     logAudit({ tenantId, entityType: "event", action: isEditing ? "updated" : "created", entityId: eventId });
+    // If event is already published, trigger update sync
+    if (isEditing && eventId && form.status === "published") {
+      triggerClickWiseSync(tenantId, "event.updated", eventId, { title: form.title, slug: form.slug });
+    }
     if (!isEditing && eventId) {
       navigate(`/app/events/${eventId}`, { replace: true });
     }
@@ -491,6 +496,9 @@ export function useEventForm() {
       { description: status === "scheduled" ? "Het event gaat automatisch live op de ingestelde datum." : "Je event is nu zichtbaar voor bezoekers." }
     );
     logAudit({ tenantId, entityType: "event", action: status === "scheduled" ? "scheduled" : "published", entityId: eventId });
+    if (status === "published" && eventId) {
+      triggerClickWiseSync(tenantId, "event.published", eventId, { title: form.title, slug: form.slug });
+    }
     navigate("/app/events");
     return true;
   }
