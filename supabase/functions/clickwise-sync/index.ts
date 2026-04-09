@@ -245,11 +245,16 @@ Deno.serve(async (req) => {
             appointmentBody,
           );
 
+          let ghlCalError: string | null = null;
+          if (!calResult.ok) {
+            try { ghlCalError = calResult.body; } catch { /* */ }
+          }
+
           await supabase.from("integration_events").insert({
             connection_id, event_id,
             event_type: "event.calendar_sync",
             status: calResult.ok ? "success" : "failed",
-            payload: appointmentBody as any,
+            payload: { ...appointmentBody, _ghl_response: ghlCalError } as any,
             response_status: calResult.status,
           });
         } else {
