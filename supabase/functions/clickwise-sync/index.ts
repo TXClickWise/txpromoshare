@@ -371,8 +371,14 @@ Deno.serve(async (req) => {
           endTime = buildISODateTime(eventRow.end_date, eventRow.end_time);
         } else if (eventRow.end_date) {
           endTime = buildISODateTime(eventRow.end_date, eventRow.start_time);
+        } else if (eventRow.end_time) {
+          // end_time without end_date — check if it crosses midnight
+          const endDate = eventRow.end_time < eventRow.start_time
+            ? new Date(new Date(eventRow.start_date + "T00:00:00").getTime() + 86400000).toISOString().split("T")[0]
+            : eventRow.start_date;
+          endTime = buildISODateTime(endDate, eventRow.end_time);
         } else {
-          endTime = addHours(startTime, 3);
+          endTime = addHours(startTime, 1);
         }
 
         const notes = [
