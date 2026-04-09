@@ -61,11 +61,15 @@ export function useClickWiseIntegration() {
   useEffect(() => { fetchConnection(); }, [fetchConnection]);
   useEffect(() => { if (connection?.status === "connected") fetchEvents(); }, [connection, fetchEvents]);
 
-  async function connect(subaccountId: string, apiKey?: string) {
+  async function connect(subaccountId: string, apiKey?: string, calendarId?: string) {
     if (!tenantId || !user) return;
     setSyncing(true);
     try {
       if (subaccountId.trim()) {
+        const creds: Record<string, string> = {};
+        if (apiKey?.trim()) creds.api_key = apiKey.trim();
+        if (calendarId?.trim()) creds.calendar_id = calendarId.trim();
+
         const insertData: any = {
           tenant_id: tenantId,
           provider: "clickwise" as const,
@@ -74,10 +78,8 @@ export function useClickWiseIntegration() {
           connected_by: user.id,
           last_sync_at: new Date().toISOString(),
           sync_settings: { rules: defaultRules } as any,
+          credentials_encrypted: Object.keys(creds).length > 0 ? creds : undefined,
         };
-        if (apiKey?.trim()) {
-          insertData.credentials_encrypted = { api_key: apiKey.trim() };
-        }
         const { error } = await supabase.from("integration_connections").insert([insertData]);
         if (error) throw error;
       }

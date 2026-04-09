@@ -25,6 +25,7 @@ export default function IntegrationsPage() {
   const { tenant } = useTenant();
   const [subaccountId, setSubaccountId] = useState("");
   const [apiKey, setApiKey] = useState("");
+  const [calendarId, setCalendarId] = useState("TiR5CHmHCYXM16aZbq7g");
   const [activeTab, setActiveTab] = useState("overview");
 
   const isConnected = status === "connected";
