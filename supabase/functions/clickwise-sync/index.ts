@@ -263,13 +263,7 @@ Deno.serve(async (req) => {
           });
         }
 
-        await supabase.from("integration_events").insert({
-          connection_id, event_id,
-          event_type: "event.calendar_sync",
-          status: calResult.ok ? "success" : "failed",
-          payload: appointmentBody as any,
-          response_status: calResult.status,
-        });
+        // (duplicate log removed – already logged inside the if/else above)
 
         // Update last_sync_at
         await supabase
