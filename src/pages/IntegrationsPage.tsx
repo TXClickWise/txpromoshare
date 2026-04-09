@@ -24,6 +24,7 @@ export default function IntegrationsPage() {
   const { status, connection, syncRules, events, loading, syncing, connect, disconnect, toggleRule, refreshEvents, createSubaccount } = useClickWiseIntegration();
   const { tenant } = useTenant();
   const [subaccountId, setSubaccountId] = useState("");
+  const [apiKey, setApiKey] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
 
   const isConnected = status === "connected";
