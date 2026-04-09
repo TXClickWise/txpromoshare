@@ -190,6 +190,13 @@ Deno.serve(async (req) => {
 
         const contactResult = await callGHL(`${CLICKWISE_API_URL}/contacts/upsert`, apiKey, contactBody);
 
+        // Extract contactId from upsert response for calendar sync
+        let ghlContactId: string | null = null;
+        try {
+          const contactJson = JSON.parse(contactResult.body);
+          ghlContactId = contactJson?.contact?.id || null;
+        } catch { /* ignore parse errors */ }
+
         await supabase.from("integration_events").insert({
           connection_id, event_id, event_type,
           status: contactResult.ok ? "success" : "failed",
@@ -217,22 +224,44 @@ Deno.serve(async (req) => {
           eventRow.social_share_text ? `📣 Social: ${eventRow.social_share_text}` : "",
         ].filter(Boolean).join("\n");
 
-        const appointmentBody: Record<string, unknown> = {
-          calendarId,
-          locationId: subaccountId,
-          title: eventRow.title,
-          startTime,
-          endTime,
-          address: addressStr || undefined,
-          notes,
-          status: event_type === "event.ended" ? "cancelled" : "confirmed",
-        };
+        // Only sync to calendar if we have a contactId
+        let calResult = { ok: true, status: 0, body: "skipped - no contactId" };
+        if (ghlContactId) {
+          const appointmentBody: Record<string, unknown> = {
+            calendarId,
+            locationId: subaccountId,
+            contactId: ghlContactId,
+            title: eventRow.title,
+            startTime,
+            endTime,
+            address: addressStr || undefined,
+            notes,
+            appointmentStatus: event_type === "event.ended" ? "cancelled" : "confirmed",
+          };
 
-        const calResult = await callGHL(
-          `${CLICKWISE_API_URL}/calendars/events/appointments`,
-          apiKey,
-          appointmentBody,
-        );
+          calResult = await callGHL(
+            `${CLICKWISE_API_URL}/calendars/events/appointments`,
+            apiKey,
+            appointmentBody,
+          );
+
+          await supabase.from("integration_events").insert({
+            connection_id, event_id,
+            event_type: "event.calendar_sync",
+            status: calResult.ok ? "success" : "failed",
+            payload: appointmentBody as any,
+            response_status: calResult.status,
+          });
+        } else {
+          console.error("No contactId from upsert, skipping calendar sync");
+          await supabase.from("integration_events").insert({
+            connection_id, event_id,
+            event_type: "event.calendar_sync",
+            status: "failed",
+            payload: { error: "No contactId from contact upsert" } as any,
+            response_status: 0,
+          });
+        }
 
         await supabase.from("integration_events").insert({
           connection_id, event_id,
