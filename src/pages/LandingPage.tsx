@@ -142,7 +142,7 @@ export default function LandingPage() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-6">
                 <Star className="w-3.5 h-3.5" />
-                Het perfecte grote systeem voor kleinere events
+                 Het perfecte systeem voor kleinere events
               </div>
 
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-foreground leading-[1.12] mb-5">
