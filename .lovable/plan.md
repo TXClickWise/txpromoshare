@@ -2,26 +2,70 @@
 
 ## Analyse
 
-**Doel**: De `CLICKWISE_API_KEY` secret bijwerken naar de sub-account API key in plaats van de agency-level key, zodat de sync correct werkt op sub-account niveau met de juiste scopes.
+**Doel**: Elke tenant slaat zijn eigen ClickWise sub-account API key op in de database, in plaats van één globale secret te gebruiken.
 
-**Aanname**: De huidige edge function gebruikt `Bearer ${CLICKWISE_API_KEY}` in de Authorization header — dit blijft werken met een sub-account key, maar de API calls worden dan uitgevoerd binnen de context van dat specifieke sub-account.
+**Aannames**:
+- Het `credentials_encrypted` veld in `integration_connections` is al beschikbaar (jsonb, nullable)
+- De globale `CLICKWISE_API_KEY` secret kan als fallback blijven bestaan (bijv. voor platform-eigen sync via `CLICKWISE_OWN_SUBACCOUNT_ID`)
+- API keys worden opgeslagen als `{ "api_key": "pit-xxx..." }` in `credentials_encrypted`
 
-**Impact op code**: De `clickwise-sync` edge function stuurt nu een `locationId` (subaccount_id) mee in de API calls. Met een sub-account key is dit correct — de key hoort bij dat sub-account. Geen code-wijzigingen nodig.
+**Scope**:
+- Edge function: `clickwise-sync` — lees API key per connection
+- Hook: `useClickWiseIntegration` — stuur API key mee bij connect
+- UI: Integrations page — voeg API key invoerveld toe bij koppeling
+
+**Risico's**:
+- API keys staan als plaintext JSON in de database (acceptabel met RLS, maar niet ideaal voor productie — Vault-encryptie is een toekomstige verbetering)
+- Bestaande Eigeweis-koppeling heeft geen `credentials_encrypted` ingevuld → fallback naar globale secret nodig
 
 ---
 
 ## Stappenplan
 
-### Stap 1: Update CLICKWISE_API_KEY secret
-Vervang de huidige agency-level key door de sub-account key: `pit-dcc8b68f-9a87-4005-ba14-57f3b9a61d00`
+### Stap 1: Edge function aanpassen
+In `clickwise-sync/index.ts`:
+- Lees `credentials_encrypted.api_key` uit de connection record (die al ge-fetched wordt)
+- Gebruik die als `Authorization: Bearer` header
+- Fallback naar globale `CLICKWISE_API_KEY` als `credentials_encrypted` leeg is
 
-### Stap 2: Verificatie
-Test de sync door een event te updaten en controleer of de GHL API correct reageert.
+### Stap 2: Hook aanpassen
+In `useClickWiseIntegration.ts`:
+- Pas de `connect()` functie aan zodat naast `subaccountId` ook een `apiKey` parameter wordt meegegeven
+- Sla die op in `credentials_encrypted: { api_key: apiKey }`
+
+### Stap 3: UI aanpassen
+Op de Integrations page:
+- Voeg een API key invoerveld toe naast het bestaande sub-account ID veld
+- Toon instructie: "Ga naar Settings → API Keys in je ClickWise sub-account"
+
+### Stap 4: Bestaande Eigeweis-koppeling bijwerken
+- Update de bestaande `integration_connections` record voor Eigeweis met `credentials_encrypted: { "api_key": "pit-dcc8b68f-..." }`
 
 ---
 
 ## Technische details
 
-- Geen code-wijzigingen nodig — de edge function werkt identiek met een sub-account key
-- De scopes uit de screenshot (contacts.write, customFields.write, socialplanner/post.write, etc.) dekken precies wat nodig is voor de event-sync en toekomstige social planner integratie
+**Edge function wijziging** (kern):
+```typescript
+// Haal API key per connection op
+const connectionApiKey = (connection.credentials_encrypted as any)?.api_key;
+const apiKey = connectionApiKey || CLICKWISE_API_KEY;
+
+if (!apiKey) {
+  // ... error: geen API key geconfigureerd
+}
+```
+
+**Connect flow wijziging**:
+```typescript
+async function connect(subaccountId: string, apiKey: string) {
+  // ...
+  await supabase.from("integration_connections").insert([{
+    // ...bestaande velden...
+    credentials_encrypted: { api_key: apiKey },
+  }]);
+}
+```
+
+Geen database-migraties nodig — `credentials_encrypted` kolom bestaat al.
 
