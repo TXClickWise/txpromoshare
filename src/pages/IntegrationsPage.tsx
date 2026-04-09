@@ -98,12 +98,17 @@ export default function IntegrationsPage() {
                 <p className="text-sm text-muted-foreground">
                   Voer je ClickWise subaccount ID in, of laat automatisch een sub-account aanmaken (Basic/Pro plan vereist).
                 </p>
-                <div className="flex gap-3 items-end max-w-md">
-                  <div className="flex-1 space-y-1.5">
+                <div className="flex flex-col gap-3 max-w-md">
+                  <div className="space-y-1.5">
                     <label className="text-xs font-medium text-foreground">Subaccount ID</label>
                     <Input placeholder="bijv. sub_abc123xyz" value={subaccountId} onChange={(e) => setSubaccountId(e.target.value)} className="h-9" />
                   </div>
-                  <Button onClick={() => connect(subaccountId)} disabled={!subaccountId.trim() || syncing} className="gap-2 gradient-hero text-primary-foreground border-0 hover:opacity-90 h-9">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground">API Key (sub-account)</label>
+                    <Input type="password" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="h-9 font-mono text-xs" />
+                    <p className="text-[11px] text-muted-foreground">Ga naar Settings → Business Profile → API Keys in je ClickWise sub-account</p>
+                  </div>
+                  <Button onClick={() => connect(subaccountId, apiKey)} disabled={!subaccountId.trim() || !apiKey.trim() || syncing} className="gap-2 gradient-hero text-primary-foreground border-0 hover:opacity-90 h-9 w-fit">
                     <Link2 className="w-4 h-4" />{syncing ? "Bezig…" : "Verbinden"}
                   </Button>
                 </div>
