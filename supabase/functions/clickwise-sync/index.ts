@@ -281,8 +281,8 @@ Deno.serve(async (req) => {
 
     const credentials = connection.credentials_encrypted as any;
     const connectionApiKey = credentials?.api_key;
+    const calendarId = credentials?.calendar_id;
     const apiKey = connectionApiKey || CLICKWISE_API_KEY;
-    const calendarId = credentials?.calendar_id || "TiRSCHmHCYXM16aZbq7g";
 
     if (!apiKey) {
       await supabase.from("integration_events").insert({
@@ -291,6 +291,21 @@ Deno.serve(async (req) => {
       });
       return new Response(JSON.stringify({ error: "ClickWise API credentials not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!calendarId) {
+      await supabase.from("integration_events").insert({
+        connection_id,
+        event_id: event_id || null,
+        event_type,
+        status: "failed",
+        payload: { ...(data || {}), error: "ClickWise calendar_id ontbreekt in de koppeling" } as any,
+        response_status: 422,
+      });
+
+      return new Response(JSON.stringify({ error: "ClickWise calendar_id ontbreekt in de koppeling" }), {
+        status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
