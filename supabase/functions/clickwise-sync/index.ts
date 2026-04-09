@@ -371,8 +371,14 @@ Deno.serve(async (req) => {
           endTime = buildISODateTime(eventRow.end_date, eventRow.end_time);
         } else if (eventRow.end_date) {
           endTime = buildISODateTime(eventRow.end_date, eventRow.start_time);
+        } else if (eventRow.end_time) {
+          // end_time without end_date — check if it crosses midnight
+          const endDate = eventRow.end_time < eventRow.start_time
+            ? new Date(new Date(eventRow.start_date + "T00:00:00").getTime() + 86400000).toISOString().split("T")[0]
+            : eventRow.start_date;
+          endTime = buildISODateTime(endDate, eventRow.end_time);
         } else {
-          endTime = addHours(startTime, 3);
+          endTime = addHours(startTime, 1);
         }
 
         const notes = [
@@ -429,13 +435,16 @@ Deno.serve(async (req) => {
           if (occurrences && occurrences.length > 0) {
             for (const occ of occurrences) {
               const occStart = buildISODateTime(occ.occurrence_date, occ.start_time || eventRow.start_time);
+              const effEndTime = occ.end_time || eventRow.end_time;
+              const effStartTime = occ.start_time || eventRow.start_time;
               let occEnd: string;
-              if (occ.end_time) {
-                occEnd = buildISODateTime(occ.occurrence_date, occ.end_time);
-              } else if (eventRow.end_time) {
-                occEnd = buildISODateTime(occ.occurrence_date, eventRow.end_time);
+              if (effEndTime) {
+                const occEndDate = effEndTime < effStartTime
+                  ? new Date(new Date(occ.occurrence_date + "T00:00:00").getTime() + 86400000).toISOString().split("T")[0]
+                  : occ.occurrence_date;
+                occEnd = buildISODateTime(occEndDate, effEndTime);
               } else {
-                occEnd = addHours(occStart, 3);
+                occEnd = addHours(occStart, 1);
               }
 
               const overrides = occ.overrides as any;
