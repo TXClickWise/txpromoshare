@@ -2,67 +2,79 @@
 
 ## Analyse
 
-**Doel**: Automatisch ClickWise synchroniseren wanneer events gepubliceerd, gewijzigd of beëindigd worden, zonder handmatige actie.
+**Doel**: De `clickwise-sync` edge function aanpassen zodat bij event-synchronisatie de volledige event-data als gestructureerde Custom Fields naar het GHL Contacts API wordt gestuurd — bruikbaar voor WhatsApp-berichten en Social Planner in ClickWise.
 
-**Aannames**: De `clickwise-sync` edge function en `useClickWiseIntegration` hook werken correct. We hoeven alleen de trigger-logica toe te voegen op de juiste plekken.
+**Aannames**:
+- `CLICKWISE_API_URL` moet `https://services.leadconnectorhq.com` zijn (GHL v2)
+- Custom Fields (`tx_event_*`) zijn al aangemaakt in het ClickWise sub-account, of worden door de gebruiker aangemaakt
+- De edge function haalt zelf de volledige event-data op uit de database (in plaats van te vertrouwen op de beperkte data die de client meestuurt)
 
-**Scope**: Een herbruikbare helper-functie + integratie in 3 plekken waar event-statuswijzigingen plaatsvinden.
+**Scope**: Alleen de edge function + de client-side trigger (meer data meesturen is niet nodig — de function fetcht zelf)
 
-**Betrokken bestanden**:
-- `src/lib/clickwise-sync.ts` (nieuw) — helper functie
-- `src/components/event-wizard/useEventForm.ts` — publish & save
-- `src/components/EventActionMenu.tsx` — archiveren, republish, beëindigen
-- `src/pages/admin/AdminTenantsPage.tsx` — niet nodig (cron-jobs)
-
-**Risico's**: Sync mag nooit de event-flow blokkeren. Fouten worden getoast maar blokkeren niet.
+**Risico's**:
+- Custom Fields moeten in GHL exact matchen op `key` — gebruiker moet deze aanmaken in ClickWise
+- De `CLICKWISE_API_URL` secret moet correct zijn (`https://services.leadconnectorhq.com`)
 
 ---
 
 ## Stappenplan
 
-### Stap 1: Maak `src/lib/clickwise-sync.ts`
+### Stap 1: Update `clickwise-sync` edge function
 
-Een fire-and-forget helper die:
-1. De `integration_connections` tabel checkt voor een actieve ClickWise-koppeling voor de tenant
-2. De `sync_settings.rules` checkt of de betreffende event_type aan staat
-3. De `clickwise-sync` edge function aanroept
-4. Bij fout alleen console.error logt (geen blokkerende fout)
+Wijzig de event-sync logica (cases `event.published`, `event.updated`, `event.ended`):
 
-Mapping van regels:
-- `event.published` → `rules.event_published`
-- `event.updated` → `rules.event_updated`
-- `event.ended` → `rules.event_ended`
+1. **Fetch volledige event-data** uit de database met service role client — inclusief joins op `media` (voor image URL), `venues` (voor locatie), `categories` (voor categorie)
+2. **Bouw een publieke event-URL** op basis van tenant slug + event slug
+3. **Bouw een publieke image-URL** op basis van `media.original_url` of `storage_path`
+4. **Map naar Custom Fields**:
+   - `tx_event_title` → event title
+   - `tx_event_date` → geformateerde datum + tijd
+   - `tx_event_whatsapp` → `whatsapp_share_text` (of fallback: korte beschrijving + URL)
+   - `tx_event_url` → publieke event URL
+   - `tx_event_image` → publieke afbeelding URL
+   - `tx_event_social` → `social_share_text` (of fallback)
+   - `tx_event_type` → het event_type (`published`/`updated`/`ended`)
+   - `tx_event_location` → venue naam + stad
+   - `tx_event_category` → categorie naam
+5. **Fix het GHL endpoint**: Gebruik `POST /contacts/` met `locationId` en `customFields` array
+6. **Fix de API URL**: Gebruik `https://services.leadconnectorhq.com` als base (validatie in code)
 
-### Stap 2: Integreer in `useEventForm.ts`
+### Stap 2: Deploy en test
 
-- Na succesvolle `handlePublish`: roep `triggerClickWiseSync("event.published", eventId, eventData)` aan
-- Na succesvolle `handleSave` (als event al published is): roep `triggerClickWiseSync("event.updated", eventId, eventData)` aan
-
-### Stap 3: Integreer in `EventActionMenu.tsx`
-
-- Na `archiveEvent`: trigger `event.ended`
-- Na `republishEvent`: trigger `event.published`
+- Deploy de edge function
+- Test met `curl_edge_functions`
 
 ---
 
 ## Technische details
 
-De helper `triggerClickWiseSync` is volledig async/fire-and-forget:
+**Custom Fields mapping** in de GHL API call:
 
 ```typescript
-// src/lib/clickwise-sync.ts
-export async function triggerClickWiseSync(
-  tenantId: string,
-  eventType: "event.published" | "event.updated" | "event.ended",
-  eventId: string,
-  eventData?: Record<string, unknown>
-) {
-  // 1. Check connection exists & is active
-  // 2. Check sync rule is enabled
-  // 3. Call edge function
-  // All wrapped in try/catch — never throws
-}
+customFields: [
+  { key: "tx_event_type",     value: event_type },
+  { key: "tx_event_title",    value: event.title },
+  { key: "tx_event_date",     value: `${event.start_date} ${event.start_time || ""}`.trim() },
+  { key: "tx_event_location", value: `${venue?.name || ""}, ${venue?.city || ""}` },
+  { key: "tx_event_category", value: category?.name || "" },
+  { key: "tx_event_url",      value: `https://txpromoshare.lovable.app/e/${event.slug}` },
+  { key: "tx_event_image",    value: media?.original_url || "" },
+  { key: "tx_event_whatsapp", value: event.whatsapp_share_text || shortFallback },
+  { key: "tx_event_social",   value: event.social_share_text || shortFallback },
+]
 ```
 
-Geen nieuwe database-migraties nodig. Geen nieuwe edge functions. Alleen client-side trigger-logica.
+**Event data query** (server-side met service role):
+```sql
+SELECT e.*, m.original_url, m.storage_path, 
+       v.name as venue_name, v.city as venue_city,
+       c.name as category_name
+FROM events e
+LEFT JOIN media m ON m.id = e.featured_image_id
+LEFT JOIN venues v ON v.id = e.venue_id  
+LEFT JOIN categories c ON c.id = e.category_id
+WHERE e.id = $event_id AND e.tenant_id = $tenant_id
+```
+
+**Geen migraties nodig.** Geen client-side wijzigingen nodig — de edge function fetcht zelf de data.
 
