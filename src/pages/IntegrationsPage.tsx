@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Zap, Check, AlertCircle, ArrowRight, Calendar, RefreshCw, Send, Settings2, Link2, Unlink, Activity, Users } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Zap, Check, AlertCircle, ArrowRight, Calendar, RefreshCw, Send, Settings2, Link2, Unlink, Activity, Users, XCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,15 @@ const SYNC_RULE_META: Record<string, { label: string; description: string; trigg
   contact_sync: { label: "Contact synchronisatie", description: "Sync contactgegevens en teamleden naar ClickWise", trigger: "contact.sync" },
 };
 
+const EVENT_TYPE_LABELS: Record<string, string> = {
+  "event.published": "Gepubliceerd",
+  "event.updated": "Bijgewerkt",
+  "event.ended": "Beëindigd",
+  "event.calendar_sync": "Kalender sync",
+  "event.occurrence_sync": "Occurrence sync",
+  "contact.sync": "Contact sync",
+};
+
 export default function IntegrationsPage() {
   const { status, connection, syncRules, events, loading, syncing, connect, disconnect, toggleRule, refreshEvents, createSubaccount } = useClickWiseIntegration();
   const { tenant } = useTenant();
@@ -30,6 +39,18 @@ export default function IntegrationsPage() {
 
   const isConnected = status === "connected";
   const activeRuleCount = Object.values(syncRules).filter(Boolean).length;
+
+  // Compute stats from events (last 7 days)
+  const stats = useMemo(() => {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recent = events.filter((e) => new Date(e.attempted_at) >= sevenDaysAgo);
+    return {
+      success: recent.filter((e) => e.status === "success").length,
+      failed: recent.filter((e) => e.status === "failed").length,
+      total: recent.length,
+    };
+  }, [events]);
 
   if (loading) {
     return <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">Laden…</div>;
@@ -167,15 +188,17 @@ export default function IntegrationsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                {/* Sync stats (last 7 days) */}
+                <div className="grid grid-cols-4 gap-3">
                   {[
-                    { label: "Sync events", value: String(events.length), icon: Send },
-                    { label: "Succesvol", value: String(events.filter((e) => e.status === "success").length), icon: Check },
-                    { label: "Actieve regels", value: String(activeRuleCount), icon: RefreshCw },
+                    { label: "Totaal (7d)", value: String(stats.total), icon: Send, color: "" },
+                    { label: "Succesvol", value: String(stats.success), icon: Check, color: "text-accent" },
+                    { label: "Mislukt", value: String(stats.failed), icon: XCircle, color: stats.failed > 0 ? "text-destructive" : "" },
+                    { label: "Actieve regels", value: String(activeRuleCount), icon: RefreshCw, color: "" },
                   ].map((s) => (
                     <div key={s.label} className="rounded-lg border border-border bg-card p-4 text-center">
-                      <s.icon className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
-                      <p className="text-2xl font-bold text-foreground">{s.value}</p>
+                      <s.icon className={`w-4 h-4 mx-auto mb-1 ${s.color || "text-muted-foreground"}`} />
+                      <p className={`text-2xl font-bold ${s.color || "text-foreground"}`}>{s.value}</p>
                       <p className="text-[10px] text-muted-foreground">{s.label}</p>
                     </div>
                   ))}
@@ -237,23 +260,34 @@ export default function IntegrationsPage() {
               </Button>
             </div>
             <div className="divide-y divide-border">
-              {events.map((log) => (
-                <div key={log.id} className="flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors">
-                  <div className={`w-2 h-2 rounded-full shrink-0 ${log.status === "success" ? "bg-accent" : log.status === "failed" ? "bg-destructive" : "bg-muted-foreground/40"}`} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-foreground truncate">{log.event_type}</p>
-                      <Badge variant={log.status === "success" ? "default" : "destructive"} className="text-[10px]">{log.status}</Badge>
+              {events.map((log) => {
+                const payload = log.payload as any;
+                const eventTitle = payload?.title || payload?.name || null;
+                const method = payload?._method;
+                const typeLabel = EVENT_TYPE_LABELS[log.event_type] || log.event_type;
+
+                return (
+                  <div key={log.id} className="flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors">
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${log.status === "success" ? "bg-accent" : log.status === "failed" ? "bg-destructive" : "bg-muted-foreground/40"}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium text-foreground truncate">{typeLabel}</p>
+                        {method && <Badge variant="outline" className="text-[9px]">{method}</Badge>}
+                        <Badge variant={log.status === "success" ? "default" : "destructive"} className="text-[10px]">{log.status}</Badge>
+                      </div>
+                      {eventTitle && (
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{eventTitle}</p>
+                      )}
+                      {log.response_status && log.status === "failed" && (
+                        <p className="text-[11px] text-destructive mt-0.5">HTTP {log.response_status}</p>
+                      )}
                     </div>
-                    {log.response_status && log.status === "failed" && (
-                      <p className="text-[11px] text-destructive mt-0.5">HTTP {log.response_status}</p>
-                    )}
+                    <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                      {formatDistanceToNow(new Date(log.attempted_at), { addSuffix: true, locale: nl })}
+                    </span>
                   </div>
-                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                    {formatDistanceToNow(new Date(log.attempted_at), { addSuffix: true, locale: nl })}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
             {events.length === 0 && (
               <div className="p-8 text-center text-sm text-muted-foreground">Nog geen synchronisatie-acties</div>
