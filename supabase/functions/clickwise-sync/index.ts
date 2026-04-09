@@ -31,7 +31,6 @@ function buildPublicImageUrl(storagePath: string | null, originalUrl: string | n
 }
 
 function buildISODateTime(date: string, time: string | null): string {
-  // date = "2026-04-15", time = "20:00:00" or "20:00"
   const t = time || "00:00";
   return `${date}T${t.length === 5 ? t + ":00" : t}+02:00`;
 }
@@ -39,15 +38,14 @@ function buildISODateTime(date: string, time: string | null): string {
 function addHours(isoStr: string, hours: number): string {
   const d = new Date(isoStr);
   d.setTime(d.getTime() + hours * 3600000);
-  // Return in same +02:00 format
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}+02:00`;
 }
 
-async function callGHL(endpoint: string, apiKey: string, body: Record<string, unknown>): Promise<{ status: number; body: string; ok: boolean }> {
+async function callGHL(endpoint: string, apiKey: string, body: Record<string, unknown>, method = "POST"): Promise<{ status: number; body: string; ok: boolean }> {
   try {
     const res = await fetch(endpoint, {
-      method: "POST",
+      method,
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Version": "2021-07-28",
@@ -62,6 +60,113 @@ async function callGHL(endpoint: string, apiKey: string, body: Record<string, un
     console.error("GHL API call failed:", err);
     return { status: 0, body: String(err), ok: false };
   }
+}
+
+// Look up existing GHL appointment ID from previous successful sync
+async function findExistingAppointmentId(supabase: any, connectionId: string, eventId: string, suffix = ""): Promise<string | null> {
+  const eventType = suffix ? `event.occurrence_sync` : "event.calendar_sync";
+  const { data } = await supabase
+    .from("integration_events")
+    .select("payload")
+    .eq("connection_id", connectionId)
+    .eq("event_id", eventId)
+    .eq("event_type", eventType)
+    .eq("status", "success")
+    .order("attempted_at", { ascending: false })
+    .limit(10);
+
+  if (!data) return null;
+  for (const row of data) {
+    const p = row.payload as any;
+    if (suffix && p?._occurrence_id !== suffix) continue;
+    if (p?.ghl_appointment_id) return p.ghl_appointment_id;
+  }
+  return null;
+}
+
+// Create or update an appointment in GHL
+async function syncAppointment(
+  supabase: any,
+  opts: {
+    apiKey: string;
+    calendarId: string;
+    subaccountId: string;
+    connectionId: string;
+    eventId: string;
+    contactId: string;
+    title: string;
+    startTime: string;
+    endTime: string;
+    address: string;
+    notes: string;
+    appointmentStatus: string;
+    eventType: string;
+    logEventType: string;
+    occurrenceId?: string;
+  },
+): Promise<{ ok: boolean; appointmentId?: string }> {
+  const existingId = await findExistingAppointmentId(supabase, opts.connectionId, opts.eventId, opts.occurrenceId || "");
+
+  const appointmentBody: Record<string, unknown> = {
+    calendarId: opts.calendarId,
+    locationId: opts.subaccountId,
+    contactId: opts.contactId,
+    title: opts.title,
+    startTime: opts.startTime,
+    endTime: opts.endTime,
+    address: opts.address || undefined,
+    notes: opts.notes,
+    appointmentStatus: opts.appointmentStatus,
+    ignoreDateRange: true,
+    toNotify: false,
+  };
+
+  let result: { ok: boolean; status: number; body: string };
+  if (existingId) {
+    // PUT to update existing appointment
+    result = await callGHL(
+      `${CLICKWISE_API_URL}/calendars/events/appointments/${existingId}`,
+      opts.apiKey,
+      appointmentBody,
+      "PUT",
+    );
+  } else {
+    // POST to create new appointment
+    result = await callGHL(
+      `${CLICKWISE_API_URL}/calendars/events/appointments`,
+      opts.apiKey,
+      appointmentBody,
+    );
+  }
+
+  // Extract appointment ID from response
+  let ghlAppointmentId: string | null = existingId;
+  if (!existingId && result.ok) {
+    try {
+      const json = JSON.parse(result.body);
+      ghlAppointmentId = json?.id || json?.appointment?.id || null;
+    } catch { /* */ }
+  }
+
+  const logPayload: Record<string, unknown> = {
+    ...appointmentBody,
+    ghl_appointment_id: ghlAppointmentId,
+    _method: existingId ? "PUT" : "POST",
+    _existing_id: existingId || undefined,
+  };
+  if (opts.occurrenceId) logPayload._occurrence_id = opts.occurrenceId;
+  if (!result.ok) logPayload._ghl_response = result.body;
+
+  await supabase.from("integration_events").insert({
+    connection_id: opts.connectionId,
+    event_id: opts.eventId,
+    event_type: opts.logEventType,
+    status: result.ok ? "success" : "failed",
+    payload: logPayload as any,
+    response_status: result.status,
+  });
+
+  return { ok: result.ok, appointmentId: ghlAppointmentId || undefined };
 }
 
 Deno.serve(async (req) => {
@@ -169,12 +274,12 @@ Deno.serve(async (req) => {
         const dateStr = `${eventRow.start_date} ${eventRow.start_time || ""}`.trim();
         const shortFallback = `${eventRow.title} - ${dateStr}${locationStr ? ` @ ${locationStr}` : ""}\n${eventUrl}`;
 
-        // === 1. Contact upsert (existing behavior) ===
+        // === 1. Contact upsert (unique per event) ===
         const contactBody = {
           locationId: subaccountId,
-          email: `events@${tenant_id}.txeventshare.local`,
-          name: "TX EventShare Sync",
-          tags: ["tx-eventshare", `tx-${event_type.replace(".", "-")}`],
+          email: `event-${eventRow.slug}@${tenant_id}.txeventshare.local`,
+          name: eventRow.title,
+          tags: ["tx-eventshare", `tx-${event_type.replace(".", "-")}`, `tx-event-${eventRow.slug}`],
           customFields: [
             { key: "tx_event_type", field_value: event_type },
             { key: "tx_event_title", field_value: eventRow.title || "" },
@@ -190,12 +295,11 @@ Deno.serve(async (req) => {
 
         const contactResult = await callGHL(`${CLICKWISE_API_URL}/contacts/upsert`, apiKey, contactBody);
 
-        // Extract contactId from upsert response for calendar sync
         let ghlContactId: string | null = null;
         try {
           const contactJson = JSON.parse(contactResult.body);
           ghlContactId = contactJson?.contact?.id || null;
-        } catch { /* ignore parse errors */ }
+        } catch { /* */ }
 
         await supabase.from("integration_events").insert({
           connection_id, event_id, event_type,
@@ -204,7 +308,7 @@ Deno.serve(async (req) => {
           response_status: contactResult.status,
         });
 
-        // === 2. Calendar appointment sync ===
+        // === 2. Calendar appointment sync (create or update) ===
         const startTime = buildISODateTime(eventRow.start_date, eventRow.start_time);
         let endTime: string;
         if (eventRow.end_date && eventRow.end_time) {
@@ -224,40 +328,23 @@ Deno.serve(async (req) => {
           eventRow.social_share_text ? `📣 Social: ${eventRow.social_share_text}` : "",
         ].filter(Boolean).join("\n");
 
-        // Only sync to calendar if we have a contactId
-        let calResult = { ok: true, status: 0, body: "skipped - no contactId" };
+        let calResult = { ok: true, appointmentId: undefined as string | undefined };
         if (ghlContactId) {
-          const appointmentBody: Record<string, unknown> = {
+          calResult = await syncAppointment(supabase, {
+            apiKey,
             calendarId,
-            locationId: subaccountId,
+            subaccountId: subaccountId!,
+            connectionId: connection_id,
+            eventId: event_id,
             contactId: ghlContactId,
             title: eventRow.title,
             startTime,
             endTime,
-            address: addressStr || undefined,
+            address: addressStr,
             notes,
             appointmentStatus: event_type === "event.ended" ? "cancelled" : "confirmed",
-            ignoreDateRange: true,
-            toNotify: false,
-          };
-
-          calResult = await callGHL(
-            `${CLICKWISE_API_URL}/calendars/events/appointments`,
-            apiKey,
-            appointmentBody,
-          );
-
-          let ghlCalError: string | null = null;
-          if (!calResult.ok) {
-            try { ghlCalError = calResult.body; } catch { /* */ }
-          }
-
-          await supabase.from("integration_events").insert({
-            connection_id, event_id,
-            event_type: "event.calendar_sync",
-            status: calResult.ok ? "success" : "failed",
-            payload: { ...appointmentBody, _ghl_response: ghlCalError } as any,
-            response_status: calResult.status,
+            eventType: event_type,
+            logEventType: "event.calendar_sync",
           });
         } else {
           console.error("No contactId from upsert, skipping calendar sync");
@@ -270,7 +357,56 @@ Deno.serve(async (req) => {
           });
         }
 
-        // (duplicate log removed – already logged inside the if/else above)
+        // === 3. Recurring occurrences sync ===
+        let occurrenceSyncCount = 0;
+        let occurrenceFailCount = 0;
+        if (eventRow.is_recurring && ghlContactId) {
+          const { data: occurrences } = await supabase
+            .from("event_occurrences")
+            .select("*")
+            .eq("event_id", event_id)
+            .eq("tenant_id", tenant_id)
+            .eq("status", "active")
+            .order("occurrence_date", { ascending: true });
+
+          if (occurrences && occurrences.length > 0) {
+            for (const occ of occurrences) {
+              const occStart = buildISODateTime(occ.occurrence_date, occ.start_time || eventRow.start_time);
+              let occEnd: string;
+              if (occ.end_time) {
+                occEnd = buildISODateTime(occ.occurrence_date, occ.end_time);
+              } else if (eventRow.end_time) {
+                occEnd = buildISODateTime(occ.occurrence_date, eventRow.end_time);
+              } else {
+                occEnd = addHours(occStart, 3);
+              }
+
+              const overrides = occ.overrides as any;
+              const occTitle = overrides?.title || `${eventRow.title} – ${occ.label || occ.occurrence_date}`;
+
+              const occResult = await syncAppointment(supabase, {
+                apiKey,
+                calendarId,
+                subaccountId: subaccountId!,
+                connectionId: connection_id,
+                eventId: event_id,
+                contactId: ghlContactId,
+                title: occTitle,
+                startTime: occStart,
+                endTime: occEnd,
+                address: addressStr,
+                notes: `${notes}\n\n📅 Occurrence: ${occ.occurrence_date}${occ.label ? ` (${occ.label})` : ""}`,
+                appointmentStatus: event_type === "event.ended" ? "cancelled" : "confirmed",
+                eventType: event_type,
+                logEventType: "event.occurrence_sync",
+                occurrenceId: occ.id,
+              });
+
+              if (occResult.ok) occurrenceSyncCount++;
+              else occurrenceFailCount++;
+            }
+          }
+        }
 
         // Update last_sync_at
         await supabase
@@ -283,7 +419,8 @@ Deno.serve(async (req) => {
           contact_status: contactResult.ok ? "success" : "failed",
           calendar_status: calResult.ok ? "success" : "failed",
           ghl_contact_status: contactResult.status,
-          ghl_calendar_status: calResult.status,
+          occurrences_synced: occurrenceSyncCount,
+          occurrences_failed: occurrenceFailCount,
         }), {
           status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
