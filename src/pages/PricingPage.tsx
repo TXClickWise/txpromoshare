@@ -24,7 +24,7 @@ const comparisonRows: { label: string; free: string | boolean; basic: string | b
   { label: "Eigen categorieën", free: false, basic: true, pro: true },
   { label: "Geavanceerde branding", free: false, basic: false, pro: true },
   { label: "Meerdere locaties", free: false, basic: false, pro: true },
-  { label: "ClickWise CRM integratie", free: false, basic: false, pro: true },
+  { label: "ClickWise koppeling (apart abo)", free: false, basic: false, pro: true },
   { label: "Geavanceerde analytics", free: false, basic: false, pro: true },
   { label: "Prioriteit support", free: false, basic: false, pro: true },
   { label: "Ticketing module (binnenkort)", free: false, basic: false, pro: "Add-on" },

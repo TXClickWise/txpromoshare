@@ -56,7 +56,7 @@ const features = [
   { icon: Tags, title: "Eigen categorieën", desc: "Organiseer events op jouw manier met aangepaste labels en kleuren." },
   { icon: Users, title: "Teamleden & rollen", desc: "Nodig collega's uit als redacteur, marketeer of bekijker met afgestemde rechten." },
   { icon: Clock, title: "Auto-deactivatie", desc: "Events worden automatisch gedeactiveerd na de einddatum. Geen handmatig opruimwerk." },
-  { icon: Plug, title: "ClickWise CRM integratie", desc: "Events direct bruikbaar in je CRM-workflows, automation en opvolgcampagnes." },
+  { icon: Plug, title: "ClickWise koppeling", desc: "Automatische reminders naar je gasten, slimmere opvolging na events en je promotie op de automatische piloot. Apart ClickWise abonnement vereist." },
   { icon: Ticket, title: "Ticketverkoop (uitbreidbaar)", desc: "Bereid je voor op ticketverkoop als toekomstige add-on module. Nu al in de architectuur.", upcoming: true },
 ];
 
@@ -78,7 +78,7 @@ const comparisonRows = [
   { label: "Eigen branding", manual: "Eigen ontwerp", generic: "Beperkt", tx: "✅ Volledig" },
   { label: "Terugkerende events", manual: "Opnieuw maken", generic: "Beperkt", tx: "✅ Templates" },
   { label: "Teamsamenwerking", manual: "WhatsApp/mail", generic: "Beperkt", tx: "✅ Met rollen" },
-  { label: "CRM integratie", manual: "❌", generic: "❌", tx: "✅ ClickWise" },
+  { label: "ClickWise koppeling (apart abo)", manual: "❌", generic: "❌", tx: "✅ Inclusief" },
   { label: "Distributie centrum", manual: "❌", generic: "❌", tx: "✅ Alle kanalen" },
   { label: "Focus", manual: "—", generic: "Ticketing-first", tx: "Promotie & agenda" },
 ];
@@ -94,7 +94,7 @@ const faqs = [
   { q: "Kan ik de agenda op mijn eigen website plaatsen?", a: "Ja. Je kopieert een klein stukje code en plakt dat op je website. De agenda widget is responsive, altijd automatisch bijgewerkt en past zich aan aan jouw huisstijl." },
   { q: "Werkt het ook voor terugkerende events?", a: "Ja. Je kunt sjablonen maken en events dupliceren met één klik. Ideaal voor wekelijkse live muziek, maandelijkse proeverijen of seizoensgebonden activiteiten." },
   { q: "Kunnen meerdere teamleden ermee werken?", a: "Ja. Je kunt teamleden uitnodigen met verschillende rollen: eigenaar, beheerder, redacteur, marketeer of bekijker. Iedereen werkt vanuit dezelfde actuele informatie." },
-  { q: "Is er een koppeling met ClickWise?", a: "Ja. TX EventShare integreert native met ClickWise zodat events onderdeel worden van je CRM-workflows, marketing automation en opvolging." },
+  { q: "Is er een koppeling met ClickWise?", a: "Ja. Via de ClickWise koppeling krijgen je gasten automatisch reminders voor aanvang en start je follow-up vanzelf na afloop. De koppeling vereist een apart ClickWise abonnement. Heb je al ClickWise? Dan is de koppeling gratis. We bieden ook een Done For You service aan waarbij wij alles voor je inrichten (v.a. €89,- excl. btw)." },
   { q: "Komt ticketverkoop later beschikbaar?", a: "Ja. Ticketing wordt ontwikkeld als add-on module voor Pro plan gebruikers. Inclusief QR-scanning, betalingen via Stripe/Mollie en bezoekersbeheer." },
   { q: "Is dit alleen voor horeca of ook voor eventorganisaties?", a: "Beide. Het platform schaalt van een klein café met 3 events per maand tot een professionele organisatie met tientallen evenementen, meerdere locaties en een volledig team." },
 ];
@@ -462,20 +462,20 @@ export default function LandingPage() {
         <div className="container px-4">
           <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center">
             <motion.div {...fadeUp}>
-              <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Native integratie</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Promotie op de automatische piloot</p>
               <h2 className="text-2xl md:text-4xl font-display font-bold text-foreground leading-tight mb-4">
-                ClickWise & je events,{" "}
-                <span className="text-gradient-hero">naadloos verbonden</span>
+                Je gasten herinneren.{" "}
+                <span className="text-gradient-hero">Zonder dat jij eraan denkt.</span>
               </h2>
               <p className="text-muted-foreground mb-6 leading-relaxed">
-                TX EventShare integreert native met ClickWise zodat je events onderdeel worden van je bredere marketing- en automatiseringsworkflow. Minder losse tools, betere opvolging, slimmer werken vanuit één ecosysteem.
+                Verbind TX EventShare met ClickWise en je gasten krijgen automatisch een herinnering voor aanvang. Na afloop start je follow-up vanzelf. Jij focust op je event, de rest draait op de achtergrond.
               </p>
-              <ul className="space-y-3 mb-6">
+              <ul className="space-y-3 mb-4">
                 {[
-                  "Event gepubliceerd → automatisch in je CRM workflow",
-                  "Opvolging en remarketing na afloop van events",
-                  "Promotie en klantdata dichter bij elkaar",
-                  "Werk vanuit één ecosysteem in plaats van vijf tools",
+                  "Gasten krijgen automatisch een herinnering voor aanvang",
+                  "Na afloop start je follow-up vanzelf",
+                  "Wijzig een event — alles wordt automatisch bijgewerkt",
+                  "Eén ecosysteem in plaats van vijf losse tools",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2.5 text-sm">
                     <Check className="w-4 h-4 text-accent shrink-0 mt-0.5" />
@@ -483,8 +483,9 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <Link to="/register" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
-                Ontdek de integratie <ArrowRight className="w-4 h-4" />
+              <p className="text-xs text-muted-foreground mb-5">Apart ClickWise abonnement vereist. Al ClickWise klant? Koppeling is gratis. DFY setup v.a. €89,- excl. btw.</p>
+              <Link to="/clickwise-integratie" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
+                Ontdek de mogelijkheden <ArrowRight className="w-4 h-4" />
               </Link>
             </motion.div>
             <motion.div {...fadeUp} transition={{ delay: 0.2 }}>
@@ -502,9 +503,9 @@ export default function LandingPage() {
                     <span className="text-accent font-display font-bold text-base">CW</span>
                   </div>
                 </div>
-                <p className="text-primary-foreground/80 text-sm text-center mb-4">Eén ecosysteem voor promotie, CRM en automation</p>
+                <p className="text-primary-foreground/80 text-sm text-center mb-4">Event publiceren → de rest gaat automatisch</p>
                 <div className="space-y-2">
-                  {["Event → CRM workflow", "Bezoekersdata → Opvolging", "Promotie → Automation"].map((flow) => (
+                  {["Event → Afspraak in je kalender", "Afspraak → Automatische reminder", "Event afgelopen → Follow-up campagne"].map((flow) => (
                     <div key={flow} className="flex items-center gap-2 text-xs text-primary-foreground/50">
                       <ArrowRight className="w-3 h-3 text-primary/60" />
                       {flow}
