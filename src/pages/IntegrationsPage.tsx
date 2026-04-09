@@ -262,21 +262,6 @@ export default function IntegrationsPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Future teasers */}
-      <div className="rounded-xl border border-dashed border-border p-5 opacity-60">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-            <Calendar className="w-6 h-6 text-muted-foreground" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
-              Kalender integratie
-              <Badge variant="outline" className="text-[10px]">{t.common.comingSoon}</Badge>
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1">Google Calendar & ICS download op publieke eventpagina's</p>
-          </div>
-        </div>
-      </div>
 
       <div className="rounded-xl border border-dashed border-border p-5 opacity-60">
         <div className="flex items-start gap-4">
