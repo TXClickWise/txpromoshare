@@ -129,6 +129,7 @@ async function syncAppointment(
     notes: opts.notes,
     appointmentStatus: opts.appointmentStatus,
     ignoreDateRange: true,
+    ignoreFreeSlotValidation: true,
     toNotify: false,
     selectedTimezone: "Europe/Amsterdam",
   };
