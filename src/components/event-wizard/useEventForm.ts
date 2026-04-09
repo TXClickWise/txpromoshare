@@ -264,6 +264,7 @@ export function useEventForm() {
         }
         const { data: spData } = await supabase.from("event_sponsors").select("*").eq("event_id", data.id).order("sort_order");
         if (spData) updates.sponsors = spData.map(s => ({ name: s.name, logo_url: s.logo_url || "", website_url: s.website_url || "" }));
+        loadedStatusRef.current = data.status;
         setForm(prev => ({ ...prev, ...updates }));
         setTimeout(() => {
           initialFormRef.current = JSON.stringify({ ...form, ...updates });
@@ -453,7 +454,7 @@ export function useEventForm() {
     toast.success("Concept opgeslagen ✓", { description: "Je kunt later verder werken aan dit event." });
     logAudit({ tenantId, entityType: "event", action: isEditing ? "updated" : "created", entityId: eventId });
     // If event is already published, trigger update sync
-    if (isEditing && eventId && form.status === "published") {
+    if (isEditing && eventId && loadedStatusRef.current === "published") {
       triggerClickWiseSync(tenantId, "event.updated", eventId, { title: form.title, slug: form.slug });
     }
     if (!isEditing && eventId) {
