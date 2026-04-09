@@ -25,6 +25,7 @@ export default function IntegrationsPage() {
   const { tenant } = useTenant();
   const [subaccountId, setSubaccountId] = useState("");
   const [apiKey, setApiKey] = useState("");
+  const [calendarId, setCalendarId] = useState("TiR5CHmHCYXM16aZbq7g");
   const [activeTab, setActiveTab] = useState("overview");
 
   const isConnected = status === "connected";
@@ -108,7 +109,12 @@ export default function IntegrationsPage() {
                     <Input type="password" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="h-9 font-mono text-xs" />
                     <p className="text-[11px] text-muted-foreground">Ga naar Settings → Business Profile → API Keys in je ClickWise sub-account</p>
                   </div>
-                  <Button onClick={() => connect(subaccountId, apiKey)} disabled={!subaccountId.trim() || !apiKey.trim() || syncing} className="gap-2 gradient-hero text-primary-foreground border-0 hover:opacity-90 h-9 w-fit">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground">Calendar ID</label>
+                    <Input placeholder="bijv. TiR5CHmHCYXM16aZbq7g" value={calendarId} onChange={(e) => setCalendarId(e.target.value)} className="h-9 font-mono text-xs" />
+                    <p className="text-[11px] text-muted-foreground">ID van je Event Calendar in ClickWise (Calendars → klik op kalender → URL)</p>
+                  </div>
+                  <Button onClick={() => connect(subaccountId, apiKey, calendarId)} disabled={!subaccountId.trim() || !apiKey.trim() || syncing} className="gap-2 gradient-hero text-primary-foreground border-0 hover:opacity-90 h-9 w-fit">
                     <Link2 className="w-4 h-4" />{syncing ? "Bezig…" : "Verbinden"}
                   </Button>
                 </div>
@@ -145,6 +151,10 @@ export default function IntegrationsPage() {
                           ? formatDistanceToNow(new Date(connection.last_sync_at), { addSuffix: true, locale: nl })
                           : "Nog niet"}
                       </p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground">Calendar ID</span>
+                      <p className="font-mono text-xs">{(connection?.credentials_encrypted as any)?.calendar_id || "TiR5CHmHCYXM16aZbq7g"}</p>
                     </div>
                     <div>
                       <span className="text-xs text-muted-foreground">Verbonden sinds</span>
@@ -252,21 +262,6 @@ export default function IntegrationsPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Future teasers */}
-      <div className="rounded-xl border border-dashed border-border p-5 opacity-60">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-            <Calendar className="w-6 h-6 text-muted-foreground" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
-              Kalender integratie
-              <Badge variant="outline" className="text-[10px]">{t.common.comingSoon}</Badge>
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1">Google Calendar & ICS download op publieke eventpagina's</p>
-          </div>
-        </div>
-      </div>
 
       <div className="rounded-xl border border-dashed border-border p-5 opacity-60">
         <div className="flex items-start gap-4">
