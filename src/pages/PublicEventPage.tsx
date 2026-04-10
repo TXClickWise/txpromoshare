@@ -105,6 +105,7 @@ export default function PublicEventPage() {
   }, [slug]);
 
   const publicEventUrl = `https://txeventshare.nl/e/${slug}`;
+  const ogProxyUrl = `https://ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/og-proxy?slug=${encodeURIComponent(slug || '')}`;
   const heroImg = featuredImageUrl || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop";
 
   useSEO(
@@ -142,11 +143,11 @@ export default function PublicEventPage() {
 
   const ctaText = event.cta_button_text || "Meer info";
 
-  // Visitor-perspective WhatsApp text — single clean link only
+  // Visitor-perspective WhatsApp text — og-proxy URL for correct preview
   const visitorWhatsappText = [
     "Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?",
     "",
-    publicEventUrl,
+    ogProxyUrl,
   ].join("\n");
 
   const copyLink = () => {
