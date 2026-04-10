@@ -276,7 +276,7 @@ export default function EventsPage() {
                     {(() => {
                       const img = event.featured_image;
                       const src = img?.storage_path
-                        ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/${img.storage_path}`
+                        ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/media/${img.storage_path}`
                         : img?.original_url || null;
                       return src ? (
                         <img src={src} alt={event.title} className="w-full h-full object-cover" />
@@ -346,7 +346,7 @@ export default function EventsPage() {
                   {(() => {
                     const img = event.featured_image;
                     const src = img?.storage_path
-                      ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/${img.storage_path}`
+                      ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/media/${img.storage_path}`
                       : img?.original_url || null;
                     return (
                       <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0 overflow-hidden">
