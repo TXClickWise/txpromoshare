@@ -143,14 +143,11 @@ export default function PublicEventPage() {
 
   const ctaText = event.cta_button_text || "Meer info";
 
-  // Visitor-perspective WhatsApp text — shareUrl is included for OG preview header
-  const formattedDate = formatDate(event.start_date);
-  const formattedTime = event.start_time?.slice(0, 5) || "";
+  // Visitor-perspective WhatsApp text — single clean link only
   const visitorWhatsappText = [
     "Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?",
     "",
-    ...(event.cta_link ? [`${ctaText}: ${event.cta_link}`, ""] : []),
-    shareUrl,
+    publicEventUrl,
   ].join("\n");
 
   const copyLink = () => {
