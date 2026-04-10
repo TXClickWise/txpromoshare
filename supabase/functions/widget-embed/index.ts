@@ -161,7 +161,7 @@ function generateEmbedScript(payload: any): string {
     let shareHtml = "";
     if (showShare) {
       // Single clean public URL — no backend/og-proxy URLs in message
-      const eventPageUrl = "https://txeventshare.nl/e/" + encodeURIComponent(e.slug);
+      const eventPageUrl = "https://ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/og-proxy?slug=" + encodeURIComponent(e.slug);
 
       // Simple visitor WhatsApp text with one link only
       const visitorLines = [
