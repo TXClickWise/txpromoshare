@@ -147,8 +147,19 @@ export default function PublicEventPage() {
   const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${calStart}/${calEnd}&location=${encodeURIComponent(venueName)}&details=${encodeURIComponent(event.short_description || "")}`;
   const ctaText = event.cta_button_text || "Meer info";
 
-  // Visitor-perspective WhatsApp text
-  const visitorWhatsappText = `Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?\n\n${shareUrl}\n\n${ctaText}: ${event.cta_link || shareUrl}\n\nZet in je agenda: ${calendarUrl}\n\nVia txeventshare.nl`;
+  // Visitor-perspective WhatsApp text — event URL first for OG preview header
+  const formattedDate = formatDate(event.start_date);
+  const formattedTime = event.start_time?.slice(0, 5) || "";
+  const visitorWhatsappText = [
+    shareUrl,
+    "",
+    "Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?",
+    "",
+    `${event.title} — ${formattedDate} om ${formattedTime}`,
+    "",
+    ...(event.cta_link ? [`${ctaText}: ${event.cta_link}`] : []),
+    `Zet in je agenda: ${calendarUrl}`,
+  ].join("\n");
 
   const copyLink = () => {
     navigator.clipboard.writeText(shareUrl);
