@@ -134,6 +134,10 @@ export default function PublicEventPage() {
   }
 
   const shareText = event.social_share_text || `${event.title} — ${formatDate(event.start_date)}`;
+  const venueName = venue?.name || "Locatie volgt";
+  const venueAddress = venue ? [venue.address, venue.city].filter(Boolean).join(", ") : "";
+  const days = daysUntil(event.start_date);
+  const countdownLabel = days === 0 ? "Vandaag!" : days === 1 ? "Morgen" : days > 0 ? `Nog ${days} dagen` : "Afgelopen";
 
   // Build Google Calendar URL for visitor sharing
   const calStart = `${event.start_date.replace(/-/g, "")}T${event.start_time.replace(/:/g, "")}00`;
@@ -145,10 +149,6 @@ export default function PublicEventPage() {
 
   // Visitor-perspective WhatsApp text
   const visitorWhatsappText = `Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?\n\n${shareUrl}\n\n${ctaText}: ${event.cta_link || shareUrl}\n\nZet in je agenda: ${calendarUrl}\n\nVia txeventshare.nl`;
-  const venueName = venue?.name || "Locatie volgt";
-  const venueAddress = venue ? [venue.address, venue.city].filter(Boolean).join(", ") : "";
-  const days = daysUntil(event.start_date);
-  const countdownLabel = days === 0 ? "Vandaag!" : days === 1 ? "Morgen" : days > 0 ? `Nog ${days} dagen` : "Afgelopen";
 
   const copyLink = () => {
     navigator.clipboard.writeText(shareUrl);
