@@ -393,7 +393,7 @@ export default function PublicEventPage() {
               </h3>
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
-                  <a href={`https://wa.me/?text=${encodeURIComponent(event.whatsapp_share_text || shareText + " " + shareUrl)}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`https://wa.me/?text=${encodeURIComponent(visitorWhatsappText)}`} target="_blank" rel="noopener noreferrer">
                     <MessageCircle className="w-3.5 h-3.5" />WhatsApp
                   </a>
                 </Button>
@@ -402,21 +402,16 @@ export default function PublicEventPage() {
                     <Facebook className="w-3.5 h-3.5" />Facebook
                   </a>
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
-                  <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer">
-                    <Twitter className="w-3.5 h-3.5" />X / Twitter
-                  </a>
-                </Button>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={copyLink}>
                   {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? "Gekopieerd!" : "Kopieer link"}
                 </Button>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
+                  <a href={`mailto:?subject=${encodeURIComponent(event.title)}&body=${encodeURIComponent(shareText + "\n\n" + shareUrl)}`}>
+                    <Mail className="w-3.5 h-3.5" />E-mail
+                  </a>
+                </Button>
               </div>
-              <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs h-8" asChild>
-                <a href={`mailto:?subject=${encodeURIComponent(event.title)}&body=${encodeURIComponent(shareText + "\n\n" + shareUrl)}`}>
-                  <Mail className="w-3.5 h-3.5" />Deel via e-mail
-                </a>
-              </Button>
             </motion.div>
 
             <div className="text-center pt-2">
