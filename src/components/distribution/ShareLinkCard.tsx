@@ -55,11 +55,11 @@ export function ShareLinkCard({ url, eventId }: ShareLinkCardProps) {
         </div>
       </div>
 
-      <a href={url} target="_blank" rel="noopener noreferrer">
-        <Button variant="ghost" size="sm" className="gap-2 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2">
+        <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium transition-colors">
           <ExternalLink className="w-3.5 h-3.5" />Bekijk publieke pagina
-        </Button>
-      </a>
+        </a>
+      </div>
     </div>
   );
 }
