@@ -1,115 +1,62 @@
 
 
-## Plan: Social media kanalen bijwerken + WhatsApp berichtformat + minimaal emoji-gebruik
+## Plan: WhatsApp bezoeker-bericht corrigeren
 
-### Overzicht van alle wijzigingen
+### Analyse van het probleem
 
-Dit plan omvat alles wat besproken is: kanalen aanpassen, twee WhatsApp-perspectieven, gestructureerde berichtformats, en menselijk klinkende teksten met minimaal emoji-gebruik.
+Het huidige bezoeker WhatsApp-bericht uit de widget bevat meerdere fouten:
 
----
+**Wat er mis is:**
 
-### 1. `supabase/functions/ai-assist/index.ts` — AI-prompts aanpassen
+1. **Header toont website-info i.p.v. event-info** — De widget gebruikt `e.cta_link` (eigeweis.com) als primaire URL. WhatsApp toont daarom de OG-preview van de website, niet van het event.
+2. **Geen event-specifieke details in de tekst** — Titel, datum/tijd en korte omschrijving ontbreken volledig in het bericht.
+3. **Geen CTA-link** — Er is geen duidelijke call-to-action met link naar de eventpagina.
+4. **Geen agenda-link** — "Zet in je agenda" ontbreekt in de widget-versie.
+5. **Link gaat naar eigeweis.com** — Moet naar `txeventshare.nl/e/{slug}` gaan zodat de OG-preview het event toont.
+6. **OG-preview werkt niet voor txeventshare.nl** — De SPA rendert meta-tags client-side; WhatsApp-crawlers voeren geen JavaScript uit. Er is een server-side OG-proxy nodig (apart punt, bestaand bekend issue).
 
-**`distribution_content` prompt herschrijven:**
-- WhatsApp = organisator-perspectief: "Geschreven vanuit de organisator, gericht aan nieuwe en bestaande relaties"
-- Nieuw veld `tiktok`: kort, energiek, casual toon voor 18-30 jaar, trending hashtags, max 2200 tekens
-- Nieuw veld `gbp`: zakelijk, lokaal, zonder emoji's, met locatie-info, max 1500 tekens
-- Instagram verfijnen: visueel-gericht, hashtags, engaging voor 25-45 jaar
-- **Alle velden**: instructie "Gebruik maximaal 1-2 emoji's per tekst. Schrijf menselijk, niet AI-achtig. Geen opsommingen van emoji's."
+### Gewenst berichtformat (Bezoeker/B)
 
-**Nieuw prompt-type `visitor_whatsapp`:**
-- Instructie: "Schrijf een kort WhatsApp bericht vanuit een bezoeker die een vriend uitnodigt om samen naar het event te gaan. Persoonlijk, informeel, alsof een echte vriend het stuurt. Max 1 emoji. Max 200 tekens exclusief link."
+De link naar de eventpagina staat bovenaan zodat WhatsApp daar de OG-preview van maakt (de "header"). Daaronder de persoonlijke tekst en compacte links:
 
-**Alle prompts**: regel toevoegen "Beperk emoji-gebruik tot maximaal 1-2 per tekst. De tekst moet menselijk en natuurlijk overkomen."
-
----
-
-### 2. `src/pages/DistributionPage.tsx` — Organisator WhatsApp-format + nieuwe kanalen
-
-**WhatsApp default tekst wijzigen naar gestructureerd organisator-format (A):**
 ```text
-{titel}
+https://txeventshare.nl/e/{slug}
 
-{korte omschrijving}
-
-{datum} om {tijd}
-
-{CTA tekst}: {event link}
-
-Zet in je agenda: {google calendar link}
-
-txeventshare.nl
-```
-Maximaal 1 emoji (alleen bij titel, optioneel).
-
-**Nieuwe ShareTextCards toevoegen:**
-- TikTok kaart (charLimit 2200, beschrijving "Korte, pakkende tekst voor TikTok")
-- Google GBP kaart (charLimit 1500, beschrijving "Zakelijke post voor Google Bedrijfsprofiel")
-
-**Teaser beschrijving:** "X/Twitter" verwijzing verwijderen → "Voor stories of advertenties"
-
-**`handleGenerateAll`:** verwacht nu ook `tiktok` en `gbp` van AI-response.
-
-**Imports:** TikTok icoon → `Music` of `Video` van lucide. GBP → `MapPin`.
-
----
-
-### 3. `src/components/distribution/ChannelBar.tsx` — Kanalen vervangen
-
-- **Verwijderen:** X/Twitter
-- **Toevoegen:** Instagram, TikTok, Google GBP
-- **Nieuwe prop:** `eventImageUrl`
-- **Instagram/TikTok/GBP actie:** `navigator.share({ text, files: [imageFile] })` via Web Share API (mobiel). Fallback desktop: tekst kopiëren + toast.
-- **Grid:** `sm:grid-cols-4` (8 items → 2 rijen van 4)
-
----
-
-### 4. `src/pages/PublicEventPage.tsx` — Bezoeker WhatsApp-format + kanalen
-
-**X/Twitter share-knop verwijderen** (regel 394-398).
-
-**WhatsApp share-tekst wijzigen naar bezoeker-perspectief (B):**
-```text
 Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?
 
-{CTA tekst}: {event link}
+{titel} — {datum} om {tijd}
 
-Zet in je agenda: {google calendar link}
-
-Via txeventshare.nl
-```
-De event-link genereert automatisch een OG-preview in WhatsApp (de "header" met afbeelding, titel, beschrijving).
-
-**Google Calendar link genereren:**
-```
-https://calendar.google.com/calendar/render?action=TEMPLATE&text={titel}&dates={startISO}/{endISO}&location={locatie}
+{CTA tekst}: {cta_link}
+Zet in je agenda: {calendar_link}
 ```
 
----
+De `txeventshare.nl` backlink kan vervallen omdat de eventpagina-link al naar txeventshare.nl wijst.
 
-### 5. `supabase/functions/widget-embed/index.ts` — Widget share-knoppen
+### Wijzigingen
 
-- **X/Twitter knop verwijderen** (regel 169)
-- **WhatsApp share-tekst** wijzigen naar bezoeker-perspectief (zelfde format als PublicEventPage)
+#### 1. `supabase/functions/widget-embed/index.ts` (regel 163-164)
+- Event-URL altijd `https://txeventshare.nl/e/{slug}` maken (niet `cta_link`)
+- Bezoeker-tekst uitbreiden met: event titel, datum/tijd, CTA-link en agenda-link
+- Google Calendar URL genereren in de edge function
+- "Via txeventshare.nl" verwijderen (redundant)
 
----
+#### 2. `src/pages/PublicEventPage.tsx` (regel 151)
+- `visitorWhatsappText` herschrijven: eventpagina-link bovenaan (voor OG-header), dan persoonlijke tekst, dan event titel + datum, dan compacte CTA + agenda-link
+- `shareUrl` altijd als eerste link (niet `cta_link`)
+- "Via txeventshare.nl" verwijderen
 
-### 6. `src/components/distribution/ShareTextCard.tsx` — AI-acties uitbreiden
+#### 3. OG-proxy (vermelding)
+- Voor een werkende OG-preview "header" in WhatsApp is een server-side OG-proxy edge function nodig die de juiste meta-tags rendert voor crawlers. Dit is een apart, al bekend issue. Zonder deze proxy toont WhatsApp geen preview-header voor txeventshare.nl links.
 
-Toevoegen aan `AI_ACTIONS`:
-- `{ id: "tiktok", label: "Optimaliseer voor TikTok", icon: "🎵" }`
-- `{ id: "gbp", label: "Optimaliseer voor Google", icon: "📍" }`
+### Samenvatting berichtstructuur
 
----
-
-### Samenvatting platformregels
-
-| Platform | Max | Perspectief | Stijl | Emoji's |
-|---|---|---|---|---|
-| WhatsApp (organisator) | 500 | Organisator | Informatief, uitnodigend | Max 1 |
-| WhatsApp (bezoeker) | 300 | Vriend/gast | Persoonlijk, "ga je mee?" | Max 1 |
-| Instagram | 2200 | Organisator | Visueel, hashtags | Max 2 |
-| TikTok | 2200 | Organisator | Kort, energiek, casual | Max 2 |
-| Facebook | 2200 | Organisator | Community, informatief | Max 2 |
-| Google GBP | 1500 | Organisator | Zakelijk, lokaal | Geen |
+| Element | Organisator (A) | Bezoeker (B) |
+|---|---|---|
+| Event-afbeelding | Via OG-preview van link | Via OG-preview van link (bovenaan) |
+| Titel + omschrijving | In tekst | In OG-preview + korte vermelding |
+| Datum/tijd | In tekst | Compact in tekst |
+| CTA-link | Prominent | Compact, 1 regel |
+| Agenda-link | Eigen regel | Compact, 1 regel |
+| Persoonlijke tekst | — | "Hey, ga je mee?" |
+| txeventshare.nl | Onderaan | Niet nodig (zit in event-link) |
 
