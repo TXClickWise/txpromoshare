@@ -1,65 +1,39 @@
 
 
-## Plan: OG-proxy Edge Function voor social media previews
+## Plan: WhatsApp bezoekersbericht corrigeren
 
-### Probleem
-WhatsApp, Facebook, en andere platforms voeren geen JavaScript uit. De SPA rendert meta-tags client-side, dus crawlers zien alleen de standaard TX EventShare meta-tags in `index.html` — niet de event-specifieke afbeelding, titel en beschrijving.
+### Analyse van de screenshot
 
-### Oplossing
-Een Edge Function `og-proxy` die:
-1. Een event-slug ontvangt via query parameter
-2. Event-data + afbeelding ophaalt uit de database
-3. Een minimale HTML-pagina retourneert met correcte OG meta-tags
-4. Een JavaScript-redirect bevat zodat echte gebruikers doorgestuurd worden naar de SPA
+De screenshot is van **vóór** de OG-proxy implementatie. Nu de OG-proxy live is, zouden punten 1 en 2 (verkeerde afbeelding/tekst in de header) opgelost moeten zijn — WhatsApp haalt nu de meta-tags op van de edge function die de juiste event-titel, beschrijving en afbeelding retourneert.
 
-### Architectuur
+Wat nog wel aangepast moet worden:
 
-```text
-WhatsApp/Facebook crawler
-  → https://txeventshare.nl/e/{slug}
-  → Vercel/hosting rewrite rule stuurt /e/* naar Edge Function
-  → Edge Function detecteert crawler User-Agent
-  → Retourneert HTML met og:image, og:title, og:description
-  → Crawler toont preview
-
-Echte gebruiker
-  → Zelfde URL → SPA laadt normaal (geen redirect nodig)
-```
-
-**Alternatief (eenvoudiger, geen hosting-rewrite nodig):**
-De share-links wijzen naar de Edge Function URL met redirect naar de SPA. Dit werkt zonder aanpassingen aan de hosting.
+| # | Probleem | Actie |
+|---|---------|-------|
+| 4 | Rauwe URL `https://txeventshare.nl/e/...` staat los in de tekst | Verwijderen uit berichttekst (de URL zit al in de OG-preview header) |
+| 6 | "Zet in je agenda" staat er 2x met verschillende links | Gehele agenda-functionaliteit verwijderen |
 
 ### Wijzigingen
 
-#### 1. Nieuwe Edge Function: `supabase/functions/og-proxy/index.ts`
-- Accepteert `?slug={event-slug}` als query parameter
-- Haalt event op uit `events` tabel (titel, short_description, slug, start_date, featured_image_id)
-- Haalt afbeelding-URL op uit `media` tabel
-- Retourneert HTML met:
-  - `og:title` = event titel
-  - `og:description` = korte omschrijving + datum
-  - `og:image` = featured image URL
-  - `og:url` = `https://txeventshare.nl/e/{slug}`
-  - `twitter:card` = `summary_large_image`
-  - Een `<meta http-equiv="refresh">` redirect naar de echte SPA-pagina
-  - Een JavaScript `window.location.replace()` als fallback redirect
-- CORS headers voor cross-origin requests
-- Cache-Control header (5 minuten) voor performance
+#### 1. `src/pages/PublicEventPage.tsx`
+- **Regel 144-149**: Verwijder de Google Calendar URL-berekening
+- **Regel 155-156**: Verwijder `shareUrl` uit de eerste regel van `visitorWhatsappText`
+- **Regel 163**: Verwijder `Zet in je agenda: ${calendarUrl}`
 
-#### 2. Share-URLs aanpassen
-In de volgende bestanden de share-URL wijzigen van `https://txeventshare.nl/e/{slug}` naar de Edge Function URL `https://ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/og-proxy?slug={slug}`:
+Nieuw berichtformat:
+```text
+Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?
 
-- **`src/pages/PublicEventPage.tsx`**: `shareUrl` en `visitorWhatsappText`
-- **`src/pages/DistributionPage.tsx`**: WhatsApp organisator-tekst en share links
-- **`supabase/functions/widget-embed/index.ts`**: `eventPageUrl` in share-knoppen
-- **`src/components/distribution/ChannelBar.tsx`**: share URL constructie
+Retro Night — 29 mei 2026 om 21:00
 
-#### 3. Config
-- Geen `config.toml` wijziging nodig (standaard `verify_jwt = false` voor Lovable-managed functions)
+Meer info: https://eigeweis.com
+```
 
-### Hoe het werkt voor de gebruiker
-- Alle gedeelde event-links gaan via de OG-proxy
-- WhatsApp/Facebook tonen de juiste afbeelding, titel en beschrijving als preview
-- Echte gebruikers worden automatisch doorgestuurd naar de volledige eventpagina
-- Geen zichtbaar verschil voor de eindgebruiker
+#### 2. `supabase/functions/widget-embed/index.ts`
+- **Regels 166-172**: Verwijder Google Calendar URL-berekening
+- **Regel 182**: Verwijder `eventPageUrl` uit eerste regel van `visitorLines`
+- **Regel 192**: Verwijder `Zet in je agenda:` regel
+
+#### 3. Verificatie
+- Na de wijzigingen de OG-proxy testen om te bevestigen dat WhatsApp nu de juiste event-afbeelding en -titel toont als preview header
 
