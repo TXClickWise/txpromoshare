@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Calendar, Clock, MapPin, User, Share2, ExternalLink, ChevronLeft,
-  Tag, CalendarPlus, MessageCircle, Facebook, Twitter, Copy, Check, Mail
+  Tag, CalendarPlus, MessageCircle, Facebook, Copy, Check, Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -134,6 +134,17 @@ export default function PublicEventPage() {
   }
 
   const shareText = event.social_share_text || `${event.title} — ${formatDate(event.start_date)}`;
+
+  // Build Google Calendar URL for visitor sharing
+  const calStart = `${event.start_date.replace(/-/g, "")}T${event.start_time.replace(/:/g, "")}00`;
+  const calEnd = event.end_time
+    ? `${(event.end_date || event.start_date).replace(/-/g, "")}T${event.end_time.replace(/:/g, "")}00`
+    : calStart;
+  const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${calStart}/${calEnd}&location=${encodeURIComponent(venueName)}&details=${encodeURIComponent(event.short_description || "")}`;
+  const ctaText = event.cta_button_text || "Meer info";
+
+  // Visitor-perspective WhatsApp text
+  const visitorWhatsappText = `Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?\n\n${shareUrl}\n\n${ctaText}: ${event.cta_link || shareUrl}\n\nZet in je agenda: ${calendarUrl}\n\nVia txeventshare.nl`;
   const venueName = venue?.name || "Locatie volgt";
   const venueAddress = venue ? [venue.address, venue.city].filter(Boolean).join(", ") : "";
   const days = daysUntil(event.start_date);
