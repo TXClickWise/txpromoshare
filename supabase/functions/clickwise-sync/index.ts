@@ -452,6 +452,7 @@ Deno.serve(async (req) => {
         } else {
           endTime = addHours(startTime, 1);
         }
+        endTime = clampGhlEndTime(startTime, endTime);
 
         const notes = [
           eventRow.short_description || eventRow.full_description || "",
