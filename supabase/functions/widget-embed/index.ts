@@ -163,21 +163,13 @@ function generateEmbedScript(payload: any): string {
       const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
       const eventPageUrl = supabaseUrl + "/functions/v1/og-proxy?slug=" + encodeURIComponent(e.slug);
 
-      // Build Google Calendar URL
-      const calStart = e.start_date.replace(/-/g, "") + "T" + (e.start_time ? e.start_time.replace(/:/g, "").slice(0, 6) : "000000");
-      const calEndDate = e.end_date || e.start_date;
-      const calEnd = e.end_time
-        ? calEndDate.replace(/-/g, "") + "T" + e.end_time.replace(/:/g, "").slice(0, 6)
-        : calStart;
-      const calendarUrl = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(e.title) + "&dates=" + calStart + "/" + calEnd;
-
       // Format date for display
       const evDateObj = new Date(e.start_date);
       const evDateStr = evDateObj.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
       const evTimeStr = e.start_time ? e.start_time.slice(0, 5) : "";
       const ctaBtnText = e.cta_button_text || "Meer info";
 
-      // Build visitor WhatsApp text: event URL first (for OG preview), then personal text, then details
+      // Build visitor WhatsApp text: eventPageUrl first (for OG preview header)
       const visitorLines = [
         eventPageUrl,
         "",
@@ -189,7 +181,6 @@ function generateEmbedScript(payload: any): string {
       if (e.cta_link) {
         visitorLines.push(ctaBtnText + ": " + e.cta_link);
       }
-      visitorLines.push("Zet in je agenda: " + calendarUrl);
 
       const visitorText = encodeURIComponent(visitorLines.join("\n"));
       const shareUrl = encodeURIComponent(eventPageUrl);

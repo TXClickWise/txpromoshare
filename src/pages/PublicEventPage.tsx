@@ -141,15 +141,9 @@ export default function PublicEventPage() {
   const days = daysUntil(event.start_date);
   const countdownLabel = days === 0 ? "Vandaag!" : days === 1 ? "Morgen" : days > 0 ? `Nog ${days} dagen` : "Afgelopen";
 
-  // Build Google Calendar URL for visitor sharing
-  const calStart = `${event.start_date.replace(/-/g, "")}T${event.start_time.replace(/:/g, "")}00`;
-  const calEnd = event.end_time
-    ? `${(event.end_date || event.start_date).replace(/-/g, "")}T${event.end_time.replace(/:/g, "")}00`
-    : calStart;
-  const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${calStart}/${calEnd}&location=${encodeURIComponent(venueName)}&details=${encodeURIComponent(event.short_description || "")}`;
   const ctaText = event.cta_button_text || "Meer info";
 
-  // Visitor-perspective WhatsApp text — event URL first for OG preview header
+  // Visitor-perspective WhatsApp text — shareUrl is included for OG preview header
   const formattedDate = formatDate(event.start_date);
   const formattedTime = event.start_time?.slice(0, 5) || "";
   const visitorWhatsappText = [
@@ -160,7 +154,6 @@ export default function PublicEventPage() {
     `${event.title} — ${formattedDate} om ${formattedTime}`,
     "",
     ...(event.cta_link ? [`${ctaText}: ${event.cta_link}`] : []),
-    `Zet in je agenda: ${calendarUrl}`,
   ].join("\n");
 
   const copyLink = () => {
