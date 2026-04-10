@@ -1,4 +1,4 @@
-import { Share2, MessageCircle, Smartphone, Zap, BarChart3, ArrowRight, Sparkles, Loader2, Globe, Mail, QrCode, Code2, Shield, Music, MapPin } from "lucide-react";
+import { Share2, Smartphone, Zap, BarChart3, ArrowRight, Sparkles, Loader2, Globe, Mail, QrCode, Code2, Shield } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
@@ -300,11 +300,11 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
       {/* Channel-specific content sections */}
       <div className="space-y-3">
         <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
-          <MessageCircle className="w-4 h-4 text-green-600" />
+          <img src="/images/whatsapp-icon.png" alt="WhatsApp" className="w-4 h-4 rounded-sm" />
           WhatsApp
         </h2>
         <ShareTextCard
-          icon={<MessageCircle className="w-4 h-4 text-green-600" />}
+          icon={<img src="/images/whatsapp-icon.png" alt="WhatsApp" className="w-4 h-4 rounded-sm" />}
           title="WhatsApp bericht"
           description="Vanuit jou als organisator aan je relaties"
           text={getText("whatsapp")}
@@ -339,7 +339,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
             aiLoading={!!rewriting}
           />
           <ShareTextCard
-            icon={<Music className="w-4 h-4 text-foreground" />}
+            icon={<img src="/images/tiktok-icon.png" alt="TikTok" className="w-4 h-4 rounded-sm" />}
             title="TikTok caption"
             description="Korte, pakkende tekst voor TikTok"
             text={getText("tiktok")}
@@ -363,11 +363,11 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
 
       <div className="space-y-3">
         <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-blue-500" />
+          <img src="/images/google-icon.png" alt="Google" className="w-4 h-4" />
           Google Bedrijfsprofiel
         </h2>
         <ShareTextCard
-          icon={<MapPin className="w-4 h-4 text-blue-500" />}
+          icon={<img src="/images/google-icon.png" alt="Google" className="w-4 h-4" />}
           title="Google Bedrijfsprofiel post"
           description="Zakelijke post voor lokale vindbaarheid"
           text={getText("gbp")}

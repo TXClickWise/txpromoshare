@@ -1,4 +1,4 @@
-import { LinkIcon, MessageCircle, Code2, Facebook, Mail, QrCode, Music, MapPin } from "lucide-react";
+import { LinkIcon, Code2, Mail, QrCode } from "lucide-react";
 import { toast } from "sonner";
 
 interface ChannelBarProps {
@@ -65,15 +65,15 @@ export function ChannelBar({ shareUrl, whatsappText, socialText, eventTitle, eve
     onChannelClick?.(channelId);
   };
 
-  const InstagramIcon = () => <img src="/images/instagram-icon.png" alt="Instagram" className="w-5 h-5 rounded" />;
+  const ImgIcon = ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} className="w-5 h-5 rounded" />;
 
   const channels = [
     { id: "link", icon: LinkIcon, label: "Kopieer link", accent: "bg-primary/10 text-primary hover:bg-primary/20" },
-    { id: "whatsapp", icon: MessageCircle, label: "WhatsApp", accent: "bg-green-500/10 text-green-600 hover:bg-green-500/20" },
-    { id: "facebook", icon: Facebook, label: "Facebook", accent: "bg-blue-600/10 text-blue-600 hover:bg-blue-600/20" },
-    { id: "instagram", icon: InstagramIcon, label: "Instagram", accent: "bg-pink-500/10 text-pink-600 hover:bg-pink-500/20" },
-    { id: "tiktok", icon: Music, label: "TikTok", accent: "bg-foreground/5 text-foreground hover:bg-foreground/10" },
-    { id: "gbp", icon: MapPin, label: "Google", accent: "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" },
+    { id: "whatsapp", icon: () => <ImgIcon src="/images/whatsapp-icon.png" alt="WhatsApp" />, label: "WhatsApp", accent: "bg-green-500/10 text-green-600 hover:bg-green-500/20" },
+    { id: "facebook", icon: () => <ImgIcon src="/images/facebook-icon.png" alt="Facebook" />, label: "Facebook", accent: "bg-blue-600/10 text-blue-600 hover:bg-blue-600/20" },
+    { id: "instagram", icon: () => <ImgIcon src="/images/instagram-icon.png" alt="Instagram" />, label: "Instagram", accent: "bg-pink-500/10 text-pink-600 hover:bg-pink-500/20" },
+    { id: "tiktok", icon: () => <ImgIcon src="/images/tiktok-icon.png" alt="TikTok" />, label: "TikTok", accent: "bg-foreground/5 text-foreground hover:bg-foreground/10" },
+    { id: "gbp", icon: () => <ImgIcon src="/images/google-icon.png" alt="Google" />, label: "Google", accent: "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" },
     { id: "email", icon: Mail, label: "E-mail", accent: "bg-orange-500/10 text-orange-600 hover:bg-orange-500/20" },
     { id: "qr", icon: QrCode, label: "QR-code", accent: "bg-violet-500/10 text-violet-600 hover:bg-violet-500/20" },
   ];
