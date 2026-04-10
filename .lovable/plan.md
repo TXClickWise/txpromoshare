@@ -1,40 +1,46 @@
 
 
-## Plan: Cap ClickWise eindtijd op 23:55 en rond af op 5 minuten
+## Plan: Custom locatie opslaan bij evenementen
 
-### Wat wordt er gedaan
+### Probleem
+De `events` tabel heeft alleen een `venue_id` kolom. Als een gebruiker "Andere locatie invoeren..." kiest en een locatienaam + adres invoert, wordt die data niet opgeslagen — alleen `venue_id` (die leeg is bij custom input) wordt naar de database geschreven.
 
-Een helper-functie `clampGhlEndTime(startTime, endTime)` toevoegen aan `supabase/functions/clickwise-sync/index.ts` die:
+### Oplossing
+Bij het opslaan van een event: als er een custom locatienaam is ingevuld maar geen `venueId`, automatisch een nieuwe venue aanmaken in de `venues` tabel en die koppelen aan het event.
 
-1. **Dag-overschrijding voorkomt**: als de eindtijd op een latere datum valt dan de starttijd → cap op 23:55 van de startdatum
-2. **Afrondt op 5 minuten**: minuten naar beneden afronden naar het dichtstbijzijnde veelvoud van 5 (bijv. 23:57 → 23:55, 21:13 → 21:10)
+### Stappen
 
-Deze functie wordt aangeroepen op **3 plekken**:
-- Hoofdevent eindtijd (regel ~437, vóór `syncAppointment`)
-- Occurrence eindtijd (regel ~500-503, vóór occurrence `syncAppointment`)
+1. **`src/components/event-wizard/useEventForm.ts`** — Wijzig `buildEventData` / `handleSave` / `handlePublish`:
+   - Vóór het opslaan van het event: als `form.venue` gevuld is maar `form.venueId` leeg, maak een nieuw venue record aan via `supabase.from("venues").insert(...)` met de ingevoerde naam en adres
+   - Gebruik het nieuwe venue-ID als `venue_id` in de event data
+   - Parse het `address` veld: splits op komma voor `address` en `city` velden in de venues tabel
 
-### Bestand
+2. **Geen database-migratie nodig** — de `venues` tabel heeft al alle benodigde kolommen (name, address, city, tenant_id)
 
-| Bestand | Wijziging |
-|---|---|
-| `supabase/functions/clickwise-sync/index.ts` | Nieuwe `clampGhlEndTime()` helper + aanroepen bij beide eindtijd-berekeningen |
-
-### Logica (pseudo)
+### Technisch detail
 
 ```text
-function clampGhlEndTime(startISO, endISO):
-  startDate = date-part(startISO)
-  endDate   = date-part(endISO)
-  
-  if endDate > startDate:
-    endISO = startDate + "T23:55:00"
-  
-  // rond minuten af naar veelvoud van 5
-  minutes = getMinutes(endISO)
-  endISO.setMinutes(floor(minutes / 5) * 5)
-  
-  return endISO
+In handleSave / handlePublish, vóór buildEventData:
+
+  if (form.venue.trim() && !form.venueId && tenantId) {
+    // Parse "Straat 1, Stad" → address="Straat 1", city="Stad"
+    const parts = form.address.split(",").map(s => s.trim());
+    const { data: newVenue } = await supabase.from("venues").insert({
+      tenant_id: tenantId,
+      name: form.venue.trim(),
+      address: parts[0] || null,
+      city: parts[1] || null,
+    }).select("id").single();
+    
+    if (newVenue) {
+      updateForm({ venueId: newVenue.id });
+      form.venueId = newVenue.id;  // ensure buildEventData picks it up
+    }
+  }
 ```
 
-**Alleen voor ClickWise sync** — de TX EventShare app blijft de originele tijden tonen.
+Dit zorgt ervoor dat:
+- Custom locaties automatisch worden opgeslagen als venue
+- Het event correct wordt gekoppeld aan de nieuwe venue
+- De locatie bij volgende bewerkingen gewoon in de dropdown verschijnt
 
