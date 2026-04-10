@@ -1,4 +1,4 @@
-import { LinkIcon, MessageCircle, Code2, Facebook, Mail, QrCode, Instagram, Music, MapPin } from "lucide-react";
+import { LinkIcon, MessageCircle, Code2, Facebook, Mail, QrCode, Music, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
 interface ChannelBarProps {
@@ -65,11 +65,13 @@ export function ChannelBar({ shareUrl, whatsappText, socialText, eventTitle, eve
     onChannelClick?.(channelId);
   };
 
+  const InstagramIcon = () => <img src="/images/instagram-icon.png" alt="Instagram" className="w-5 h-5 rounded" />;
+
   const channels = [
     { id: "link", icon: LinkIcon, label: "Kopieer link", accent: "bg-primary/10 text-primary hover:bg-primary/20" },
     { id: "whatsapp", icon: MessageCircle, label: "WhatsApp", accent: "bg-green-500/10 text-green-600 hover:bg-green-500/20" },
     { id: "facebook", icon: Facebook, label: "Facebook", accent: "bg-blue-600/10 text-blue-600 hover:bg-blue-600/20" },
-    { id: "instagram", icon: Instagram, label: "Instagram", accent: "bg-pink-500/10 text-pink-600 hover:bg-pink-500/20" },
+    { id: "instagram", icon: InstagramIcon, label: "Instagram", accent: "bg-pink-500/10 text-pink-600 hover:bg-pink-500/20" },
     { id: "tiktok", icon: Music, label: "TikTok", accent: "bg-foreground/5 text-foreground hover:bg-foreground/10" },
     { id: "gbp", icon: MapPin, label: "Google", accent: "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20" },
     { id: "email", icon: Mail, label: "E-mail", accent: "bg-orange-500/10 text-orange-600 hover:bg-orange-500/20" },
