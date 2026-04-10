@@ -51,7 +51,7 @@ export function ogPagesPlugin(
           return;
         }
 
-        const events: any[] = await eventsRes.json();
+        const events = (await eventsRes.json()) as any[];
         if (!events.length) {
           console.log("[og-pages] No published events found");
           return;
@@ -73,7 +73,7 @@ export function ogPagesPlugin(
             },
           );
           if (mediaRes.ok) {
-            const media: any[] = await mediaRes.json();
+            const media = (await mediaRes.json()) as any[];
             for (const m of media) {
               imageMap[m.id] = { original_url: m.original_url, storage_path: m.storage_path };
             }
