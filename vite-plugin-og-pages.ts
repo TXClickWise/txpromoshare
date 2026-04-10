@@ -114,7 +114,7 @@ export function ogPagesPlugin(
           html = html.replace(/<meta property="og:url"[^>]*>/, `<meta property="og:url" content="${canonical}">`);
           html = html.replace(
             /<meta property="og:image"[^>]*>/,
-            `<meta property="og:image" content="${esc(ogImage)}">\n    <meta property="og:image:width" content="1200">\n    <meta property="og:image:height" content="630">`,
+            `<meta property="og:image" content="${escUrl(ogImage)}">\n    <meta property="og:image:width" content="1200">\n    <meta property="og:image:height" content="630">`,
           );
           html = html.replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${title}">`);
           html = html.replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${description}">`);
@@ -122,7 +122,7 @@ export function ogPagesPlugin(
           // Replace Twitter tags
           html = html.replace(/<meta name="twitter:title"[^>]*>/, `<meta name="twitter:title" content="${title}">`);
           html = html.replace(/<meta name="twitter:description"[^>]*>/, `<meta name="twitter:description" content="${description}">`);
-          html = html.replace(/<meta name="twitter:image"[^>]*>/, `<meta name="twitter:image" content="${esc(ogImage)}">`);
+          html = html.replace(/<meta name="twitter:image"[^>]*>/, `<meta name="twitter:image" content="${escUrl(ogImage)}">`);
 
           // Write file
           const dir = path.join(outDir, "e", event.slug);
@@ -160,6 +160,14 @@ function buildOgImageUrl(
 function esc(str: string): string {
   return str
     .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/** Lighter escape for URLs — keeps & intact so crawlers don't choke on &amp; in query strings */
+function escUrl(str: string): string {
+  return str
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
