@@ -1,39 +1,67 @@
 
 
-## Plan: WhatsApp bezoekersbericht corrigeren
+## Plan: WhatsApp OG-preview en berichttekst optimaliseren
 
 ### Analyse van de screenshot
 
-De screenshot is van **vóór** de OG-proxy implementatie. Nu de OG-proxy live is, zouden punten 1 en 2 (verkeerde afbeelding/tekst in de header) opgelost moeten zijn — WhatsApp haalt nu de meta-tags op van de edge function die de juiste event-titel, beschrijving en afbeelding retourneert.
+De WhatsApp preview toont:
+1. **Header/OG-preview**: Afbeelding, titel en beschrijving worden correct opgehaald — maar datum/tijd ontbreekt in de description
+2. **Zichtbare URL**: De lange `ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/og-proxy?slug=...` URL staat als losse tekst in het bericht
+3. **Redundante tekst**: Evenementnaam + datum staan zowel in de header als in de berichttekst
 
-Wat nog wel aangepast moet worden:
+### Gewenst resultaat
 
-| # | Probleem | Actie |
-|---|---------|-------|
-| 4 | Rauwe URL `https://txeventshare.nl/e/...` staat los in de tekst | Verwijderen uit berichttekst (de URL zit al in de OG-preview header) |
-| 6 | "Zet in je agenda" staat er 2x met verschillende links | Gehele agenda-functionaliteit verwijderen |
+De OG-preview header bevat alles (afbeelding, titel, beschrijving incl. datum/tijd), waardoor de berichttekst alleen de persoonlijke uitnodiging en CTA hoeft te bevatten. De lange URL mag niet zichtbaar zijn als tekst.
 
 ### Wijzigingen
 
-#### 1. `src/pages/PublicEventPage.tsx`
-- **Regel 144-149**: Verwijder de Google Calendar URL-berekening
-- **Regel 155-156**: Verwijder `shareUrl` uit de eerste regel van `visitorWhatsappText`
-- **Regel 163**: Verwijder `Zet in je agenda: ${calendarUrl}`
+#### 1. OG-proxy: datum/tijd toevoegen aan og:description (`supabase/functions/og-proxy/index.ts`)
 
-Nieuw berichtformat:
+De `og:description` moet altijd datum en tijd bevatten zodat die info in de header preview staat:
+
+```
+og:description = "10 april 2026 om 10:00 — Geniet van rust en lekker eten terwijl de kinderen spelen..."
+```
+
+- Datum/tijd formatteren en prependen aan de description
+- `start_time` toevoegen aan de select query (zit er al in)
+
+#### 2. Widget WhatsApp-tekst vereenvoudigen (`supabase/functions/widget-embed/index.ts`)
+
+De `visitorLines` aanpassen — de OG-proxy URL blijft als eerste regel (nodig om de preview te triggeren), maar de redundante event-titel + datum regel vervalt:
+
+```text
+[OG-proxy URL]          ← niet zichtbaar voor gebruiker dankzij OG-preview
+                        
+Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?
+
+Reserveer een tafel: https://eigeweis.guestplan.io
+```
+
+**Probleem met zichtbare URL**: WhatsApp toont de URL als klikbare tekst wanneer deze als eerste regel staat. Dit is inherent aan hoe WhatsApp werkt — de URL is nodig om de preview te genereren. **Oplossing**: de URL naar het einde van het bericht verplaatsen. WhatsApp genereert de OG-preview voor elke URL in het bericht, niet alleen de eerste.
+
+Nieuw format:
 ```text
 Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?
 
-Retro Night — 29 mei 2026 om 21:00
+Reserveer een tafel: https://eigeweis.guestplan.io
 
-Meer info: https://eigeweis.com
+https://[og-proxy-url]
 ```
 
-#### 2. `supabase/functions/widget-embed/index.ts`
-- **Regels 166-172**: Verwijder Google Calendar URL-berekening
-- **Regel 182**: Verwijder `eventPageUrl` uit eerste regel van `visitorLines`
-- **Regel 192**: Verwijder `Zet in je agenda:` regel
+De URL staat onderaan, na de CTA, waardoor de focus op de uitnodiging en actie ligt.
 
-#### 3. Verificatie
-- Na de wijzigingen de OG-proxy testen om te bevestigen dat WhatsApp nu de juiste event-afbeelding en -titel toont als preview header
+#### 3. PublicEventPage WhatsApp-tekst (`src/pages/PublicEventPage.tsx`)
+
+Zelfde aanpassing: URL naar onderaan, event-titel+datum regel verwijderen.
+
+### Technische details
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `supabase/functions/og-proxy/index.ts` | `og:description` = datum/tijd + korte omschrijving |
+| `supabase/functions/widget-embed/index.ts` | `visitorLines`: verwijder titel+datum regel, URL naar einde |
+| `src/pages/PublicEventPage.tsx` | `visitorWhatsappText`: verwijder titel+datum regel, URL naar einde |
+
+Beide edge functions worden opnieuw gedeployed na de wijzigingen.
 
