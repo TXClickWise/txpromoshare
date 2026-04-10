@@ -128,8 +128,7 @@ export default function DistributionPage() {
 
   // Default texts per channel — organisator-perspectief
   const defaultTexts = {
-    whatsapp: event.whatsapp_share_text ||
-      `${event.title}\n\n${event.short_description || ""}\n\n${dateStr} om ${timeStr}\n\n${ctaText}: ${shareUrl}\n\nZet in je agenda: ${calendarUrl}\n\ntxeventshare.nl`,
+    whatsapp: `${event.title}\n\n${event.short_description || ""}\n\n📅 ${dateStr} om ${timeStr}\n📍 ${venueName}\n\n${ctaText}: ${shareUrl}`,
     instagram: event.social_share_text ||
       `${event.title}\n\n${dateStr} | ${timeStr}\n${event.short_description || ""}\n\nLink in bio\n\n#event #horeca #uitagenda`,
     tiktok: `${event.title}\n\n${dateStr} om ${timeStr}\n${event.short_description || ""}\n\n#event #uitagenda #horeca`,
