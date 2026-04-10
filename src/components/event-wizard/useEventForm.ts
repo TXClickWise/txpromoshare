@@ -421,12 +421,29 @@ export function useEventForm() {
     }
   }
 
+  async function ensureVenue() {
+    if (form.venue.trim() && !form.venueId && tenantId) {
+      const parts = form.address.split(",").map(s => s.trim());
+      const { data: newVenue } = await supabase.from("venues").insert({
+        tenant_id: tenantId,
+        name: form.venue.trim(),
+        address: parts[0] || null,
+        city: parts[1] || null,
+      }).select("id").single();
+      if (newVenue) {
+        form.venueId = newVenue.id;
+        setForm(prev => ({ ...prev, venueId: newVenue.id }));
+      }
+    }
+  }
+
   async function handleSave() {
     if (!tenantId || !form.title.trim()) {
       toast.error("Vul minimaal een titel in om op te slaan");
       return false;
     }
     setSaving(true);
+    await ensureVenue();
     const data = buildEventData("draft");
     let error;
     let eventId = id;
