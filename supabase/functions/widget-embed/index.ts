@@ -160,24 +160,15 @@ function generateEmbedScript(payload: any): string {
 
     let shareHtml = "";
     if (showShare) {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-      const eventPageUrl = supabaseUrl + "/functions/v1/og-proxy?slug=" + encodeURIComponent(e.slug);
+      // Single clean public URL — no backend/og-proxy URLs in message
+      const eventPageUrl = "https://txeventshare.nl/e/" + encodeURIComponent(e.slug);
 
-      // Format date for display
-      const evDateObj = new Date(e.start_date);
-      const evDateStr = evDateObj.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
-      const evTimeStr = e.start_time ? e.start_time.slice(0, 5) : "";
-      const ctaBtnText = e.cta_button_text || "Meer info";
-
-      // Build visitor WhatsApp text: eventPageUrl first (for OG preview header)
+      // Simple visitor WhatsApp text with one link only
       const visitorLines = [
         "Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?",
         "",
+        eventPageUrl,
       ];
-      if (e.cta_link) {
-        visitorLines.push(ctaBtnText + ": " + e.cta_link, "");
-      }
-      visitorLines.push(eventPageUrl);
 
       const visitorText = encodeURIComponent(visitorLines.join("\n"));
       const shareUrl = encodeURIComponent(eventPageUrl);

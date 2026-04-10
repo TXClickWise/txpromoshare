@@ -104,15 +104,14 @@ export default function PublicEventPage() {
     load();
   }, [slug]);
 
-  const ogProxyBase = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-proxy`;
-  const shareUrl = `${ogProxyBase}?slug=${slug}`;
+  const publicEventUrl = `https://txeventshare.nl/e/${slug}`;
   const heroImg = featuredImageUrl || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop";
 
   useSEO(
     event?.seo_title || event?.title || "Evenement",
     event?.seo_description || event?.short_description || "",
     heroImg,
-    shareUrl,
+    publicEventUrl,
   );
 
   if (loading) {
@@ -143,18 +142,15 @@ export default function PublicEventPage() {
 
   const ctaText = event.cta_button_text || "Meer info";
 
-  // Visitor-perspective WhatsApp text — shareUrl is included for OG preview header
-  const formattedDate = formatDate(event.start_date);
-  const formattedTime = event.start_time?.slice(0, 5) || "";
+  // Visitor-perspective WhatsApp text — single clean link only
   const visitorWhatsappText = [
     "Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?",
     "",
-    ...(event.cta_link ? [`${ctaText}: ${event.cta_link}`, ""] : []),
-    shareUrl,
+    publicEventUrl,
   ].join("\n");
 
   const copyLink = () => {
-    navigator.clipboard.writeText(shareUrl);
+    navigator.clipboard.writeText(publicEventUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -379,7 +375,7 @@ export default function PublicEventPage() {
                       `SUMMARY:${event.title}`,
                       `LOCATION:${venueName}${venueAddress ? ", " + venueAddress : ""}`,
                       `DESCRIPTION:${(event.short_description || "").replace(/\n/g, "\\n")}`,
-                      `URL:${shareUrl}`,
+                      `URL:${publicEventUrl}`,
                       "END:VEVENT", "END:VCALENDAR"
                     ].filter(Boolean).join("\r\n");
                     const blob = new Blob([ics], { type: "text/calendar" });
@@ -401,14 +397,14 @@ export default function PublicEventPage() {
                   </a>
                 </Button>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
-                  <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(publicEventUrl)}`} target="_blank" rel="noopener noreferrer">
                     <Facebook className="w-3.5 h-3.5" />Facebook
                   </a>
                 </Button>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => {
-                  const text = shareText + "\n\n" + shareUrl;
+                  const text = shareText + "\n\n" + publicEventUrl;
                   if (navigator.share) {
-                    navigator.share({ title: event.title, text, url: shareUrl }).catch(() => {});
+                    navigator.share({ title: event.title, text, url: publicEventUrl }).catch(() => {});
                   } else {
                     navigator.clipboard.writeText(text);
                   }
@@ -416,9 +412,9 @@ export default function PublicEventPage() {
                   <Instagram className="w-3.5 h-3.5" />Instagram
                 </Button>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => {
-                  const text = shareText + "\n\n" + shareUrl;
+                  const text = shareText + "\n\n" + publicEventUrl;
                   if (navigator.share) {
-                    navigator.share({ title: event.title, text, url: shareUrl }).catch(() => {});
+                    navigator.share({ title: event.title, text, url: publicEventUrl }).catch(() => {});
                   } else {
                     navigator.clipboard.writeText(text);
                   }
@@ -426,9 +422,9 @@ export default function PublicEventPage() {
                   <Music className="w-3.5 h-3.5" />TikTok
                 </Button>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => {
-                  const text = shareText + "\n\n" + shareUrl;
+                  const text = shareText + "\n\n" + publicEventUrl;
                   if (navigator.share) {
-                    navigator.share({ title: event.title, text, url: shareUrl }).catch(() => {});
+                    navigator.share({ title: event.title, text, url: publicEventUrl }).catch(() => {});
                   } else {
                     navigator.clipboard.writeText(text);
                   }
@@ -436,7 +432,7 @@ export default function PublicEventPage() {
                   <Building2 className="w-3.5 h-3.5" />Google
                 </Button>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
-                  <a href={`mailto:?subject=${encodeURIComponent(event.title)}&body=${encodeURIComponent(shareText + "\n\n" + shareUrl)}`}>
+                  <a href={`mailto:?subject=${encodeURIComponent(event.title)}&body=${encodeURIComponent(shareText + "\n\n" + publicEventUrl)}`}>
                     <Mail className="w-3.5 h-3.5" />E-mail
                   </a>
                 </Button>
@@ -477,7 +473,7 @@ export default function PublicEventPage() {
         } : undefined,
         organizer: event.organizer_name ? { "@type": "Organization", name: event.organizer_name } : undefined,
         image: heroImg,
-        url: shareUrl,
+        url: publicEventUrl,
         eventStatus: "https://schema.org/EventScheduled",
         eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
         ...(event.cta_link ? { offers: { "@type": "Offer", url: event.cta_link, availability: "https://schema.org/InStock" } } : {}),
