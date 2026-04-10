@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Calendar, Clock, MapPin, User, Share2, ExternalLink, ChevronLeft,
-  Tag, CalendarPlus, MessageCircle, Facebook, Copy, Check, Mail
+  Tag, CalendarPlus, MessageCircle, Facebook, Copy, Check, Mail,
+  Instagram, Music, Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -402,7 +403,7 @@ export default function PublicEventPage() {
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <Share2 className="w-4 h-4 text-primary" />Delen
               </h3>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
                   <a href={`https://wa.me/?text=${encodeURIComponent(visitorWhatsappText)}`} target="_blank" rel="noopener noreferrer">
                     <MessageCircle className="w-3.5 h-3.5" />WhatsApp
@@ -413,14 +414,44 @@ export default function PublicEventPage() {
                     <Facebook className="w-3.5 h-3.5" />Facebook
                   </a>
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={copyLink}>
-                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copied ? "Gekopieerd!" : "Kopieer link"}
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => {
+                  const text = shareText + "\n\n" + shareUrl;
+                  if (navigator.share) {
+                    navigator.share({ title: event.title, text, url: shareUrl }).catch(() => {});
+                  } else {
+                    navigator.clipboard.writeText(text);
+                  }
+                }}>
+                  <Instagram className="w-3.5 h-3.5" />Instagram
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => {
+                  const text = shareText + "\n\n" + shareUrl;
+                  if (navigator.share) {
+                    navigator.share({ title: event.title, text, url: shareUrl }).catch(() => {});
+                  } else {
+                    navigator.clipboard.writeText(text);
+                  }
+                }}>
+                  <Music className="w-3.5 h-3.5" />TikTok
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => {
+                  const text = shareText + "\n\n" + shareUrl;
+                  if (navigator.share) {
+                    navigator.share({ title: event.title, text, url: shareUrl }).catch(() => {});
+                  } else {
+                    navigator.clipboard.writeText(text);
+                  }
+                }}>
+                  <Building2 className="w-3.5 h-3.5" />Google
                 </Button>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
                   <a href={`mailto:?subject=${encodeURIComponent(event.title)}&body=${encodeURIComponent(shareText + "\n\n" + shareUrl)}`}>
                     <Mail className="w-3.5 h-3.5" />E-mail
                   </a>
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={copyLink}>
+                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? "Gekopieerd!" : "Kopieer link"}
                 </Button>
               </div>
             </motion.div>
