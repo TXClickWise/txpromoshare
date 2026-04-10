@@ -1,29 +1,40 @@
 
 
-## Plan: Fix "Slot not available" voor Retro Brothers event
+## Plan: Cap ClickWise eindtijd op 23:55 en rond af op 5 minuten
 
-### Diagnose
+### Wat wordt er gedaan
 
-De `calendarId` is nu correct (`TiRSCHmHCYXM16aZbq7g`). Het probleem is een **andere GHL-fout**: `"The slot you have selected is no longer available."` Dit treedt op omdat GHL Event Calendars werken met **beschikbare slots** — je kunt alleen appointments boeken op tijden die de kalender als beschikbaar markeert.
+Een helper-functie `clampGhlEndTime(startTime, endTime)` toevoegen aan `supabase/functions/clickwise-sync/index.ts` die:
 
-Het Retro Brothers event (29 mei 2026, 21:00-02:00) valt waarschijnlijk buiten de beschikbare uren van de kalender.
+1. **Dag-overschrijding voorkomt**: als de eindtijd op een latere datum valt dan de starttijd → cap op 23:55 van de startdatum
+2. **Afrondt op 5 minuten**: minuten naar beneden afronden naar het dichtstbijzijnde veelvoud van 5 (bijv. 23:57 → 23:55, 21:13 → 21:10)
 
-### Twee-sporige oplossing
+Deze functie wordt aangeroepen op **3 plekken**:
+- Hoofdevent eindtijd (regel ~437, vóór `syncAppointment`)
+- Occurrence eindtijd (regel ~500-503, vóór occurrence `syncAppointment`)
 
-**Spoor 1: ClickWise/GHL kalender-instellingen (handmatig)**
-- De "Evenementen Kalender" in GHL moet zo worden ingesteld dat **avond-/nachtslots** beschikbaar zijn (bijv. 00:00-23:59 of 24/7)
-- Controleer: Calendar Settings → Availability → zorg dat de uren alle dagdelen dekken, inclusief avond en nacht
-- Dit verklaart ook waarom events overdag (12:00-13:00) wél syncen maar avondevents falen
-
-**Spoor 2: Code-aanpassing — gebruik `ignoreFreeSlotValidation` flag**
-- GHL ondersteunt een `ignoreFreeSlotValidation: true` parameter bij het aanmaken van appointments, waarmee slot-beschikbaarheid wordt overgeslagen
-- Dit is precies wat nodig is: TX EventShare pusht events naar de kalender ongeacht de slot-configuratie
-
-### Bestanden
+### Bestand
 
 | Bestand | Wijziging |
 |---|---|
-| `supabase/functions/clickwise-sync/index.ts` | Voeg `ignoreFreeSlotValidation: true` toe aan het appointment request body in de `syncAppointment` functie |
+| `supabase/functions/clickwise-sync/index.ts` | Nieuwe `clampGhlEndTime()` helper + aanroepen bij beide eindtijd-berekeningen |
 
-Dit is een kleine wijziging (1 regel) in de `appointmentBody` object rond lijn 121-135.
+### Logica (pseudo)
+
+```text
+function clampGhlEndTime(startISO, endISO):
+  startDate = date-part(startISO)
+  endDate   = date-part(endISO)
+  
+  if endDate > startDate:
+    endISO = startDate + "T23:55:00"
+  
+  // rond minuten af naar veelvoud van 5
+  minutes = getMinutes(endISO)
+  endISO.setMinutes(floor(minutes / 5) * 5)
+  
+  return endISO
+```
+
+**Alleen voor ClickWise sync** — de TX EventShare app blijft de originele tijden tonen.
 
