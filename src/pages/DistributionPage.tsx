@@ -1,4 +1,4 @@
-import { Share2, MessageCircle, Smartphone, Zap, BarChart3, ArrowRight, Sparkles, Loader2, Globe, Mail, Instagram, QrCode, Code2, Shield, Music, MapPin } from "lucide-react";
+import { Share2, MessageCircle, Smartphone, Zap, BarChart3, ArrowRight, Sparkles, Loader2, Globe, Mail, QrCode, Code2, Shield, Music, MapPin } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
@@ -324,12 +324,12 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
 
       <div className="space-y-3">
         <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
-          <Instagram className="w-4 h-4 text-pink-600" />
+          <img src="/images/instagram-icon.png" alt="Instagram" className="w-4 h-4 rounded-sm" />
           Social media
         </h2>
         <div className="grid md:grid-cols-2 gap-3">
           <ShareTextCard
-            icon={<Instagram className="w-4 h-4 text-pink-600" />}
+            icon={<img src="/images/instagram-icon.png" alt="Instagram" className="w-4 h-4 rounded-sm" />}
             title="Instagram / Facebook post"
             description="Met hashtags, visueel gericht"
             text={getText("instagram")}
