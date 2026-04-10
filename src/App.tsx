@@ -82,6 +82,7 @@ const App = () => (
 
               {/* Public event pages */}
               <Route path="/e/:slug" element={<PublicEventPage />} />
+              <Route path="/e/:slug/index.html" element={<PublicEventPage />} />
               <Route path="/unsubscribe" element={<UnsubscribePage />} />
 
               {/* App routes */}
