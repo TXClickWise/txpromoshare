@@ -160,7 +160,8 @@ function generateEmbedScript(payload: any): string {
 
     let shareHtml = "";
     if (showShare) {
-      const eventPageUrl = "https://txeventshare.nl/e/" + escapeHtml(e.slug);
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+      const eventPageUrl = supabaseUrl + "/functions/v1/og-proxy?slug=" + encodeURIComponent(e.slug);
 
       // Build Google Calendar URL
       const calStart = e.start_date.replace(/-/g, "") + "T" + (e.start_time ? e.start_time.replace(/:/g, "").slice(0, 6) : "000000");
