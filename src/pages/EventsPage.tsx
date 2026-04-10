@@ -42,7 +42,7 @@ export default function EventsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date_desc");
-  const [events, setEvents] = useState<Tables<"events">[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   const [categories, setCategories] = useState<Tables<"categories">[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -95,7 +95,7 @@ export default function EventsPage() {
     if (!tenantId) return;
     const { data } = await supabase
       .from("events")
-      .select("*")
+      .select("*, featured_image:media!events_featured_image_id_fkey(storage_path, original_url)")
       .eq("tenant_id", tenantId)
       .order("start_date", { ascending: false });
     setEvents(data || []);
@@ -272,8 +272,18 @@ export default function EventsPage() {
                   <div className="absolute top-3 left-3 z-10" onClick={(e) => toggleSelect(e, event.id)}>
                     <Checkbox checked={selected.has(event.id)} className="bg-background/80 backdrop-blur-sm" />
                   </div>
-                  <div className="h-32 bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center relative">
-                    <Calendar className="w-8 h-8 text-muted-foreground/20" />
+                  <div className="h-32 bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center relative overflow-hidden">
+                    {(() => {
+                      const img = event.featured_image;
+                      const src = img?.storage_path
+                        ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/${img.storage_path}`
+                        : img?.original_url || null;
+                      return src ? (
+                        <img src={src} alt={event.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <Calendar className="w-8 h-8 text-muted-foreground/20" />
+                      );
+                    })()}
                     <div className="absolute top-3 right-3">
                       <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} onRefresh={fetchEvents} />
                     </div>
@@ -333,9 +343,23 @@ export default function EventsPage() {
                   <div className="w-5" onClick={(e) => toggleSelect(e, event.id)}>
                     <Checkbox checked={selected.has(event.id)} />
                   </div>
-                  <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                    {event.is_recurring ? <RefreshCw className="w-4 h-4 text-accent" /> : <Calendar className="w-4 h-4 text-muted-foreground" />}
-                  </div>
+                  {(() => {
+                    const img = event.featured_image;
+                    const src = img?.storage_path
+                      ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/${img.storage_path}`
+                      : img?.original_url || null;
+                    return (
+                      <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0 overflow-hidden">
+                        {src ? (
+                          <img src={src} alt={event.title} className="w-full h-full object-cover" />
+                        ) : event.is_recurring ? (
+                          <RefreshCw className="w-4 h-4 text-accent" />
+                        ) : (
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </div>
+                    );
+                  })()}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground text-sm truncate group-hover:text-primary transition-colors">{event.title}</p>
                     {event.short_description && <p className="text-[11px] text-muted-foreground truncate">{event.short_description}</p>}
