@@ -185,14 +185,16 @@ function generateEmbedScript(payload: any): string {
       const visitorText = encodeURIComponent(visitorLines.join("\n"));
       const shareUrl = encodeURIComponent(eventPageUrl);
       const clipboardJs = 'navigator.clipboard.writeText(decodeURIComponent(\\x27' + visitorText + '\\x27)).then(function(){alert(\\x27Tekst gekopieerd! Plak in Instagram, TikTok of Google.\\x27)})';
-      const iconStyle = 'display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;color:#fff;text-decoration:none;font-size:16px;cursor:pointer;border:none;';
+      const imgIcon = 'width:36px;height:36px;border-radius:50%;object-fit:cover;';
+      const btnStyle = 'display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;cursor:pointer;border:none;padding:0;overflow:hidden;background:transparent;';
+      const baseUrl = 'https://txpromoshare.lovable.app/images/';
       shareHtml = '<div style="display:flex;gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap;">' +
-        '<a href="https://wa.me/?text=' + visitorText + '" target="_blank" rel="noopener" title="WhatsApp" style="' + iconStyle + 'background:#25D366;">&#9993;</a>' +
-        '<a href="https://www.facebook.com/sharer/sharer.php?u=' + shareUrl + '" target="_blank" rel="noopener" title="Facebook" style="' + iconStyle + 'background:#1877F2;font-size:14px;font-weight:700;">f</a>' +
-        '<button onclick="' + clipboardJs + '" title="Instagram" style="' + iconStyle + 'background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);padding:0;overflow:hidden;"><img src="https://txpromoshare.lovable.app/images/instagram-icon.png" alt="Instagram" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" /></button>' +
-        '<button onclick="' + clipboardJs + '" title="TikTok" style="' + iconStyle + 'background:#010101;">&#9835;</button>' +
-        '<button onclick="' + clipboardJs + '" title="Google" style="' + iconStyle + 'background:#4285F4;">G</button>' +
-        '<a href="mailto:?subject=' + encodeURIComponent(e.title) + '&body=' + visitorText + '" title="E-mail" style="' + iconStyle + 'background:' + textSecondary + ';">&#9993;</a>' +
+        '<a href="https://wa.me/?text=' + visitorText + '" target="_blank" rel="noopener" title="WhatsApp" style="' + btnStyle + '"><img src="' + baseUrl + 'whatsapp-icon.png" alt="WhatsApp" style="' + imgIcon + '" /></a>' +
+        '<a href="https://www.facebook.com/sharer/sharer.php?u=' + shareUrl + '" target="_blank" rel="noopener" title="Facebook" style="' + btnStyle + '"><img src="' + baseUrl + 'facebook-icon.png" alt="Facebook" style="' + imgIcon + '" /></a>' +
+        '<button onclick="' + clipboardJs + '" title="Instagram" style="' + btnStyle + '"><img src="' + baseUrl + 'instagram-icon.png" alt="Instagram" style="' + imgIcon + '" /></button>' +
+        '<button onclick="' + clipboardJs + '" title="TikTok" style="' + btnStyle + '"><img src="' + baseUrl + 'tiktok-icon.png" alt="TikTok" style="' + imgIcon + '" /></button>' +
+        '<button onclick="' + clipboardJs + '" title="Google" style="' + btnStyle + '"><img src="' + baseUrl + 'google-icon.png" alt="Google" style="' + imgIcon + '" /></button>' +
+        '<a href="mailto:?subject=' + encodeURIComponent(e.title) + '&body=' + visitorText + '" title="E-mail" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;color:#fff;text-decoration:none;font-size:16px;background:' + textSecondary + ';">&#9993;</a>' +
         '</div>';
     }
 
