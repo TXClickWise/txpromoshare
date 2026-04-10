@@ -104,15 +104,14 @@ export default function PublicEventPage() {
     load();
   }, [slug]);
 
-  const ogProxyBase = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-proxy`;
-  const shareUrl = `${ogProxyBase}?slug=${slug}`;
+  const publicEventUrl = `https://txeventshare.nl/e/${slug}`;
   const heroImg = featuredImageUrl || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop";
 
   useSEO(
     event?.seo_title || event?.title || "Evenement",
     event?.seo_description || event?.short_description || "",
     heroImg,
-    shareUrl,
+    publicEventUrl,
   );
 
   if (loading) {
