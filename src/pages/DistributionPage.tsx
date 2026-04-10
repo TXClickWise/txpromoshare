@@ -119,8 +119,7 @@ export default function DistributionPage() {
     return <div className="text-muted-foreground text-sm">Laden...</div>;
   }
 
-  const ogProxyBase = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-proxy`;
-  const shareUrl = `${ogProxyBase}?slug=${event.slug}`;
+  const shareUrl = `https://txeventshare.nl/e/${event.slug}`;
   const dateStr = new Date(event.start_date).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" });
   const timeStr = event.start_time?.slice(0, 5) || "";
   const venueName = venue?.name || "Locatie volgt";
