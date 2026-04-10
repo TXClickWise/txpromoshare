@@ -520,7 +520,6 @@ Deno.serve(async (req) => {
                 occEnd = addHours(occStart, 1);
               }
               occEnd = clampGhlEndTime(occStart, occEnd);
-              }
 
               const overrides = occ.overrides as any;
               const occTitle = overrides?.title || `${eventRow.title} – ${occ.label || occ.occurrence_date}`;
