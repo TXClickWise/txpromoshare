@@ -51,11 +51,12 @@ serve(async (req) => {
         .select("original_url, storage_path")
         .eq("id", event.featured_image_id)
         .single();
-      if (media?.original_url) {
+      if (media?.storage_path) {
+        // Optimized 1200×630 image via Supabase transforms (~150 KB instead of 2+ MB)
+        const sbUrl = Deno.env.get("SUPABASE_URL") ?? "";
+        imageUrl = `${sbUrl}/storage/v1/render/image/public/media/${media.storage_path}?width=1200&height=630&resize=cover&quality=80`;
+      } else if (media?.original_url) {
         imageUrl = media.original_url;
-      } else if (media?.storage_path) {
-        const { data: urlData } = supabase.storage.from("media").getPublicUrl(media.storage_path);
-        if (urlData?.publicUrl) imageUrl = urlData.publicUrl;
       }
     }
 
