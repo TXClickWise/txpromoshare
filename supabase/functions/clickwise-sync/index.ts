@@ -35,6 +35,23 @@ function buildISODateTime(date: string, time: string | null): string {
   return `${date}T${t.length === 5 ? t + ":00" : t}+02:00`;
 }
 
+function clampGhlEndTime(startISO: string, endISO: string): string {
+  const startDate = startISO.split("T")[0];
+  const endDate = endISO.split("T")[0];
+  let clamped = endISO;
+  if (endDate > startDate) {
+    clamped = `${startDate}T23:55:00+02:00`;
+  }
+  // Round minutes down to nearest multiple of 5
+  const timeMatch = clamped.match(/T(\d{2}):(\d{2})/);
+  if (timeMatch) {
+    const mins = parseInt(timeMatch[2], 10);
+    const rounded = Math.floor(mins / 5) * 5;
+    clamped = clamped.replace(/T(\d{2}):(\d{2})/, `T${timeMatch[1]}:${String(rounded).padStart(2, "0")}`);
+  }
+  return clamped;
+}
+
 function addHours(isoStr: string, hours: number): string {
   const d = new Date(isoStr);
   d.setTime(d.getTime() + hours * 3600000);
@@ -435,6 +452,7 @@ Deno.serve(async (req) => {
         } else {
           endTime = addHours(startTime, 1);
         }
+        endTime = clampGhlEndTime(startTime, endTime);
 
         const notes = [
           eventRow.short_description || eventRow.full_description || "",
@@ -501,6 +519,7 @@ Deno.serve(async (req) => {
               } else {
                 occEnd = addHours(occStart, 1);
               }
+              occEnd = clampGhlEndTime(occStart, occEnd);
 
               const overrides = occ.overrides as any;
               const occTitle = overrides?.title || `${eventRow.title} – ${occ.label || occ.occurrence_date}`;
