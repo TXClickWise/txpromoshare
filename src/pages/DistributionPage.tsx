@@ -363,11 +363,11 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
 
       <div className="space-y-3">
         <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-blue-500" />
+          <img src="/images/google-icon.png" alt="Google" className="w-4 h-4" />
           Google Bedrijfsprofiel
         </h2>
         <ShareTextCard
-          icon={<MapPin className="w-4 h-4 text-blue-500" />}
+          icon={<img src="/images/google-icon.png" alt="Google" className="w-4 h-4" />}
           title="Google Bedrijfsprofiel post"
           description="Zakelijke post voor lokale vindbaarheid"
           text={getText("gbp")}
