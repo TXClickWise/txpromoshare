@@ -104,7 +104,8 @@ export default function PublicEventPage() {
     load();
   }, [slug]);
 
-  const shareUrl = `https://txeventshare.nl/e/${slug}`;
+  const ogProxyBase = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-proxy`;
+  const shareUrl = `${ogProxyBase}?slug=${slug}`;
   const heroImg = featuredImageUrl || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop";
 
   useSEO(
