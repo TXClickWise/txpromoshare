@@ -161,13 +161,12 @@ function generateEmbedScript(payload: any): string {
     let shareHtml = "";
     if (showShare) {
       const eventUrl = e.cta_link || ("https://txeventshare.nl/e/" + escapeHtml(e.slug));
-      const shareText = encodeURIComponent(e.title + " — " + weekday + " " + dayNum + " " + monthShort + " " + time);
+      const visitorText = encodeURIComponent("Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?\n\n" + eventUrl + "\n\nVia txeventshare.nl");
       const shareUrl = encodeURIComponent(eventUrl);
       shareHtml = '<div style="display:flex;gap:8px;margin-top:12px;justify-content:center;">' +
-        '<a href="https://wa.me/?text=' + shareText + "%20" + shareUrl + '" target="_blank" rel="noopener" title="WhatsApp" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#25D366;color:#fff;text-decoration:none;font-size:16px;">&#9993;</a>' +
+        '<a href="https://wa.me/?text=' + visitorText + '" target="_blank" rel="noopener" title="WhatsApp" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#25D366;color:#fff;text-decoration:none;font-size:16px;">&#9993;</a>' +
         '<a href="https://www.facebook.com/sharer/sharer.php?u=' + shareUrl + '" target="_blank" rel="noopener" title="Facebook" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#1877F2;color:#fff;text-decoration:none;font-size:14px;font-weight:700;">f</a>' +
-        '<a href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener" title="X" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#000;color:#fff;text-decoration:none;font-size:14px;font-weight:700;">𝕏</a>' +
-        '<a href="mailto:?subject=' + shareText + '&body=' + shareText + "%20" + shareUrl + '" title="E-mail" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:' + textSecondary + ';color:#fff;text-decoration:none;font-size:16px;">✉</a>' +
+        '<a href="mailto:?subject=' + encodeURIComponent(e.title) + '&body=' + visitorText + '" title="E-mail" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:' + textSecondary + ';color:#fff;text-decoration:none;font-size:16px;">&#9993;</a>' +
         '</div>';
     }
 
