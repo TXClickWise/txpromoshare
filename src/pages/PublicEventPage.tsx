@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Calendar, Clock, MapPin, User, Share2, ExternalLink, ChevronLeft,
-  Tag, CalendarPlus, MessageCircle, Facebook, Twitter, Copy, Check, Mail
+  Tag, CalendarPlus, MessageCircle, Facebook, Copy, Check, Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -138,6 +138,17 @@ export default function PublicEventPage() {
   const venueAddress = venue ? [venue.address, venue.city].filter(Boolean).join(", ") : "";
   const days = daysUntil(event.start_date);
   const countdownLabel = days === 0 ? "Vandaag!" : days === 1 ? "Morgen" : days > 0 ? `Nog ${days} dagen` : "Afgelopen";
+
+  // Build Google Calendar URL for visitor sharing
+  const calStart = `${event.start_date.replace(/-/g, "")}T${event.start_time.replace(/:/g, "")}00`;
+  const calEnd = event.end_time
+    ? `${(event.end_date || event.start_date).replace(/-/g, "")}T${event.end_time.replace(/:/g, "")}00`
+    : calStart;
+  const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${calStart}/${calEnd}&location=${encodeURIComponent(venueName)}&details=${encodeURIComponent(event.short_description || "")}`;
+  const ctaText = event.cta_button_text || "Meer info";
+
+  // Visitor-perspective WhatsApp text
+  const visitorWhatsappText = `Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?\n\n${shareUrl}\n\n${ctaText}: ${event.cta_link || shareUrl}\n\nZet in je agenda: ${calendarUrl}\n\nVia txeventshare.nl`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(shareUrl);
@@ -382,7 +393,7 @@ export default function PublicEventPage() {
               </h3>
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
-                  <a href={`https://wa.me/?text=${encodeURIComponent(event.whatsapp_share_text || shareText + " " + shareUrl)}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`https://wa.me/?text=${encodeURIComponent(visitorWhatsappText)}`} target="_blank" rel="noopener noreferrer">
                     <MessageCircle className="w-3.5 h-3.5" />WhatsApp
                   </a>
                 </Button>
@@ -391,21 +402,16 @@ export default function PublicEventPage() {
                     <Facebook className="w-3.5 h-3.5" />Facebook
                   </a>
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
-                  <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer">
-                    <Twitter className="w-3.5 h-3.5" />X / Twitter
-                  </a>
-                </Button>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={copyLink}>
                   {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? "Gekopieerd!" : "Kopieer link"}
                 </Button>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
+                  <a href={`mailto:?subject=${encodeURIComponent(event.title)}&body=${encodeURIComponent(shareText + "\n\n" + shareUrl)}`}>
+                    <Mail className="w-3.5 h-3.5" />E-mail
+                  </a>
+                </Button>
               </div>
-              <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs h-8" asChild>
-                <a href={`mailto:?subject=${encodeURIComponent(event.title)}&body=${encodeURIComponent(shareText + "\n\n" + shareUrl)}`}>
-                  <Mail className="w-3.5 h-3.5" />Deel via e-mail
-                </a>
-              </Button>
             </motion.div>
 
             <div className="text-center pt-2">

@@ -26,6 +26,8 @@ const AI_ACTIONS = [
   { id: "onbrand", label: "Meer on-brand", icon: "🎨" },
   { id: "whatsapp", label: "Optimaliseer voor WhatsApp", icon: "💬" },
   { id: "instagram", label: "Optimaliseer voor Instagram", icon: "📸" },
+  { id: "tiktok", label: "Optimaliseer voor TikTok", icon: "🎵" },
+  { id: "gbp", label: "Optimaliseer voor Google", icon: "📍" },
   { id: "seo", label: "Optimaliseer voor SEO", icon: "🔍" },
 ];
 

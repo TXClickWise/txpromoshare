@@ -1,4 +1,4 @@
-import { Share2, MessageCircle, Smartphone, Zap, BarChart3, ArrowRight, Sparkles, Loader2, Globe, Mail, Instagram, QrCode, Code2, Shield } from "lucide-react";
+import { Share2, MessageCircle, Smartphone, Zap, BarChart3, ArrowRight, Sparkles, Loader2, Globe, Mail, Instagram, QrCode, Code2, Shield, Music, MapPin } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
@@ -18,6 +18,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
+
+function buildGoogleCalendarUrl(event: Tables<"events">, venueName: string) {
+  const start = `${event.start_date.replace(/-/g, "")}T${event.start_time.replace(/:/g, "")}00`;
+  const end = event.end_time
+    ? `${(event.end_date || event.start_date).replace(/-/g, "")}T${event.end_time.replace(/:/g, "")}00`
+    : start;
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${start}/${end}&location=${encodeURIComponent(venueName)}&details=${encodeURIComponent(event.short_description || "")}`;
+}
 
 export default function DistributionPage() {
   const { tenantId, tenant } = useTenant();
@@ -43,6 +51,30 @@ export default function DistributionPage() {
       return (data ?? []) as Tables<"events">[];
     },
     enabled: !!tenantId,
+  });
+
+  // Fetch venue for selected event
+  const { data: venue } = useQuery({
+    queryKey: ["event-venue", selectedEvent],
+    queryFn: async () => {
+      const ev = publishedEvents.find((e) => e.id === selectedEvent);
+      if (!ev?.venue_id) return null;
+      const { data } = await supabase.from("venues").select("*").eq("id", ev.venue_id).maybeSingle();
+      return data;
+    },
+    enabled: !!selectedEvent && publishedEvents.length > 0,
+  });
+
+  // Fetch featured image URL for selected event
+  const { data: featuredImageUrl } = useQuery({
+    queryKey: ["event-image", selectedEvent],
+    queryFn: async () => {
+      const ev = publishedEvents.find((e) => e.id === selectedEvent);
+      if (!ev?.featured_image_id) return null;
+      const { data } = await supabase.from("media").select("original_url").eq("id", ev.featured_image_id).maybeSingle();
+      return data?.original_url || null;
+    },
+    enabled: !!selectedEvent && publishedEvents.length > 0,
   });
 
   const { data: stats = [] } = useQuery({
@@ -90,17 +122,22 @@ export default function DistributionPage() {
   const shareUrl = `https://txeventshare.nl/e/${event.slug}`;
   const dateStr = new Date(event.start_date).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" });
   const timeStr = event.start_time?.slice(0, 5) || "";
+  const venueName = venue?.name || "Locatie volgt";
+  const calendarUrl = buildGoogleCalendarUrl(event, venueName);
+  const ctaText = event.cta_button_text || "Meer info";
 
-  // Default texts per channel
+  // Default texts per channel — organisator-perspectief
   const defaultTexts = {
     whatsapp: event.whatsapp_share_text ||
-      `🎉 ${event.title}\n📅 ${dateStr} om ${timeStr}\n\n👉 Meer info & aanmelden:\n${shareUrl}`,
+      `${event.title}\n\n${event.short_description || ""}\n\n${dateStr} om ${timeStr}\n\n${ctaText}: ${shareUrl}\n\nZet in je agenda: ${calendarUrl}\n\ntxeventshare.nl`,
     instagram: event.social_share_text ||
-      `${event.title} 🎉\n\n📅 ${dateStr} | ${timeStr}\n${event.short_description || ""}\n\n👉 Link in bio\n\n#event #horeca #uitagenda`,
+      `${event.title}\n\n${dateStr} | ${timeStr}\n${event.short_description || ""}\n\nLink in bio\n\n#event #horeca #uitagenda`,
+    tiktok: `${event.title}\n\n${dateStr} om ${timeStr}\n${event.short_description || ""}\n\n#event #uitagenda #horeca`,
     teaser: event.short_description || `${event.title} — ${dateStr}. Wees erbij!`,
     newsletter: `Binnenkort in de agenda: ${event.title}!\n\n${event.short_description || `Op ${dateStr} om ${timeStr} is het zover.`}\n\nBekijk alle details en meld je aan: ${shareUrl}`,
     website: `<strong>${event.title}</strong> — ${dateStr} om ${timeStr}. ${event.short_description || "Bekijk de details en schrijf je in."} <a href="${shareUrl}">Meer info →</a>`,
-    promo: `${event.title}\n\n${event.short_description || ""}\n\n📅 ${dateStr}\n⏰ ${timeStr}\n\nMeer weten? Bekijk alle details op:\n${shareUrl}`,
+    promo: `${event.title}\n\n${event.short_description || ""}\n\n${dateStr}\n${timeStr}\n\nMeer weten? Bekijk alle details op:\n${shareUrl}`,
+    gbp: `${event.title} — ${dateStr} om ${timeStr}. ${event.short_description || "Bekijk de details op onze pagina."} ${venueName}. Meer informatie: ${shareUrl}`,
   };
 
   const getText = (channel: string) => channelTexts[channel] || defaultTexts[channel as keyof typeof defaultTexts] || "";
@@ -125,9 +162,12 @@ export default function DistributionPage() {
 Titel: ${event.title}
 Datum: ${dateStr}
 Tijd: ${timeStr}
+Locatie: ${venueName}
 Beschrijving: ${event.short_description || "Geen beschrijving"}
 Volledige beschrijving: ${event.full_description || "Geen"}
 Link: ${shareUrl}
+CTA: ${ctaText}
+Agenda link: ${calendarUrl}
 Organisatie: ${tenant?.name || ""}
 ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}
 ${tenant?.tagline ? `Tagline: ${tenant.tagline}` : ""}`;
@@ -141,10 +181,12 @@ ${tenant?.tagline ? `Tagline: ${tenant.tagline}` : ""}`;
       setChannelTexts({
         whatsapp: parsed.whatsapp || getText("whatsapp"),
         instagram: parsed.instagram || getText("instagram"),
+        tiktok: parsed.tiktok || getText("tiktok"),
         teaser: parsed.teaser || getText("teaser"),
         newsletter: parsed.newsletter || getText("newsletter"),
         website: parsed.website || getText("website"),
         promo: parsed.promo || getText("promo"),
+        gbp: parsed.gbp || getText("gbp"),
       });
       toast.success("Alle teksten gegenereerd!");
     } catch (err: any) {
@@ -230,6 +272,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
           whatsappText={getText("whatsapp")}
           socialText={getText("instagram")}
           eventTitle={event.title}
+          eventImageUrl={featuredImageUrl || undefined}
           onChannelClick={trackAction}
           onShowQR={() => setShowQR(true)}
         />
@@ -262,7 +305,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         <ShareTextCard
           icon={<MessageCircle className="w-4 h-4 text-green-600" />}
           title="WhatsApp bericht"
-          description="Klaar om te sturen naar gasten of groepen"
+          description="Vanuit jou als organisator aan je relaties"
           text={getText("whatsapp")}
           onTextChange={(t) => setText("whatsapp", t)}
           charLimit={500}
@@ -287,7 +330,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
           <ShareTextCard
             icon={<Instagram className="w-4 h-4 text-pink-600" />}
             title="Instagram / Facebook post"
-            description="Met hashtags en emoji's"
+            description="Met hashtags, visueel gericht"
             text={getText("instagram")}
             onTextChange={(t) => setText("instagram", t)}
             charLimit={2200}
@@ -295,16 +338,43 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
             aiLoading={!!rewriting}
           />
           <ShareTextCard
-            icon={<Share2 className="w-4 h-4 text-primary" />}
-            title="Korte teaser"
-            description="Voor stories, X/Twitter of advertenties"
-            text={getText("teaser")}
-            onTextChange={(t) => setText("teaser", t)}
-            charLimit={160}
+            icon={<Music className="w-4 h-4 text-foreground" />}
+            title="TikTok caption"
+            description="Korte, pakkende tekst voor TikTok"
+            text={getText("tiktok")}
+            onTextChange={(t) => setText("tiktok", t)}
+            charLimit={2200}
             onAiRewrite={handleRewrite}
             aiLoading={!!rewriting}
           />
         </div>
+        <ShareTextCard
+          icon={<Share2 className="w-4 h-4 text-primary" />}
+          title="Korte teaser"
+          description="Voor stories of advertenties"
+          text={getText("teaser")}
+          onTextChange={(t) => setText("teaser", t)}
+          charLimit={160}
+          onAiRewrite={handleRewrite}
+          aiLoading={!!rewriting}
+        />
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-blue-500" />
+          Google Bedrijfsprofiel
+        </h2>
+        <ShareTextCard
+          icon={<MapPin className="w-4 h-4 text-blue-500" />}
+          title="Google Bedrijfsprofiel post"
+          description="Zakelijke post voor lokale vindbaarheid"
+          text={getText("gbp")}
+          onTextChange={(t) => setText("gbp", t)}
+          charLimit={1500}
+          onAiRewrite={handleRewrite}
+          aiLoading={!!rewriting}
+        />
       </div>
 
       <div className="space-y-3">
