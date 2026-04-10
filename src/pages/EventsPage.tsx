@@ -95,7 +95,7 @@ export default function EventsPage() {
     if (!tenantId) return;
     const { data } = await supabase
       .from("events")
-      .select("*")
+      .select("*, featured_image:media!events_featured_image_id_fkey(storage_path, original_url)")
       .eq("tenant_id", tenantId)
       .order("start_date", { ascending: false });
     setEvents(data || []);
