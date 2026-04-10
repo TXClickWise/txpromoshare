@@ -488,6 +488,7 @@ export function useEventForm() {
     }
     if (!tenantId) return false;
     setSaving(true);
+    await ensureVenue();
     const status = form.publishAt ? "scheduled" : "published";
     const data = buildEventData(status);
     let error;
