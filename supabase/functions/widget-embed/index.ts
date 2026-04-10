@@ -160,7 +160,7 @@ function generateEmbedScript(payload: any): string {
 
     let shareHtml = "";
     if (showShare) {
-      const eventUrl = e.cta_link || ("https://txeventshare.nl/event/" + escapeHtml(e.slug));
+      const eventUrl = e.cta_link || ("https://txeventshare.nl/e/" + escapeHtml(e.slug));
       const shareText = encodeURIComponent(e.title + " — " + weekday + " " + dayNum + " " + monthShort + " " + time);
       const shareUrl = encodeURIComponent(eventUrl);
       shareHtml = '<div style="display:flex;gap:8px;margin-top:12px;justify-content:center;">' +
