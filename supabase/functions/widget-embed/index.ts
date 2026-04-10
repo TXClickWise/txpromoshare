@@ -171,16 +171,13 @@ function generateEmbedScript(payload: any): string {
 
       // Build visitor WhatsApp text: eventPageUrl first (for OG preview header)
       const visitorLines = [
-        eventPageUrl,
-        "",
         "Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?",
-        "",
-        e.title + " \u2014 " + evDateStr + " om " + evTimeStr,
         "",
       ];
       if (e.cta_link) {
-        visitorLines.push(ctaBtnText + ": " + e.cta_link);
+        visitorLines.push(ctaBtnText + ": " + e.cta_link, "");
       }
+      visitorLines.push(eventPageUrl);
 
       const visitorText = encodeURIComponent(visitorLines.join("\n"));
       const shareUrl = encodeURIComponent(eventPageUrl);

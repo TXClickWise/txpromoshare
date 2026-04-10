@@ -147,13 +147,10 @@ export default function PublicEventPage() {
   const formattedDate = formatDate(event.start_date);
   const formattedTime = event.start_time?.slice(0, 5) || "";
   const visitorWhatsappText = [
-    shareUrl,
-    "",
     "Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?",
     "",
-    `${event.title} — ${formattedDate} om ${formattedTime}`,
-    "",
-    ...(event.cta_link ? [`${ctaText}: ${event.cta_link}`] : []),
+    ...(event.cta_link ? [`${ctaText}: ${event.cta_link}`, ""] : []),
+    shareUrl,
   ].join("\n");
 
   const copyLink = () => {

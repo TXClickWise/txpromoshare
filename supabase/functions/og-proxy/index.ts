@@ -61,11 +61,10 @@ serve(async (req) => {
 
     // Build meta content
     const title = escapeHtml(event.seo_title || event.title);
-    const description = escapeHtml(
-      event.seo_description ||
-      event.short_description ||
-      `${event.title} — ${formatDateNL(event.start_date)}`
-    );
+    const timeStr = event.start_time ? event.start_time.slice(0, 5) : "";
+    const datePrefix = `${formatDateNL(event.start_date)}${timeStr ? ` om ${timeStr}` : ""}`;
+    const baseDesc = event.seo_description || event.short_description || event.title;
+    const description = escapeHtml(`${datePrefix} — ${baseDesc}`);
     const canonicalUrl = `https://txeventshare.nl/e/${event.slug}`;
     const escapedImage = escapeHtml(imageUrl);
 
