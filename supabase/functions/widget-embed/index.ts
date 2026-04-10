@@ -160,9 +160,38 @@ function generateEmbedScript(payload: any): string {
 
     let shareHtml = "";
     if (showShare) {
-      const eventUrl = e.cta_link || ("https://txeventshare.nl/e/" + escapeHtml(e.slug));
-      const visitorText = encodeURIComponent("Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?\n\n" + eventUrl + "\n\nVia txeventshare.nl");
-      const shareUrl = encodeURIComponent(eventUrl);
+      const eventPageUrl = "https://txeventshare.nl/e/" + escapeHtml(e.slug);
+
+      // Build Google Calendar URL
+      const calStart = e.start_date.replace(/-/g, "") + "T" + (e.start_time ? e.start_time.replace(/:/g, "").slice(0, 6) : "000000");
+      const calEndDate = e.end_date || e.start_date;
+      const calEnd = e.end_time
+        ? calEndDate.replace(/-/g, "") + "T" + e.end_time.replace(/:/g, "").slice(0, 6)
+        : calStart;
+      const calendarUrl = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(e.title) + "&dates=" + calStart + "/" + calEnd;
+
+      // Format date for display
+      const evDateObj = new Date(e.start_date);
+      const evDateStr = evDateObj.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
+      const evTimeStr = e.start_time ? e.start_time.slice(0, 5) : "";
+      const ctaBtnText = e.cta_button_text || "Meer info";
+
+      // Build visitor WhatsApp text: event URL first (for OG preview), then personal text, then details
+      const visitorLines = [
+        eventPageUrl,
+        "",
+        "Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?",
+        "",
+        e.title + " \u2014 " + evDateStr + " om " + evTimeStr,
+        "",
+      ];
+      if (e.cta_link) {
+        visitorLines.push(ctaBtnText + ": " + e.cta_link);
+      }
+      visitorLines.push("Zet in je agenda: " + calendarUrl);
+
+      const visitorText = encodeURIComponent(visitorLines.join("\n"));
+      const shareUrl = encodeURIComponent(eventPageUrl);
       shareHtml = '<div style="display:flex;gap:8px;margin-top:12px;justify-content:center;">' +
         '<a href="https://wa.me/?text=' + visitorText + '" target="_blank" rel="noopener" title="WhatsApp" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#25D366;color:#fff;text-decoration:none;font-size:16px;">&#9993;</a>' +
         '<a href="https://www.facebook.com/sharer/sharer.php?u=' + shareUrl + '" target="_blank" rel="noopener" title="Facebook" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#1877F2;color:#fff;text-decoration:none;font-size:14px;font-weight:700;">f</a>' +
