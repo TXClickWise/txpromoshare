@@ -42,6 +42,9 @@ export function ShareLinkCard({ url, eventId }: ShareLinkCardProps) {
               {copiedLink ? <Check className="w-4 h-4 text-accent" /> : <Copy className="w-4 h-4" />}
             </Button>
           </div>
+          <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium transition-colors mt-1">
+            <ExternalLink className="w-3.5 h-3.5" />Bekijk publieke pagina
+          </a>
         </div>
 
         <div>
@@ -53,12 +56,6 @@ export function ShareLinkCard({ url, eventId }: ShareLinkCardProps) {
             </Button>
           </div>
         </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium transition-colors">
-          <ExternalLink className="w-3.5 h-3.5" />Bekijk publieke pagina
-        </a>
       </div>
     </div>
   );
