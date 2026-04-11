@@ -105,6 +105,7 @@ export default function PublicEventPage() {
   }, [slug]);
 
   const publicEventUrl = `https://txeventshare.nl/e/${slug}`;
+  const previewShareUrl = `https://txeventshare.nl/s/${slug}.html`;
   const heroImg = featuredImageUrl || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop";
 
   useSEO(
@@ -134,20 +135,15 @@ export default function PublicEventPage() {
     );
   }
 
-  const shareText = event.social_share_text || `${event.title} — ${formatDate(event.start_date)}`;
   const venueName = venue?.name || "Locatie volgt";
   const venueAddress = venue ? [venue.address, venue.city].filter(Boolean).join(", ") : "";
   const days = daysUntil(event.start_date);
   const countdownLabel = days === 0 ? "Vandaag!" : days === 1 ? "Morgen" : days > 0 ? `Nog ${days} dagen` : "Afgelopen";
 
   const ctaText = event.cta_button_text || "Meer info";
+  const shareText = `${event.title} — ${formatDate(event.start_date)} om ${formatTime(event.start_time)}${venueName ? ` bij ${venueName}` : ""}. Bekijk alle details van dit evenement.`;
 
-  // Visitor-perspective WhatsApp text — og-proxy URL for correct preview
-  const visitorWhatsappText = [
-    "Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?",
-    "",
-    publicEventUrl,
-  ].join("\n");
+  const visitorWhatsappText = previewShareUrl;
 
   const copyLink = () => {
     navigator.clipboard.writeText(publicEventUrl);
@@ -397,36 +393,36 @@ export default function PublicEventPage() {
                   </a>
                 </Button>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
-                  <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(publicEventUrl)}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewShareUrl)}`} target="_blank" rel="noopener noreferrer">
                     <Facebook className="w-3.5 h-3.5" />Facebook
                   </a>
                 </Button>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => {
-                  const text = shareText + "\n\n" + publicEventUrl;
+                  const text = shareText;
                   if (navigator.share) {
-                    navigator.share({ title: event.title, text, url: publicEventUrl }).catch(() => {});
+                    navigator.share({ title: event.title, text, url: previewShareUrl }).catch(() => {});
                   } else {
-                    navigator.clipboard.writeText(text);
+                    navigator.clipboard.writeText(previewShareUrl);
                   }
                 }}>
                   <Instagram className="w-3.5 h-3.5" />Instagram
                 </Button>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => {
-                  const text = shareText + "\n\n" + publicEventUrl;
+                  const text = shareText;
                   if (navigator.share) {
-                    navigator.share({ title: event.title, text, url: publicEventUrl }).catch(() => {});
+                    navigator.share({ title: event.title, text, url: previewShareUrl }).catch(() => {});
                   } else {
-                    navigator.clipboard.writeText(text);
+                    navigator.clipboard.writeText(previewShareUrl);
                   }
                 }}>
                   <Music className="w-3.5 h-3.5" />TikTok
                 </Button>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => {
-                  const text = shareText + "\n\n" + publicEventUrl;
+                  const text = shareText;
                   if (navigator.share) {
-                    navigator.share({ title: event.title, text, url: publicEventUrl }).catch(() => {});
+                    navigator.share({ title: event.title, text, url: previewShareUrl }).catch(() => {});
                   } else {
-                    navigator.clipboard.writeText(text);
+                    navigator.clipboard.writeText(previewShareUrl);
                   }
                 }}>
                   <Building2 className="w-3.5 h-3.5" />Google

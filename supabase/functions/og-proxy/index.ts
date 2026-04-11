@@ -29,7 +29,7 @@ serve(async (req) => {
     // Fetch event by slug
     const { data: event, error } = await supabase
       .from("events")
-      .select("title, short_description, slug, start_date, start_time, featured_image_id, seo_title, seo_description")
+      .select("title, short_description, slug, start_date, start_time, featured_image_id, seo_title, seo_description, venue_id")
       .eq("slug", slug)
       .eq("status", "published")
       .single();
@@ -60,14 +60,21 @@ serve(async (req) => {
       }
     }
 
+    let venueName: string | null = null;
+    if (event.venue_id) {
+      const { data: venue } = await supabase
+        .from("venues")
+        .select("name")
+        .eq("id", event.venue_id)
+        .maybeSingle();
+      venueName = venue?.name ?? null;
+    }
+
     // Build meta content
     const title = escapeHtml(event.seo_title || event.title);
-    const timeStr = event.start_time ? event.start_time.slice(0, 5) : "";
-    const datePrefix = `${formatDateNL(event.start_date)}${timeStr ? ` om ${timeStr}` : ""}`;
-    const baseDesc = event.seo_description || event.short_description || event.title;
-    const description = escapeHtml(`${datePrefix} — ${baseDesc}`);
+    const description = escapeHtml(buildShareDescription(event, venueName ?? undefined));
     const canonicalUrl = `https://txeventshare.nl/e/${event.slug}`;
-    const escapedImage = escapeHtml(imageUrl);
+    const escapedImage = escapeUrl(imageUrl);
 
     const html = `<!DOCTYPE html>
 <html lang="nl">
@@ -75,6 +82,7 @@ serve(async (req) => {
   <meta charset="utf-8">
   <title>${title} | TX EventShare</title>
   <meta name="description" content="${description}">
+  <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
   <meta property="og:type" content="website">
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${description}">
@@ -116,6 +124,23 @@ function escapeHtml(str: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function escapeUrl(str: string): string {
+  return str
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function buildShareDescription(
+  event: { title: string; start_date: string; start_time: string | null },
+  venueName?: string,
+): string {
+  const timeStr = event.start_time ? event.start_time.slice(0, 5) : "";
+  const dateStr = formatDateNL(event.start_date);
+  const venueStr = venueName ? ` bij ${venueName}` : "";
+  return `${event.title} — ${dateStr}${timeStr ? ` om ${timeStr}` : ""}${venueStr}. Bekijk alle details van dit evenement.`;
 }
 
 function formatDateNL(dateStr: string): string {

@@ -37,7 +37,7 @@ export function ogPagesPlugin(
       try {
         // Fetch published events via REST (anon key – public SELECT policy)
         const eventsRes = await fetch(
-          `${supabaseUrl}/rest/v1/events?status=eq.published&select=title,slug,short_description,start_date,start_time,seo_title,seo_description,featured_image_id`,
+          `${supabaseUrl}/rest/v1/events?status=eq.published&select=title,slug,short_description,start_date,start_time,seo_title,seo_description,featured_image_id,venue_id`,
           {
             headers: {
               apikey: supabaseKey,
@@ -80,17 +80,35 @@ export function ogPagesPlugin(
           }
         }
 
+        const venueIds = [...new Set(events.map((e) => e.venue_id).filter(Boolean))];
+        const venueMap: Record<string, string> = {};
+
+        if (venueIds.length) {
+          const idsParam = `in.(${venueIds.map((id: string) => `"${id}"`).join(",")})`;
+          const venuesRes = await fetch(
+            `${supabaseUrl}/rest/v1/venues?id=${idsParam}&select=id,name`,
+            {
+              headers: {
+                apikey: supabaseKey,
+                Authorization: `Bearer ${supabaseKey}`,
+              },
+            },
+          );
+          if (venuesRes.ok) {
+            const venues = (await venuesRes.json()) as any[];
+            for (const venue of venues) {
+              venueMap[venue.id] = venue.name;
+            }
+          }
+        }
+
         let generated = 0;
 
         for (const event of events) {
           const ogImage = buildOgImageUrl(supabaseUrl, event, imageMap);
           const title = esc(event.seo_title || event.title);
-          const timeStr = event.start_time ? event.start_time.slice(0, 5) : "";
-          const dateStr = formatDateNL(event.start_date);
-          const datePrefix = `${dateStr}${timeStr ? ` om ${timeStr}` : ""}`;
-          const rawDesc = event.seo_description || event.short_description || event.title;
-          const description = esc(`${datePrefix} — ${rawDesc}`);
           const canonical = `https://txeventshare.nl/e/${event.slug}`;
+          const description = esc(buildShareDescription(event, venueMap[event.venue_id]));
 
           let html = baseHtml;
 
@@ -123,11 +141,22 @@ export function ogPagesPlugin(
           html = html.replace(/<meta name="twitter:title"[^>]*>/, `<meta name="twitter:title" content="${title}">`);
           html = html.replace(/<meta name="twitter:description"[^>]*>/, `<meta name="twitter:description" content="${description}">`);
           html = html.replace(/<meta name="twitter:image"[^>]*>/, `<meta name="twitter:image" content="${escUrl(ogImage)}">`);
+          html = html.replace(
+            "</head>",
+            `    <meta http-equiv="refresh" content="0;url=${canonical}">\n  </head>`,
+          );
+          html = html.replace(
+            "</body>",
+            `    <script>window.location.replace(${JSON.stringify(canonical)});</script>\n  </body>`,
+          );
 
           // Write file
           const dir = path.join(outDir, "e", event.slug);
           fs.mkdirSync(dir, { recursive: true });
           fs.writeFileSync(path.join(dir, "index.html"), html, "utf-8");
+          const shareDir = path.join(outDir, "s");
+          fs.mkdirSync(shareDir, { recursive: true });
+          fs.writeFileSync(path.join(shareDir, `${event.slug}.html`), html, "utf-8");
           generated++;
         }
 
@@ -155,6 +184,13 @@ function buildOgImageUrl(
   }
 
   return media.original_url || fallback;
+}
+
+function buildShareDescription(event: any, venueName?: string): string {
+  const timeStr = event.start_time ? event.start_time.slice(0, 5) : "";
+  const dateStr = formatDateNL(event.start_date);
+  const venueStr = venueName ? ` bij ${venueName}` : "";
+  return `${event.title} — ${dateStr}${timeStr ? ` om ${timeStr}` : ""}${venueStr}. Bekijk alle details van dit evenement.`;
 }
 
 function esc(str: string): string {

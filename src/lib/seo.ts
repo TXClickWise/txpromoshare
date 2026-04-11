@@ -48,7 +48,7 @@ export function useSEO({
 
     // Canonical
     let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : undefined;
+    const canonicalUrl = canonical ? (canonical.startsWith("http") ? canonical : `${BASE_URL}${canonical}`) : undefined;
     if (canonicalUrl) {
       if (!link) {
         link = document.createElement("link");

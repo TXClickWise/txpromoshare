@@ -119,7 +119,8 @@ export default function DistributionPage() {
     return <div className="text-muted-foreground text-sm">Laden...</div>;
   }
 
-  const shareUrl = `https://txeventshare.nl/e/${event.slug}`;
+  const publicShareUrl = `https://txeventshare.nl/e/${event.slug}`;
+  const previewShareUrl = `https://txeventshare.nl/s/${event.slug}.html`;
   const dateStr = new Date(event.start_date).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" });
   const timeStr = event.start_time?.slice(0, 5) || "";
   const venueName = venue?.name || "Locatie volgt";
@@ -128,15 +129,15 @@ export default function DistributionPage() {
 
   // Default texts per channel — organisator-perspectief
   const defaultTexts = {
-    whatsapp: `${event.title}\n\n${event.short_description || ""}\n\n📅 ${dateStr} om ${timeStr}\n📍 ${venueName}\n\n${ctaText}: ${shareUrl}`,
+    whatsapp: `${event.title}\n\n📅 ${dateStr}${timeStr ? ` om ${timeStr}` : ""}\n📍 ${venueName}\n\nBekijk alle details van dit evenement in de previewkaart van WhatsApp.`,
     instagram: event.social_share_text ||
       `${event.title}\n\n${dateStr} | ${timeStr}\n${event.short_description || ""}\n\nLink in bio\n\n#event #horeca #uitagenda`,
     tiktok: `${event.title}\n\n${dateStr} om ${timeStr}\n${event.short_description || ""}\n\n#event #uitagenda #horeca`,
     teaser: event.short_description || `${event.title} — ${dateStr}. Wees erbij!`,
-    newsletter: `Binnenkort in de agenda: ${event.title}!\n\n${event.short_description || `Op ${dateStr} om ${timeStr} is het zover.`}\n\nBekijk alle details en meld je aan: ${shareUrl}`,
-    website: `<strong>${event.title}</strong> — ${dateStr} om ${timeStr}. ${event.short_description || "Bekijk de details en schrijf je in."} <a href="${shareUrl}">Meer info →</a>`,
-    promo: `${event.title}\n\n${event.short_description || ""}\n\n${dateStr}\n${timeStr}\n\nMeer weten? Bekijk alle details op:\n${shareUrl}`,
-    gbp: `${event.title} — ${dateStr} om ${timeStr}. ${event.short_description || "Bekijk de details op onze pagina."} ${venueName}. Meer informatie: ${shareUrl}`,
+    newsletter: `Binnenkort in de agenda: ${event.title}!\n\n${event.short_description || `Op ${dateStr} om ${timeStr} is het zover.`}\n\nBekijk alle details en meld je aan: ${publicShareUrl}`,
+    website: `<strong>${event.title}</strong> — ${dateStr} om ${timeStr}. ${event.short_description || "Bekijk de details en schrijf je in."} <a href="${publicShareUrl}">Meer info →</a>`,
+    promo: `${event.title}\n\n${event.short_description || ""}\n\n${dateStr}\n${timeStr}\n\nMeer weten? Bekijk alle details op:\n${publicShareUrl}`,
+    gbp: `${event.title} — ${dateStr} om ${timeStr}. ${event.short_description || "Bekijk de details op onze pagina."} ${venueName}. Meer informatie: ${publicShareUrl}`,
   };
 
   const getText = (channel: string) => channelTexts[channel] || defaultTexts[channel as keyof typeof defaultTexts] || "";
@@ -164,7 +165,7 @@ Tijd: ${timeStr}
 Locatie: ${venueName}
 Beschrijving: ${event.short_description || "Geen beschrijving"}
 Volledige beschrijving: ${event.full_description || "Geen"}
-Link: ${shareUrl}
+Link: ${publicShareUrl}
 CTA: ${ctaText}
 Agenda link: ${calendarUrl}
 Organisatie: ${tenant?.name || ""}
@@ -178,7 +179,7 @@ ${tenant?.tagline ? `Tagline: ${tenant.tagline}` : ""}`;
 
       const parsed = JSON.parse(data.result);
       setChannelTexts({
-        whatsapp: parsed.whatsapp || getText("whatsapp"),
+        whatsapp: getText("whatsapp"),
         instagram: parsed.instagram || getText("instagram"),
         tiktok: parsed.tiktok || getText("tiktok"),
         teaser: parsed.teaser || getText("teaser"),
@@ -208,7 +209,7 @@ ${text}
 Context:
 Event: ${event.title}
 Datum: ${dateStr}
-Link: ${shareUrl}
+Link: ${publicShareUrl}
 ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
 
       const { data, error } = await supabase.functions.invoke("ai-assist", {
@@ -225,7 +226,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
     }
   };
 
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(getText("whatsapp"))}`;
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(previewShareUrl)}`;
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -267,7 +268,8 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
       {/* Quick share bar */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
         <ChannelBar
-          shareUrl={shareUrl}
+          shareUrl={publicShareUrl}
+          previewShareUrl={previewShareUrl}
           whatsappText={getText("whatsapp")}
           socialText={getText("instagram")}
           eventTitle={event.title}
@@ -292,7 +294,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
 
       {/* Event Link & QR */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <ShareLinkCard url={shareUrl} eventId={event.id} />
+        <ShareLinkCard url={publicShareUrl} eventId={event.id} />
       </motion.div>
 
       {/* Channel-specific content sections */}
