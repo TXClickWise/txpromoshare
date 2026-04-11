@@ -49,7 +49,9 @@ function useSEO(title: string, description: string, image?: string, url?: string
 }
 
 export default function PublicEventPage() {
-  const { slug } = useParams<{ slug: string }>();
+  const params = useParams<{ slug: string; "*": string }>();
+  // Support /e/:slug and /s/*.html (wildcard route)
+  const slug = params.slug || (params["*"] ? params["*"].replace(/\.html$/, "") : "");
   const [copied, setCopied] = useState(false);
   const [event, setEvent] = useState<Tables<"events"> | null>(null);
   const [venue, setVenue] = useState<Tables<"venues"> | null>(null);
