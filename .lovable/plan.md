@@ -1,50 +1,42 @@
 
-Doel
 
-Zeker maken dat de event-share oplossing klopt op het live domein: event-specifieke OG-tags server-side op de schone URL `https://txeventshare.nl/e/[slug]`, zonder zichtbare technische URL en zonder verwarring rond `/index.html`.
+## Kernprobleem
 
-Wat ik nu in de code zie
+Lovable hosting gebruikt een SPA-fallback: alle routes (`/e/[slug]`, `/s/[slug].html`) serveren altijd de generieke `index.html`. De statische HTML-bestanden die het Vite-plugin genereert worden nooit door WhatsApp-crawlers gezien. Dit is een platformbeperking die niet te omzeilen is met build-time bestanden.
 
-- Ja: in de code is al expliciet ingebouwd dat per event een bestand wordt gegenereerd op `dist/e/[slug]/index.html` in `vite-plugin-og-pages.ts`.
-- De React-app zelf gebruikt publiek de route `/e/:slug` in `src/App.tsx`.
-- Op Lovable hosting hoort de publieke URL daarom normaal `https://txeventshare.nl/e/[slug]` te zijn. De `index.html` is de interne bestandsnaam achter die map-route.
-- Daardoor is `https://txeventshare.nl/e/[slug]/index.html` niet de hoofd-URL die gedeeld moet worden. Dat pad mag dus nooit leidend zijn voor WhatsApp of voor gebruikers.
+## Definitieve oplossing: Edge Function als share-URL
 
-Plan van aanpak
+De `og-proxy` Edge Function bestaat al in de code maar is **niet gedeployed** (404). Deze functie doet precies wat nodig is: event ophalen uit de database, HTML met correcte OG-tags retourneren, en de gebruiker doorsturen naar de schone URL.
 
-1. Canonieke publieke event-URL afdwingen
-- Alles blijft wijzen naar `https://txeventshare.nl/e/[slug]`
-- Geen shares, canonical tags of UI-links meer naar een `index.html`-variant
+### Stappen
 
-2. `/index.html`-pad robuust maken
-- Extra ondersteuning toevoegen zodat `/e/:slug/index.html` niet meer op een 404 eindigt als iemand die URL toch opent
-- Daarbij altijd canonicaliseren naar `/e/[slug]`, zodat zoekmachines en WhatsApp maar één juiste event-URL zien
+**1. Deploy og-proxy Edge Function**
+- Deployen van `supabase/functions/og-proxy/index.ts`
+- Testen met curl dat de functie correcte HTML met OG-tags retourneert
 
-3. OG-output nalopen
-- Bevestigen dat de build-output voor elke gepubliceerde eventslug echt een event-specifieke HTML oplevert
-- Controleren dat die HTML de juiste `og:title`, `og:description`, `og:image` en `og:url` gebruikt voor het specifieke event
+**2. WhatsApp share-URL wijzigen naar Edge Function**
+- In `DistributionPage.tsx`: `previewShareUrl` wijzigen van `https://txeventshare.nl/s/[slug].html` naar de edge function URL: `https://ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/og-proxy?slug=[slug]`
+- In `ChannelBar.tsx`: WhatsApp stuurt alleen de `previewShareUrl` (de edge function URL). De crawler ziet de OG-tags; de gebruiker wordt automatisch geredirect naar `https://txeventshare.nl/e/[slug]`
+- **Geen zichtbare URL in het WhatsApp-bericht**: alleen de link, geen tekst erboven
 
-4. Publicatiegedrag meenemen
-- Frontend-wijzigingen opnieuw publiceren, omdat juist deze statische eventpagina’s pas live zijn na een frontend update
-- Daarna live verifiëren dat `https://txeventshare.nl/e/[slug]` de event-specifieke metadata serveert
+**3. WhatsApp-berichttekst opschonen**
+- WhatsApp stuurt alleen de edge function URL als bericht (geen tekst erbij)
+- WhatsApp toont automatisch een preview-kaart met titel, afbeelding en beschrijving uit de OG-tags
+- De gebruiker ziet alleen de preview-kaart, geen technische URL of extra tekst
 
-5. Eindcontrole
-- Testen dat:
-  - `/e/[slug]` werkt als hoofd-URL
-  - `/e/[slug]/index.html` niet meer fout loopt
-  - de preview niet terugvalt op TX EventShare algemene info
-  - WhatsApp alleen de schone event-URL gebruikt
+**4. Vite-plugin kan blijven** als SEO-bonus voor zoekmachines, maar is niet meer de primaire share-methode
 
-Technische details
+### Resultaat na implementatie
 
-- Bestand dat nu de statische pagina’s maakt: `vite-plugin-og-pages.ts`
-- Huidige publieke eventroute: `src/App.tsx` met `/e/:slug`
-- Kernpunt: `dist/e/[slug]/index.html` is een build-artifact; de juiste publieke URL blijft `/e/[slug]`
-- Dus: als `/e/[slug]/index.html` nu 404 geeft, betekent dat niet automatisch dat de hoofdoplossing fout is — maar ik ga het wel afvangen zodat beide paden netjes uitkomen
+- WhatsApp toont: event-afbeelding (1200x630), event-titel, event-beschrijving met datum/tijd/locatie
+- Geen zichtbare URL in het bericht
+- Klikken op de preview opent `https://txeventshare.nl/e/[slug]`
+- Werkt direct na deploy (geen frontend-publish nodig)
 
-Concrete uitkomst na implementatie
+### Technische details
 
-- Schone publieke event-URL: `https://txeventshare.nl/e/[slug]`
-- Event-specifieke OG-data op live domein
-- Geen afhankelijkheid van zichtbare backend-URL’s
-- Geen 404 meer wanneer iemand toch de `index.html`-variant opent
+- Edge Function URL-formaat: `https://ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/og-proxy?slug={slug}`
+- De functie retourneert HTML met `<meta http-equiv="refresh">` en JS redirect naar canonical URL
+- Afbeelding wordt via storage transforms geoptimaliseerd naar 1200x630
+- Bestanden die gewijzigd worden: `src/pages/DistributionPage.tsx`, `src/components/distribution/ChannelBar.tsx`, `supabase/functions/og-proxy/index.ts` (minor fix)
+
