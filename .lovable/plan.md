@@ -1,42 +1,42 @@
 
 
-## Kernprobleem
+# Bug analyse — WhatsApp preview werkt niet
 
-Lovable hosting gebruikt een SPA-fallback: alle routes (`/e/[slug]`, `/s/[slug].html`) serveren altijd de generieke `index.html`. De statische HTML-bestanden die het Vite-plugin genereert worden nooit door WhatsApp-crawlers gezien. Dit is een platformbeperking die niet te omzeilen is met build-time bestanden.
+## Fout
+WhatsApp toont geen afbeelding, verkeerde tekst en een zichtbare technische URL in plaats van een schone previewkaart.
 
-## Definitieve oplossing: Edge Function als share-URL
+## Vermoedelijke root cause
+De `og-proxy` Edge Function retourneert de HTML correct, maar de Supabase edge runtime overschrijft de `Content-Type` header naar `text/plain` en voegt `Content-Security-Policy: default-src 'none'; sandbox` toe. WhatsApp's crawler parseert geen OG-tags uit `text/plain` responses — het vereist `text/html`.
 
-De `og-proxy` Edge Function bestaat al in de code maar is **niet gedeployed** (404). Deze functie doet precies wat nodig is: event ophalen uit de database, HTML met correcte OG-tags retourneren, en de gebruiker doorsturen naar de schone URL.
+Bewijs uit mijn test:
+```text
+Response headers van og-proxy:
+  Content-Type: text/plain          ← FOUT, moet text/html zijn
+  Content-Security-Policy: default-src 'none'; sandbox  ← Blokkeert crawlers
+```
 
-### Stappen
+De HTML-inhoud zelf is perfect (correcte og:title, og:image, og:description met datum/tijd/locatie), maar WhatsApp ziet het niet als HTML.
 
-**1. Deploy og-proxy Edge Function**
-- Deployen van `supabase/functions/og-proxy/index.ts`
-- Testen met curl dat de functie correcte HTML met OG-tags retourneert
+## Betrokken files
+- `supabase/functions/og-proxy/index.ts` — de Response headers worden overschreven door de runtime
 
-**2. WhatsApp share-URL wijzigen naar Edge Function**
-- In `DistributionPage.tsx`: `previewShareUrl` wijzigen van `https://txeventshare.nl/s/[slug].html` naar de edge function URL: `https://ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/og-proxy?slug=[slug]`
-- In `ChannelBar.tsx`: WhatsApp stuurt alleen de `previewShareUrl` (de edge function URL). De crawler ziet de OG-tags; de gebruiker wordt automatisch geredirect naar `https://txeventshare.nl/e/[slug]`
-- **Geen zichtbare URL in het WhatsApp-bericht**: alleen de link, geen tekst erboven
+## Buiten scope
+- `DistributionPage.tsx` — logica is correct (stuurt ogProxyUrl naar WhatsApp)
+- `ChannelBar.tsx` — logica is correct (stuurt alleen URL)
+- Alle andere componenten, styling, routes
 
-**3. WhatsApp-berichttekst opschonen**
-- WhatsApp stuurt alleen de edge function URL als bericht (geen tekst erbij)
-- WhatsApp toont automatisch een preview-kaart met titel, afbeelding en beschrijving uit de OG-tags
-- De gebruiker ziet alleen de preview-kaart, geen technische URL of extra tekst
+## Minimale fix
 
-**4. Vite-plugin kan blijven** als SEO-bonus voor zoekmachines, maar is niet meer de primaire share-methode
+De Supabase edge runtime overschrijft headers bij bepaalde response-patronen. De fix is om de Response te construeren op een manier die de runtime respecteert:
 
-### Resultaat na implementatie
+1. **Gebruik `new Response()` met een `Headers` object** in plaats van een plain object — sommige edge runtime versies behandelen dit anders
+2. **Voeg een expliciete `X-Content-Type-Options: nosniff` header toe** om te voorkomen dat de runtime het content-type wijzigt
+3. **Test na deploy** met `curl -I` om te verifiëren dat `Content-Type: text/html` daadwerkelijk wordt geretourneerd
+4. **Als de runtime het blijft overschrijven**: migreer naar een `new Response(readable_stream, ...)` patroon, of gebruik een alternatieve serve-methode (`Deno.serve` i.p.v. de `std/http/server` `serve`)
 
-- WhatsApp toont: event-afbeelding (1200x630), event-titel, event-beschrijving met datum/tijd/locatie
-- Geen zichtbare URL in het bericht
-- Klikken op de preview opent `https://txeventshare.nl/e/[slug]`
-- Werkt direct na deploy (geen frontend-publish nodig)
-
-### Technische details
-
-- Edge Function URL-formaat: `https://ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/og-proxy?slug={slug}`
-- De functie retourneert HTML met `<meta http-equiv="refresh">` en JS redirect naar canonical URL
-- Afbeelding wordt via storage transforms geoptimaliseerd naar 1200x630
-- Bestanden die gewijzigd worden: `src/pages/DistributionPage.tsx`, `src/components/distribution/ChannelBar.tsx`, `supabase/functions/og-proxy/index.ts` (minor fix)
+## Verificatie
+1. Deploy de aangepaste og-proxy
+2. Test met `curl -I` dat `Content-Type: text/html` wordt geretourneerd
+3. Test de og-proxy URL in de WhatsApp link preview debugger of door een nieuw bericht te sturen
+4. Bevestig dat de previewkaart verschijnt met afbeelding, titel en beschrijving
 
