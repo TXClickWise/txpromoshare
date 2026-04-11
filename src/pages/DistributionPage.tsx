@@ -120,7 +120,7 @@ export default function DistributionPage() {
   }
 
   const publicShareUrl = `https://txeventshare.nl/e/${event.slug}`;
-  const previewShareUrl = `https://txeventshare.nl/s/${event.slug}.html`;
+  const ogProxyUrl = `https://ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/og-proxy?slug=${encodeURIComponent(event.slug)}`;
   const dateStr = new Date(event.start_date).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" });
   const timeStr = event.start_time?.slice(0, 5) || "";
   const venueName = venue?.name || "Locatie volgt";
@@ -226,7 +226,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
     }
   };
 
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(previewShareUrl)}`;
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(ogProxyUrl)}`;
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -269,7 +269,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
         <ChannelBar
           shareUrl={publicShareUrl}
-          previewShareUrl={previewShareUrl}
+          previewShareUrl={ogProxyUrl}
           whatsappText={getText("whatsapp")}
           socialText={getText("instagram")}
           eventTitle={event.title}
