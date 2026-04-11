@@ -455,7 +455,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
       <QRCodeDialog
         open={showQR}
         onOpenChange={setShowQR}
-        url={shareUrl}
+        url={publicShareUrl}
         eventTitle={event.title}
       />
     </div>
