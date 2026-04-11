@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 interface ChannelBarProps {
   shareUrl: string;
+  previewShareUrl?: string;
   whatsappText: string;
   socialText: string;
   eventTitle: string;
@@ -33,18 +34,20 @@ async function nativeShareWithImage(text: string, imageUrl?: string) {
   toast.success("Tekst gekopieerd — plak in de app");
 }
 
-export function ChannelBar({ shareUrl, whatsappText, socialText, eventTitle, eventImageUrl, onChannelClick, onShowQR }: ChannelBarProps) {
+export function ChannelBar({ shareUrl, previewShareUrl, whatsappText, socialText, eventTitle, eventImageUrl, onChannelClick, onShowQR }: ChannelBarProps) {
   const handleClick = (channelId: string) => {
+    const resolvedPreviewUrl = previewShareUrl || shareUrl;
+
     switch (channelId) {
       case "link":
         navigator.clipboard.writeText(shareUrl);
         toast.success("Link gekopieerd naar klembord");
         break;
       case "whatsapp":
-        window.open(`https://wa.me/?text=${encodeURIComponent(whatsappText)}`, "_blank");
+        window.open(`https://wa.me/?text=${encodeURIComponent(resolvedPreviewUrl)}`, "_blank");
         break;
       case "facebook":
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(socialText)}`, "_blank");
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(resolvedPreviewUrl)}&quote=${encodeURIComponent(socialText)}`, "_blank");
         break;
       case "instagram":
         nativeShareWithImage(socialText, eventImageUrl);
