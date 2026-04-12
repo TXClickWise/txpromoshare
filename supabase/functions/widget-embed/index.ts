@@ -161,16 +161,9 @@ function generateEmbedScript(payload: any): string {
     let shareHtml = "";
     if (showShare) {
       // Single clean public URL — no backend/og-proxy URLs in message
-      const eventPageUrl = "https://ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/og-proxy?slug=" + encodeURIComponent(e.slug);
+      const eventPageUrl = "https://txeventshare.nl/e/" + encodeURIComponent(e.slug) + "/index.html";
 
-      // Simple visitor WhatsApp text with one link only
-      const visitorLines = [
-        "Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?",
-        "",
-        eventPageUrl,
-      ];
-
-      const visitorText = encodeURIComponent(visitorLines.join("\n"));
+      const visitorText = encodeURIComponent(eventPageUrl);
       const shareUrl = encodeURIComponent(eventPageUrl);
       const clipboardJs = 'navigator.clipboard.writeText(decodeURIComponent(\\x27' + visitorText + '\\x27)).then(function(){alert(\\x27Tekst gekopieerd! Plak in Instagram, TikTok of Google.\\x27)})';
       const imgIcon = 'width:36px;height:36px;border-radius:50%;object-fit:cover;';
