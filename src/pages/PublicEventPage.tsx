@@ -107,7 +107,8 @@ export default function PublicEventPage() {
   }, [slug]);
 
   const publicEventUrl = `https://txeventshare.nl/e/${slug}`;
-  const previewShareUrl = `https://txeventshare.nl/e/${slug}/index.html`;
+ const cacheBuster = Math.floor(Date.now() / 60000); // refreshes every minute
+ const previewShareUrl = `https://txeventshare.nl/e/${slug}/index.html?v=${cacheBuster}`;
   const heroImg = featuredImageUrl || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop";
 
   useSEO(
@@ -145,7 +146,7 @@ export default function PublicEventPage() {
   const ctaText = event.cta_button_text || "Meer info";
   const shareText = `${event.title} — ${formatDate(event.start_date)} om ${formatTime(event.start_time)}${venueName ? ` bij ${venueName}` : ""}. Bekijk alle details van dit evenement.`;
 
-  const visitorWhatsappText = previewShareUrl;
+ const visitorWhatsappText = `Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?\n\n${previewShareUrl}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(publicEventUrl);
