@@ -163,7 +163,7 @@ function generateEmbedScript(payload: any): string {
       // Single clean public URL — no backend/og-proxy URLs in message
       const eventPageUrl = "https://txeventshare.nl/e/" + encodeURIComponent(e.slug) + "/index.html";
 
-      const visitorText = encodeURIComponent(eventPageUrl);
+      const visitorText = encodeURIComponent("Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?\n\n" + eventPageUrl);
       const shareUrl = encodeURIComponent(eventPageUrl);
       const clipboardJs = 'navigator.clipboard.writeText(decodeURIComponent(\\x27' + visitorText + '\\x27)).then(function(){alert(\\x27Tekst gekopieerd! Plak in Instagram, TikTok of Google.\\x27)})';
       const imgIcon = 'width:36px;height:36px;border-radius:50%;object-fit:cover;';
