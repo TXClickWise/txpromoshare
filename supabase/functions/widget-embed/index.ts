@@ -161,7 +161,8 @@ function generateEmbedScript(payload: any): string {
     let shareHtml = "";
     if (showShare) {
       // Single clean public URL — no backend/og-proxy URLs in message
-      const eventPageUrl = "https://txeventshare.nl/e/" + encodeURIComponent(e.slug) + "/index.html";
+      const cacheBuster = Math.floor(Date.now() / 60000);
+      const eventPageUrl = "https://txeventshare.nl/e/" + encodeURIComponent(e.slug) + "/index.html?v=" + cacheBuster;
 
       const visitorText = encodeURIComponent("Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?\n\n" + eventPageUrl);
       const shareUrl = encodeURIComponent(eventPageUrl);
