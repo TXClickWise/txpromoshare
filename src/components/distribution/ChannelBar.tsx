@@ -44,11 +44,12 @@ export function ChannelBar({ shareUrl, previewShareUrl, whatsappText, socialText
         toast.success("Link gekopieerd naar klembord");
         break;
       case "whatsapp": {
-        const waText = `Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?\n\n${resolvedPreviewUrl}`;
+        const cacheBuster = Math.floor(Date.now() / 60000);
+        const waUrl = resolvedPreviewUrl.includes('?') ? `${resolvedPreviewUrl}&v=${cacheBuster}` : `${resolvedPreviewUrl}?v=${cacheBuster}`;
+        const waText = `Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?\n\n${waUrl}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(waText)}`, "_blank");
         break;
       }
-        break;
       case "facebook":
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(resolvedPreviewUrl)}&quote=${encodeURIComponent(socialText)}`, "_blank");
         break;
