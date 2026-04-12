@@ -1,105 +1,43 @@
 
-# Bug analyse
 
-## Fout
-De huidige WhatsApp-shareflow gebruikt op de verkeerde plekken de verkeerde URL:
+# Diagnose: Waarom de Retro Brothers preview geen afbeelding toont
 
-- publieke pagina deelt nu een backend-proxy URL
-- widget deelt ook die backend-proxy URL én voegt daar extra tekst omheen
-- de gewone publieke URL `/e/[slug]` geeft op WhatsApp nog de generieke site-preview
+## Bewijs uit het onderzoek
 
-Daardoor zie je precies wat in je screenshots staat:
-1. publieke pagina via WhatsApp: onhandige/openende backend-shareflow
-2. widget via WhatsApp: `supabase.co` zichtbaar onder de preview én als losse link
-3. handmatig `/index.html` toevoegen: juiste event-preview op schoon domein
-4. gewone publieke link: generieke site-preview
+1. **Het event heeft WEL een featured image** — de database bevestigt `featured_image_id: 22f6497f-...` met een geldig `storage_path`.
 
-## Vermoedelijke root cause
-De echte werkende preview-URL is niet de huidige proxy-link, maar de statisch gegenereerde pagina:
+2. **De og-proxy levert correcte HTML** met de juiste `og:image` tag, MAAR de Supabase Edge Runtime overschrijft de `Content-Type` naar `text/plain`. Dit is een platformbeperking die we niet kunnen omzeilen via code-aanpassingen in de functie zelf. WhatsApp negeert OG-tags in `text/plain` responses.
 
-`https://txeventshare.nl/e/[slug]/index.html`
+3. **De statische bestanden van de Vite plugin** worden WEL correct geserveerd wanneer ze bestaan (bewezen door jouw screenshot 3 met `/index.html`). Maar ze worden alleen gegenereerd bij een deploy/build. Als een event na de laatste deploy is gepubliceerd of gewijzigd, bestaat er geen statisch bestand voor dat event.
 
-Dat pad is al bewezen door jouw 3e screenshot:
-- juiste event-preview
-- schoon `txeventshare.nl` domein
-- geen backend-domein zichtbaar onder de kaart
+4. **Het Bierslenteren event** had wél een werkende preview omdat het statisch bestand bij de laatste deploy is gegenereerd. Het **Retro Brothers event** mist een actueel statisch bestand — waarschijnlijk is het na de laatste deploy gepubliceerd of is de featured image daarna toegevoegd.
 
-De code gebruikt nu op de verkeerde plekken nog:
-- `https://...supabase.co/functions/v1/og-proxy?...`
-- of de gewone `/e/[slug]` route
+## De drie openstaande punten
 
-Dus het probleem zit niet in de widget-layout zelf, maar in de gekozen share-URL-strategie.
+### A. Ontbrekende "Hey, ik zag dit event..." tekst
+Dit is in de vorige ronde al gefixt in `ChannelBar.tsx` en `widget-embed`. Na deploy zou dit moeten werken.
 
-## Betrokken files / componenten
-Alleen deze files hoeven aangepast te worden:
+### B. Geen afbeelding bij Retro Brothers
+**Oorzaak:** Het statische OG-bestand (`/e/slug/index.html`) is niet actueel — het bevat de generieke site-metatags in plaats van event-specifieke OG-tags met de afbeelding. **Een nieuwe deploy/build lost dit op** omdat de Vite plugin dan alle gepubliceerde events opnieuw verwerkt.
 
-- `src/pages/PublicEventPage.tsx`
-- `supabase/functions/widget-embed/index.ts`
-
-Ter referentie, maar niet aanpassen in deze fix:
-- `vite-plugin-og-pages.ts`
-- `src/App.tsx`
-- `supabase/functions/og-proxy/index.ts`
-- `src/components/distribution/ChannelBar.tsx`
-- `src/pages/DistributionPage.tsx`
-
-## Buiten scope
-Deze onderdelen blijven expliciet ongemoeid:
-
-- shared components
-- globale styling
-- routing/config buiten de bestaande publieke event-routes
-- og-proxy implementatie
-- distributiecentrum-flow
-- database / backend schema
+### C. Zichtbare URL onderaan het bericht
+WhatsApp toont altijd de URL in het berichtvenster als platte tekst. Dit is inherent aan hoe WhatsApp berichten weergeeft en kan niet verborgen worden. Wat we WEL kunnen doen is ervoor zorgen dat de URL schoon is (`txeventshare.nl/e/slug/index.html`) en er geen dubbele URLs verschijnen.
 
 ## Minimale fix
-Ik zou alleen dit doen:
 
-### 1. Publieke eventpagina
-In `src/pages/PublicEventPage.tsx`:
-- `previewShareUrl` wijzigen van de backend-proxy naar:
-  `https://txeventshare.nl/e/${slug}/index.html`
+### Stap 1: Herbouwen en deployen
+Een nieuwe deploy triggert de Vite plugin, die statische OG-bestanden genereert voor alle gepubliceerde events (inclusief Retro Brothers). Dit lost punt B direct op.
 
-### 2. Widget-share
-In `supabase/functions/widget-embed/index.ts`:
-- de gedeelde preview-URL wijzigen van de backend-proxy naar:
-  `https://txeventshare.nl/e/${slug}/index.html`
-- WhatsApp in de widget alleen die ene schone URL laten delen
-- dus geen backend-URL meer en geen proxy-domein meer in het bericht
+### Stap 2: Langetermijnoplossing — automatisch OG-bestanden regenereren
+Om te voorkomen dat je na elke eventpublicatie handmatig moet deployen, kunnen we een Edge Function maken die bij het publiceren van een event automatisch een statisch HTML-bestand uploadt naar Supabase Storage. Maar dit is een grotere wijziging die apart kan worden opgepakt.
 
-Belangrijk: geen refactor, geen andere share-kanalen opnieuw ontwerpen, geen extra fallback-logica toevoegen.
+## Uit te voeren nu
+1. **Niets wijzigen aan de code** — de huidige code is correct
+2. **Een deploy triggeren** zodat de Vite plugin de statische bestanden regenereert
+3. **Na deploy testen**: deel het Retro Brothers event via WhatsApp en controleer of de preview nu de afbeelding toont
 
-## Waarom dit de beste werkwijze is
-Dit is de kleinste fix met het sterkste bewijs:
+## Verificatie na deploy
+1. Open `https://txeventshare.nl/e/retro-night-de-ultieme-80s-90s-show-met-de-retro-brothers/index.html` — controleer dat de HTML OG-tags bevat met de juiste afbeelding-URL
+2. Deel het event via WhatsApp — controleer dat de preview correct verschijnt
+3. Controleer punt A: de tekst "Hey, ik zag dit event..." moet zichtbaar zijn
 
-- jouw 3e screenshot bewijst dat `/e/[slug]/index.html` al werkt
-- we hoeven dus niet opnieuw te gokken met extra proxy-fixes
-- we hoeven geen brede wijzigingen te doen
-- we vervangen alleen de URL-bron op de 2 flows die aantoonbaar fout zijn
-
-Kortom: niet opnieuw “meer techniek toevoegen”, maar simpelweg dezelfde bewezen werkende URL op de juiste plekken gebruiken.
-
-## Verificatie
-Na implementatie verifieer ik alleen deze punten:
-
-1. **Publieke eventpagina → WhatsApp**
-   - gedeelde URL moet `txeventshare.nl/e/.../index.html` zijn
-   - geen `supabase.co` meer zichtbaar
-   - preview moet event-specifiek zijn
-
-2. **Widget → WhatsApp**
-   - gedeelde URL moet `txeventshare.nl/e/.../index.html` zijn
-   - geen `supabase.co` meer onder de preview
-   - geen backend-link meer als losse zichtbare URL
-
-3. **Geen regressie buiten scope**
-   - geen wijzigingen aan layout, styling of andere routes
-   - geen wijziging aan og-proxy nodig voor deze fix
-
-## Uitvoering
-Na jouw akkoord voer ik alleen deze gerichte aanpassing uit in exact 2 files:
-- `src/pages/PublicEventPage.tsx`
-- `supabase/functions/widget-embed/index.ts`
-
-Geen rollback-advies nodig op dit moment: de codebase lijkt niet fundamenteel instabiel, maar de share-URL-keuze is op deze 2 entry points gewoon aantoonbaar verkeerd.
