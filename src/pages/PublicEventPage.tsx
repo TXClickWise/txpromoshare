@@ -107,7 +107,7 @@ export default function PublicEventPage() {
   }, [slug]);
 
   const publicEventUrl = `https://txeventshare.nl/e/${slug}`;
-  const previewShareUrl = `https://txeventshare.nl/s/${slug}.html`;
+  const previewShareUrl = `https://ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/og-proxy?slug=${slug}`;
   const heroImg = featuredImageUrl || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop";
 
   useSEO(
