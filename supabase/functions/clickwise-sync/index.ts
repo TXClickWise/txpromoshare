@@ -53,10 +53,18 @@ function clampGhlEndTime(startISO: string, endISO: string): string {
 }
 
 function addHours(isoStr: string, hours: number): string {
-  const d = new Date(isoStr);
-  d.setTime(d.getTime() + hours * 3600000);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}+02:00`;
+  // Parse the time components directly to avoid UTC conversion issues
+  const match = isoStr.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  if (!match) return isoStr;
+  const [, datePart, hStr, mStr, sStr] = match;
+  let h = parseInt(hStr, 10) + hours;
+  const m = mStr;
+  const s = sStr;
+  // If hours overflow past 23, clamp to 23:55 same day
+  if (h >= 24) {
+    return `${datePart}T23:55:00+02:00`;
+  }
+  return `${datePart}T${String(h).padStart(2, "0")}:${m}:${s}+02:00`;
 }
 
 async function callGHL(endpoint: string, apiKey: string, body: Record<string, unknown>, method = "POST"): Promise<{ status: number; body: string; ok: boolean }> {
