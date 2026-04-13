@@ -53,10 +53,18 @@ function clampGhlEndTime(startISO: string, endISO: string): string {
 }
 
 function addHours(isoStr: string, hours: number): string {
-  const d = new Date(isoStr);
-  d.setTime(d.getTime() + hours * 3600000);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}+02:00`;
+  // Parse the time components directly to avoid UTC conversion issues
+  const match = isoStr.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  if (!match) return isoStr;
+  const [, datePart, hStr, mStr, sStr] = match;
+  let h = parseInt(hStr, 10) + hours;
+  const m = mStr;
+  const s = sStr;
+  // If hours overflow past 23, clamp to 23:55 same day
+  if (h >= 24) {
+    return `${datePart}T23:55:00+02:00`;
+  }
+  return `${datePart}T${String(h).padStart(2, "0")}:${m}:${s}+02:00`;
 }
 
 async function callGHL(endpoint: string, apiKey: string, body: Record<string, unknown>, method = "POST"): Promise<{ status: number; body: string; ok: boolean }> {
@@ -405,7 +413,7 @@ Deno.serve(async (req) => {
         // === 1. Contact upsert (unique per event) ===
         const contactBody = {
           locationId: subaccountId,
-          email: `event-${eventRow.slug}@${tenant_id}.txeventshare.local`,
+          email: `event-${event_id}@txeventshare.local`,
           name: eventRow.title,
           tags: ["tx-eventshare", `tx-${event_type.replace(".", "-")}`, `tx-event-${eventRow.slug}`],
           customFields: [
@@ -445,8 +453,11 @@ Deno.serve(async (req) => {
         let endTime: string;
         if (eventRow.end_date && eventRow.end_time) {
           endTime = buildISODateTime(eventRow.end_date, eventRow.end_time);
-        } else if (eventRow.end_date) {
+        } else if (eventRow.end_date && eventRow.end_date > eventRow.start_date) {
           endTime = buildISODateTime(eventRow.end_date, eventRow.start_time);
+        } else if (eventRow.end_date) {
+          // end_date === start_date without end_time → default to +1 hour
+          endTime = addHours(startTime, 1);
         } else if (eventRow.end_time) {
           // end_time without end_date — check if it crosses midnight
           const endDate = eventRow.end_time < eventRow.start_time
