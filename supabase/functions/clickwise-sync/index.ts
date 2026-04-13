@@ -445,8 +445,11 @@ Deno.serve(async (req) => {
         let endTime: string;
         if (eventRow.end_date && eventRow.end_time) {
           endTime = buildISODateTime(eventRow.end_date, eventRow.end_time);
-        } else if (eventRow.end_date) {
+        } else if (eventRow.end_date && eventRow.end_date > eventRow.start_date) {
           endTime = buildISODateTime(eventRow.end_date, eventRow.start_time);
+        } else if (eventRow.end_date) {
+          // end_date === start_date without end_time → default to +1 hour
+          endTime = addHours(startTime, 1);
         } else if (eventRow.end_time) {
           // end_time without end_date — check if it crosses midnight
           const endDate = eventRow.end_time < eventRow.start_time
