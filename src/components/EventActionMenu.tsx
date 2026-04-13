@@ -157,6 +157,11 @@ export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefr
             <RotateCcw className="w-4 h-4 mr-2" />Opnieuw publiceren
           </DropdownMenuItem>
         )}
+        {status === "published" && (
+          <DropdownMenuItem onClick={(e) => { e.preventDefault(); unpublishEvent(); }}>
+            <EyeOff className="w-4 h-4 mr-2" />Depubliceren
+          </DropdownMenuItem>
+        )}
         {status !== "archived" && (
           <DropdownMenuItem onClick={(e) => { e.preventDefault(); archiveEvent(); }}>
             <Archive className="w-4 h-4 mr-2" />Archiveren
