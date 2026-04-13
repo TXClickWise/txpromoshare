@@ -1,4 +1,4 @@
-import { MoreHorizontal, Copy, Share2, Archive, Trash2, Eye, Pencil, ExternalLink, RotateCcw } from "lucide-react";
+import { MoreHorizontal, Copy, Share2, Archive, Trash2, Eye, EyeOff, Pencil, ExternalLink, RotateCcw } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -99,8 +99,23 @@ export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefr
     onRefresh?.();
   }
 
+  async function unpublishEvent() {
+    const { error } = await supabase.from("events").update({ status: "draft" }).eq("id", eventId);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`"${eventTitle}" gedepubliceerd (terug naar concept)`);
+    if (tenantId) {
+      logAudit({ tenantId, entityType: "event", action: "unpublished", entityId: eventId });
+      triggerClickWiseSync(tenantId, "event.ended", eventId, { title: eventTitle });
+    }
+    onRefresh?.();
+  }
+
   async function deleteEvent() {
     if (!confirm(`Weet je zeker dat je "${eventTitle}" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.`)) return;
+    // Trigger ClickWise delete sync BEFORE deleting the event from the database
+    if (tenantId) {
+      await triggerClickWiseSync(tenantId, "event.deleted", eventId, { title: eventTitle });
+    }
     const { error } = await supabase.from("events").delete().eq("id", eventId);
     if (error) { toast.error(error.message); return; }
     toast.success(`"${eventTitle}" verwijderd`);
@@ -140,6 +155,11 @@ export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefr
         {(status === "archived" || status === "ended") && (
           <DropdownMenuItem onClick={(e) => { e.preventDefault(); republishEvent(); }}>
             <RotateCcw className="w-4 h-4 mr-2" />Opnieuw publiceren
+          </DropdownMenuItem>
+        )}
+        {status === "published" && (
+          <DropdownMenuItem onClick={(e) => { e.preventDefault(); unpublishEvent(); }}>
+            <EyeOff className="w-4 h-4 mr-2" />Depubliceren
           </DropdownMenuItem>
         )}
         {status !== "archived" && (

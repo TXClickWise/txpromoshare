@@ -377,6 +377,135 @@ Deno.serve(async (req) => {
     const subaccountId = connection.subaccount_id;
 
     switch (event_type) {
+      case "event.deleted": {
+        if (!event_id) {
+          return new Response(JSON.stringify({ error: "event_id required for delete sync" }), {
+            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Find the GHL contact by email pattern
+        const deleteEmail = `event-${event_id}@txeventshare.local`;
+        const contactSearchResult = await callGHL(
+          `${CLICKWISE_API_URL}/contacts/lookup?email=${encodeURIComponent(deleteEmail)}&locationId=${subaccountId}`,
+          apiKey,
+          {},
+          "GET",
+        );
+
+        let deletedContact = false;
+        let deletedAppointments = 0;
+        let ghlContactId: string | null = null;
+
+        if (contactSearchResult.ok) {
+          try {
+            const searchJson = JSON.parse(contactSearchResult.body);
+            // GHL lookup returns { contacts: [...] }
+            const contacts = searchJson?.contacts || [];
+            if (contacts.length > 0) {
+              ghlContactId = contacts[0].id;
+            }
+          } catch { /* */ }
+        }
+
+        // Also try to find contact ID from previous sync logs
+        if (!ghlContactId) {
+          const { data: prevLogs } = await supabase
+            .from("integration_events")
+            .select("payload")
+            .eq("connection_id", connection_id)
+            .eq("event_id", event_id)
+            .eq("event_type", "event.calendar_sync")
+            .eq("status", "success")
+            .order("attempted_at", { ascending: false })
+            .limit(5);
+
+          if (prevLogs) {
+            for (const log of prevLogs) {
+              const p = log.payload as any;
+              if (p?.contactId) { ghlContactId = p.contactId; break; }
+            }
+          }
+        }
+
+        // Delete appointments linked to this contact
+        if (ghlContactId) {
+          // Find all appointment IDs from sync logs
+          const { data: apptLogs } = await supabase
+            .from("integration_events")
+            .select("payload")
+            .eq("connection_id", connection_id)
+            .eq("event_id", event_id)
+            .in("event_type", ["event.calendar_sync", "event.occurrence_sync"])
+            .eq("status", "success")
+            .order("attempted_at", { ascending: false })
+            .limit(50);
+
+          const appointmentIds = new Set<string>();
+          if (apptLogs) {
+            for (const log of apptLogs) {
+              const p = log.payload as any;
+              if (p?.ghl_appointment_id) appointmentIds.add(p.ghl_appointment_id);
+            }
+          }
+
+          // Delete each appointment
+          for (const apptId of appointmentIds) {
+            const delResult = await fetch(
+              `${CLICKWISE_API_URL}/calendars/events/appointments/${apptId}`,
+              {
+                method: "DELETE",
+                headers: {
+                  "Authorization": `Bearer ${apiKey}`,
+                  "Version": "2021-07-28",
+                },
+              },
+            );
+            if (delResult.ok || delResult.status === 404) deletedAppointments++;
+            else console.error("Failed to delete appointment", apptId, delResult.status);
+          }
+
+          // Delete the contact
+          const contactDelResult = await fetch(
+            `${CLICKWISE_API_URL}/contacts/${ghlContactId}`,
+            {
+              method: "DELETE",
+              headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Version": "2021-07-28",
+              },
+            },
+          );
+          deletedContact = contactDelResult.ok || contactDelResult.status === 404;
+          if (!contactDelResult.ok && contactDelResult.status !== 404) {
+            console.error("Failed to delete contact", ghlContactId, contactDelResult.status);
+          }
+        }
+
+        await supabase.from("integration_events").insert({
+          connection_id, event_id, event_type: "event.deleted",
+          status: deletedContact || !ghlContactId ? "success" : "failed",
+          payload: {
+            ghl_contact_id: ghlContactId,
+            contact_deleted: deletedContact,
+            appointments_deleted: deletedAppointments,
+          } as any,
+          response_status: deletedContact ? 200 : 0,
+        });
+
+        await supabase
+          .from("integration_connections")
+          .update({ last_sync_at: new Date().toISOString() })
+          .eq("id", connection_id);
+
+        return new Response(JSON.stringify({
+          success: true,
+          contact_deleted: deletedContact,
+          appointments_deleted: deletedAppointments,
+        }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       case "event.published":
       case "event.updated":
       case "event.ended": {
@@ -431,10 +560,10 @@ Deno.serve(async (req) => {
 
         const contactResult = await callGHL(`${CLICKWISE_API_URL}/contacts/upsert`, apiKey, contactBody);
 
-        let ghlContactId: string | null = null;
+        let ghlContactId2: string | null = null;
         try {
           const contactJson = JSON.parse(contactResult.body);
-          ghlContactId = contactJson?.contact?.id || null;
+          ghlContactId2 = contactJson?.contact?.id || null;
         } catch { /* */ }
 
         const contactLogPayload: Record<string, unknown> = { ...contactBody };
@@ -456,10 +585,8 @@ Deno.serve(async (req) => {
         } else if (eventRow.end_date && eventRow.end_date > eventRow.start_date) {
           endTime = buildISODateTime(eventRow.end_date, eventRow.start_time);
         } else if (eventRow.end_date) {
-          // end_date === start_date without end_time → default to +1 hour
           endTime = addHours(startTime, 1);
         } else if (eventRow.end_time) {
-          // end_time without end_date — check if it crosses midnight
           const endDate = eventRow.end_time < eventRow.start_time
             ? new Date(new Date(eventRow.start_date + "T00:00:00").getTime() + 86400000).toISOString().split("T")[0]
             : eventRow.start_date;
@@ -478,15 +605,15 @@ Deno.serve(async (req) => {
           eventRow.social_share_text ? `📣 Social: ${eventRow.social_share_text}` : "",
         ].filter(Boolean).join("\n");
 
-        let calResult = { ok: true, appointmentId: undefined as string | undefined };
-        if (ghlContactId) {
+        let calResult = { ok: true, appointmentId: undefined as string | undefined, calendarInactive: false };
+        if (ghlContactId2) {
           calResult = await syncAppointment(supabase, {
             apiKey,
             calendarId,
             subaccountId: subaccountId!,
             connectionId: connection_id,
             eventId: event_id,
-            contactId: ghlContactId,
+            contactId: ghlContactId2,
             title: eventRow.title,
             startTime,
             endTime,
@@ -511,7 +638,7 @@ Deno.serve(async (req) => {
         let occurrenceSyncCount = 0;
         let occurrenceFailCount = 0;
         const shouldSyncOccurrences = event_type === "event.published" || event_type === "event.ended";
-        if (eventRow.is_recurring && ghlContactId && shouldSyncOccurrences) {
+        if (eventRow.is_recurring && ghlContactId2 && shouldSyncOccurrences) {
           const { data: occurrences } = await supabase
             .from("event_occurrences")
             .select("*")
@@ -545,7 +672,7 @@ Deno.serve(async (req) => {
                 subaccountId: subaccountId!,
                 connectionId: connection_id,
                 eventId: event_id,
-                contactId: ghlContactId,
+                contactId: ghlContactId2,
                 title: occTitle,
                 startTime: occStart,
                 endTime: occEnd,

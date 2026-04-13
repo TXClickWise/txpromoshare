@@ -4,6 +4,7 @@ const RULE_MAP: Record<string, string> = {
   "event.published": "event_published",
   "event.updated": "event_updated",
   "event.ended": "event_ended",
+  "event.deleted": "event_deleted",
 };
 
 /**
@@ -13,7 +14,7 @@ const RULE_MAP: Record<string, string> = {
  */
 export async function triggerClickWiseSync(
   tenantId: string,
-  eventType: "event.published" | "event.updated" | "event.ended",
+  eventType: "event.published" | "event.updated" | "event.ended" | "event.deleted",
   eventId: string,
   eventData?: Record<string, unknown>,
 ) {
