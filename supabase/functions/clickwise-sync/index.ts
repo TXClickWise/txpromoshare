@@ -405,7 +405,7 @@ Deno.serve(async (req) => {
         // === 1. Contact upsert (unique per event) ===
         const contactBody = {
           locationId: subaccountId,
-          email: `event-${eventRow.slug}@${tenant_id}.txeventshare.local`,
+          email: `event-${event_id}@txeventshare.local`,
           name: eventRow.title,
           tags: ["tx-eventshare", `tx-${event_type.replace(".", "-")}`, `tx-event-${eventRow.slug}`],
           customFields: [
