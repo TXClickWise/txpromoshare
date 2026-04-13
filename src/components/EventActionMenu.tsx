@@ -1,4 +1,4 @@
-import { MoreHorizontal, Copy, Share2, Archive, Trash2, Eye, Pencil, ExternalLink, RotateCcw } from "lucide-react";
+import { MoreHorizontal, Copy, Share2, Archive, Trash2, Eye, EyeOff, Pencil, ExternalLink, RotateCcw } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
