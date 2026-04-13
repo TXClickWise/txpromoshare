@@ -429,10 +429,14 @@ Deno.serve(async (req) => {
           ghlContactId = contactJson?.contact?.id || null;
         } catch { /* */ }
 
+        const contactLogPayload: Record<string, unknown> = { ...contactBody };
+        if (!contactResult.ok) {
+          contactLogPayload._ghl_response = contactResult.body;
+        }
         await supabase.from("integration_events").insert({
           connection_id, event_id, event_type,
           status: contactResult.ok ? "success" : "failed",
-          payload: contactBody as any,
+          payload: contactLogPayload as any,
           response_status: contactResult.status,
         });
 
