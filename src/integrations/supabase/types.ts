@@ -1263,6 +1263,7 @@ export type Database = {
           plan_id: Database["public"]["Enums"]["subscription_plan"]
           postal_code: string | null
           primary_color: string | null
+          public_api_enabled: boolean
           secondary_color: string | null
           show_on_discovery: boolean
           slug: string
@@ -1292,6 +1293,7 @@ export type Database = {
           plan_id?: Database["public"]["Enums"]["subscription_plan"]
           postal_code?: string | null
           primary_color?: string | null
+          public_api_enabled?: boolean
           secondary_color?: string | null
           show_on_discovery?: boolean
           slug: string
@@ -1321,6 +1323,7 @@ export type Database = {
           plan_id?: Database["public"]["Enums"]["subscription_plan"]
           postal_code?: string | null
           primary_color?: string | null
+          public_api_enabled?: boolean
           secondary_color?: string | null
           show_on_discovery?: boolean
           slug?: string
