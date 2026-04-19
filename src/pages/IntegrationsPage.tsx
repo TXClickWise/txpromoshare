@@ -318,3 +318,117 @@ export default function IntegrationsPage() {
     </div>
   );
 }
+
+function PublicEventsApiCard() {
+  const { tenant, refetch } = useTenant();
+  const [saving, setSaving] = useState(false);
+  const enabled = (tenant as any)?.public_api_enabled ?? true;
+
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "ofkyhcrnzdkwypwcyobl";
+  const baseUrl = `https://${projectId}.supabase.co/functions/v1/public-events-api`;
+  const listEndpoint = tenant ? `${baseUrl}/v1/tenants/${tenant.slug}/events` : `${baseUrl}/v1/tenants/{tenant_slug}/events`;
+  const detailEndpoint = tenant ? `${baseUrl}/v1/tenants/${tenant.slug}/events/{event_slug}` : `${baseUrl}/v1/tenants/{tenant_slug}/events/{event_slug}`;
+
+  const curlExample = `curl "${listEndpoint}?limit=10"`;
+  const fetchExample = `const res = await fetch(
+  "${listEndpoint}?from=${new Date().toISOString().slice(0, 10)}&limit=20"
+);
+const { events, pagination } = await res.json();`;
+
+  const copy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} gekopieerd`);
+  };
+
+  const toggleApi = async (next: boolean) => {
+    if (!tenant) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("tenants")
+      .update({ public_api_enabled: next } as any)
+      .eq("id", tenant.id);
+    setSaving(false);
+    if (error) {
+      toast.error("Kon instelling niet opslaan");
+      return;
+    }
+    toast.success(next ? "Publieke API ingeschakeld" : "Publieke API uitgeschakeld");
+    refetch();
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="p-5 border-b border-border flex items-start gap-4">
+        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+          <Globe className="w-6 h-6 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-display text-lg font-bold text-foreground">Publieke Events API</h3>
+            <Badge variant={enabled ? "default" : "secondary"} className={enabled ? "bg-accent text-accent-foreground" : ""}>
+              {enabled ? "Actief" : "Uit"}
+            </Badge>
+            <Badge variant="outline" className="text-[10px]">JSON · CORS open · 5 min cache</Badge>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            Read-only JSON-feed van je gepubliceerde events voor externe websites. Geen authenticatie nodig.
+          </p>
+        </div>
+        <Switch checked={enabled} onCheckedChange={toggleApi} disabled={saving || !tenant} />
+      </div>
+
+      <div className="p-5 space-y-4">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
+            <Code2 className="w-3.5 h-3.5" />Lijst-endpoint
+          </label>
+          <div className="flex gap-2">
+            <Input readOnly value={listEndpoint} className="h-9 font-mono text-xs" />
+            <Button variant="outline" size="sm" onClick={() => copy(listEndpoint, "Endpoint URL")} className="h-9 gap-1.5 shrink-0">
+              <Copy className="w-3.5 h-3.5" />Kopieer
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
+            <Code2 className="w-3.5 h-3.5" />Detail-endpoint
+          </label>
+          <Input readOnly value={detailEndpoint} className="h-9 font-mono text-xs" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-foreground">curl</label>
+              <Button variant="ghost" size="sm" onClick={() => copy(curlExample, "curl voorbeeld")} className="h-6 text-[10px] gap-1">
+                <Copy className="w-3 h-3" />Kopieer
+              </Button>
+            </div>
+            <pre className="text-[11px] font-mono bg-muted/50 p-3 rounded border border-border overflow-x-auto whitespace-pre-wrap break-all">{curlExample}</pre>
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-foreground">JS fetch</label>
+              <Button variant="ghost" size="sm" onClick={() => copy(fetchExample, "JS voorbeeld")} className="h-6 text-[10px] gap-1">
+                <Copy className="w-3 h-3" />Kopieer
+              </Button>
+            </div>
+            <pre className="text-[11px] font-mono bg-muted/50 p-3 rounded border border-border overflow-x-auto whitespace-pre">{fetchExample}</pre>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-2 border-t border-border">
+          <span><strong className="text-foreground">Filters:</strong> <code className="font-mono">from</code>, <code className="font-mono">to</code>, <code className="font-mono">category</code>, <code className="font-mono">limit</code>, <code className="font-mono">offset</code></span>
+          <a
+            href="https://github.com/"
+            onClick={(e) => { e.preventDefault(); window.open("/docs/public-events-api.md", "_blank"); }}
+            className="ml-auto inline-flex items-center gap-1 text-primary hover:underline"
+          >
+            Volledige documentatie<ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
