@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
-import { Zap, Check, AlertCircle, ArrowRight, Calendar, RefreshCw, Send, Settings2, Link2, Unlink, Activity, Users, XCircle } from "lucide-react";
+import { Zap, Check, AlertCircle, ArrowRight, Calendar, RefreshCw, Send, Settings2, Link2, Unlink, Activity, Users, XCircle, Code2, Copy, ExternalLink, Globe } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -296,6 +298,8 @@ export default function IntegrationsPage() {
         </TabsContent>
       </Tabs>
 
+
+      <PublicEventsApiCard />
 
       <div className="rounded-xl border border-dashed border-border p-5 opacity-60">
         <div className="flex items-start gap-4">
