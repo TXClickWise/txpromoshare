@@ -597,7 +597,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════ 12. PRICING ═══════ */}
-      <section className="py-20 md:py-28">
+      <section id="prijzen" className="py-20 md:py-28 scroll-mt-20">
         <div className="container px-4">
           <SectionHeader
             eyebrow="Prijzen"
