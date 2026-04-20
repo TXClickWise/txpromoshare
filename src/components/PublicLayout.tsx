@@ -1,18 +1,26 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Menu, X, ArrowRight } from "lucide-react";
-import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useUILanguage";
+import { UILanguageSwitcher } from "@/components/i18n/UILanguageSwitcher";
 
-const navLinks = [
-  { to: "/", label: "Home", hash: false },
-  { to: "/event-agenda-software", label: "Voordelen", hash: false },
-  { to: "/#hoe-het-werkt", label: "Hoe het werkt", hash: true },
-  { to: "/#prijzen", label: "Prijzen", hash: true },
-  { to: "/demo", label: "Demo", hash: false },
-];
+export default function PublicLayout() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
 
-const featuredLink = { to: "/evenementen", label: "Evenementen" };
+  const navLinks = useMemo(() => [
+    { to: "/", label: t("publicNav.home"), hash: false },
+    { to: "/event-agenda-software", label: t("publicNav.benefits"), hash: false },
+    { to: "/#hoe-het-werkt", label: t("publicNav.howItWorks"), hash: true },
+    { to: "/#prijzen", label: t("publicNav.pricing"), hash: true },
+    { to: "/demo", label: t("publicNav.demo"), hash: false },
+  ], [t]);
+
+  const featuredLink = { to: "/evenementen", label: t("publicNav.events") };
 
 export default function PublicLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
