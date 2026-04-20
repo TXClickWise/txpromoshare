@@ -341,7 +341,11 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
           event={event}
           texts={{
             whatsapp: getText("whatsapp"),
-            social: getText("instagram"),
+            whatsapp_short: getText("whatsapp_short"),
+            instagram: getText("instagram"),
+            social: getText("social"),
+            teaser: getText("teaser"),
+            promo: getText("promo"),
             newsletter: getText("newsletter"),
             website: getText("website"),
           }}
