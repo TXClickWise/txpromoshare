@@ -70,7 +70,7 @@ export default function PublicLayout() {
           <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
               link.hash ? (
-                <a key={link.to} href={link.to} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                <a key={link.to} href={link.to} onClick={(e) => handleHashClick(e, link.to)} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                   {link.label}
                 </a>
               ) : (
