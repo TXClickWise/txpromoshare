@@ -327,7 +327,7 @@ export default function BrandingTab() {
 
     const { error } = await supabase.from("tenants").update(updates as any).eq("id", tenant.id);
     if (error) {
-      toast.error("Toepassen mislukt: " + error.message);
+      toast.error(`${t("branding.toast.applyFailed")}: ${error.message}`);
       return;
     }
 
@@ -344,13 +344,13 @@ export default function BrandingTab() {
     if (selection.syncLogoToClickWise && updates.logo_url && hasClickWise) {
       try {
         await supabase.functions.invoke("clickwise-tenant-sync", { body: { tenantId: tenant.id } });
-        toast.success("Branding toegepast en gesynced naar ClickWise");
+        toast.success(t("branding.toast.appliedSynced"));
       } catch (e) {
         console.warn("ClickWise sync failed", e);
-        toast.success("Branding toegepast (ClickWise sync mislukt)");
+        toast.success(t("branding.toast.appliedSyncFailed"));
       }
     } else {
-      toast.success("Branding toegepast");
+      toast.success(t("branding.toast.applied"));
     }
 
     setReviewOpen(false);
@@ -363,7 +363,7 @@ export default function BrandingTab() {
   function ConfidenceBadge({ level }: { level?: "high" | "medium" | "low" }) {
     if (!level) return null;
     const colors = { high: "text-green-600 bg-green-50", medium: "text-amber-600 bg-amber-50", low: "text-red-600 bg-red-50" };
-    const labels = { high: "Zeker", medium: "Waarschijnlijk", low: "Onzeker" };
+    const labels = { high: t("branding.confidence.high"), medium: t("branding.confidence.medium"), low: t("branding.confidence.low") };
     return <span className={`text-[10px] px-1.5 py-0.5 rounded ${colors[level]}`}>{labels[level]}</span>;
   }
 
@@ -380,8 +380,8 @@ export default function BrandingTab() {
             <Wand2 className="w-4 h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">Snelstart: importeer van je website</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Vul je website URL in — wij halen logo, kleuren en lettertype op.</p>
+            <p className="text-sm font-semibold text-foreground">{t("branding.import.title")}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("branding.import.desc")}</p>
           </div>
         </div>
 
@@ -389,12 +389,12 @@ export default function BrandingTab() {
           <Input
             value={scrapeUrl}
             onChange={(e) => setScrapeUrl(e.target.value)}
-            placeholder="https://jouwwebsite.nl"
+            placeholder={t("branding.import.placeholder")}
             className="flex-1"
           />
           <Button onClick={handleScrape} disabled={scraping} size="default" className="gap-2 shrink-0">
             {scraping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-            {scraping ? "Analyseren..." : "Analyseer website"}
+            {scraping ? t("branding.import.analyzing") : t("branding.import.analyze")}
           </Button>
         </div>
 
@@ -409,10 +409,10 @@ export default function BrandingTab() {
           <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
             <div className="flex items-center gap-2 text-xs">
               <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-              <span className="text-foreground">Voorstel klaar — open om te bekijken</span>
+              <span className="text-foreground">{t("branding.import.proposalReady")}</span>
             </div>
             <Button size="sm" variant="outline" onClick={() => setReviewOpen(true)} className="text-xs">
-              Bekijk voorstel
+              {t("branding.import.viewProposal")}
             </Button>
           </div>
         )}
@@ -421,8 +421,8 @@ export default function BrandingTab() {
       {/* Mobile-only: compacte live preview-strip bovenaan */}
       <div className="lg:hidden rounded-xl bg-card border border-border shadow-card p-3">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold text-foreground">Live preview</p>
-          <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Realtime</span>
+          <p className="text-xs font-semibold text-foreground">{t("branding.preview.live")}</p>
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">{t("branding.preview.realtime")}</span>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory">
           {/* Mini card preview */}
@@ -430,13 +430,13 @@ export default function BrandingTab() {
             <div className="bg-white rounded-md border border-gray-200 overflow-hidden" style={{ fontFamily: state.fontFamily === "system" ? undefined : state.fontFamily }}>
               <div className="h-16 bg-gradient-to-br from-gray-200 to-gray-300" />
               <div className="p-2 space-y-1.5">
-                <p className="text-[10px] font-bold text-gray-900 truncate">Live muziek avond</p>
+                <p className="text-[10px] font-bold text-gray-900 truncate">{t("branding.preview.sampleEvent")}</p>
                 <button className="w-full text-[9px] font-semibold text-white py-1.5" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
                   {state.defaultCtaText}
                 </button>
               </div>
             </div>
-            <p className="text-[9px] text-muted-foreground text-center mt-1">Card</p>
+            <p className="text-[9px] text-muted-foreground text-center mt-1">{t("branding.preview.card")}</p>
           </div>
           {/* Mini widget preview */}
           <div className="snap-start shrink-0 w-[180px] rounded-lg bg-secondary/30 border border-border p-2">
@@ -447,16 +447,16 @@ export default function BrandingTab() {
                 ) : (
                   <div className="w-1 h-3 rounded-sm" style={{ backgroundColor: state.primaryColor }} />
                 )}
-                <p className="text-[9px] font-bold text-gray-900 truncate">{tenant?.name || "Agenda"}</p>
+                <p className="text-[9px] font-bold text-gray-900 truncate">{tenant?.name || t("branding.preview.agenda")}</p>
               </div>
               <div className="rounded border border-gray-200 p-1.5">
-                <p className="text-[9px] font-semibold text-gray-900 truncate">Live muziek</p>
+                <p className="text-[9px] font-semibold text-gray-900 truncate">{t("branding.preview.sampleEventShort")}</p>
                 <div className="mt-0.5 inline-block text-[8px] text-white px-1.5 py-0.5" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
                   {state.defaultCtaText}
                 </div>
               </div>
             </div>
-            <p className="text-[9px] text-muted-foreground text-center mt-1">Widget</p>
+            <p className="text-[9px] text-muted-foreground text-center mt-1">{t("branding.preview.widget")}</p>
           </div>
           {/* Mini knop preview */}
           <div className="snap-start shrink-0 w-[180px] rounded-lg bg-secondary/30 border border-border p-2 flex flex-col justify-center">
@@ -464,9 +464,9 @@ export default function BrandingTab() {
               {state.defaultCtaText}
             </button>
             <button className="w-full text-[10px] font-semibold py-2.5 mt-1.5 border" style={{ color: state.secondaryColor, borderColor: state.secondaryColor, borderRadius: btnRadius }}>
-              Secundair
+              {t("branding.preview.secondary")}
             </button>
-            <p className="text-[9px] text-muted-foreground text-center mt-1">Knoppen</p>
+            <p className="text-[9px] text-muted-foreground text-center mt-1">{t("branding.preview.buttons")}</p>
           </div>
         </div>
       </div>
@@ -483,23 +483,23 @@ export default function BrandingTab() {
             <div className="border-b border-border bg-muted/30 px-2 pt-2 overflow-x-auto">
               <TabsList className="bg-transparent h-auto p-0 gap-1 w-full justify-start flex-nowrap sm:flex-wrap">
                 <TabsTrigger value="identity" className="text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm shrink-0">
-                  <Building2 className="w-3.5 h-3.5" /><span className="hidden xs:inline">Identiteit</span><span className="xs:hidden">Identi.</span>
+                  <Building2 className="w-3.5 h-3.5" /><span className="hidden xs:inline">{t("branding.tabs.identity")}</span><span className="xs:hidden">{t("branding.tabs.identityShort")}</span>
                 </TabsTrigger>
                 <TabsTrigger value="style" className="text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm shrink-0">
-                  <Palette className="w-3.5 h-3.5" /><span className="hidden xs:inline">Kleuren & stijl</span><span className="xs:hidden">Stijl</span>
+                  <Palette className="w-3.5 h-3.5" /><span className="hidden xs:inline">{t("branding.tabs.style")}</span><span className="xs:hidden">{t("branding.tabs.styleShort")}</span>
                 </TabsTrigger>
                 <TabsTrigger value="dna" className="text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm shrink-0">
-                  <Sparkles className="w-3.5 h-3.5" />Merk-DNA
+                  <Sparkles className="w-3.5 h-3.5" />{t("branding.tabs.dna")}
                 </TabsTrigger>
                 <TabsTrigger value="overview" className="text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm shrink-0">
-                  <ImageIcon className="w-3.5 h-3.5" />Overzicht
+                  <ImageIcon className="w-3.5 h-3.5" />{t("branding.tabs.overview")}
                 </TabsTrigger>
               </TabsList>
             </div>
 
             {/* IDENTITEIT */}
             <TabsContent value="identity" className="p-4 sm:p-5 space-y-6 mt-0">
-              <Section icon={ImageIcon} title="Logo" description="Wordt getoond op eventpagina's, widgets en e-mails.">
+              <Section icon={ImageIcon} title={t("branding.section.logo")} description={t("branding.section.logoDesc")}>
                 <LogoUploader
                   logoUrl={state.logoUrl}
                   primaryColor={state.primaryColor}
@@ -513,28 +513,28 @@ export default function BrandingTab() {
                 />
               </Section>
 
-              <Section icon={Type} title="Tagline" description="Korte slogan onder je naam op de eventpagina.">
+              <Section icon={Type} title={t("branding.section.tagline")} description={t("branding.section.taglineDesc")}>
                 <Input
                   value={state.tagline}
                   onChange={(e) => update("tagline", e.target.value)}
-                  placeholder="Bijv. De beste events op Texel"
+                  placeholder={t("branding.section.taglinePlaceholder")}
                 />
               </Section>
             </TabsContent>
 
             {/* KLEUREN & STIJL */}
             <TabsContent value="style" className="p-4 sm:p-5 space-y-6 mt-0">
-              <Section icon={Palette} title="Kleuren" description="Worden gebruikt op eventpagina's, widgets en deelkaarten.">
+              <Section icon={Palette} title={t("branding.section.colors")} description={t("branding.section.colorsDesc")}>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Primaire kleur</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("branding.section.primaryColor")}</Label>
                     <div className="flex gap-2 items-center">
                       <Input type="color" value={state.primaryColor} onChange={(e) => update("primaryColor", e.target.value)} className="w-12 h-10 p-1 cursor-pointer" />
                       <Input value={state.primaryColor} onChange={(e) => update("primaryColor", e.target.value)} className="flex-1 font-mono text-sm" />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Secundaire kleur</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("branding.section.secondaryColor")}</Label>
                     <div className="flex gap-2 items-center">
                       <Input type="color" value={state.secondaryColor} onChange={(e) => update("secondaryColor", e.target.value)} className="w-12 h-10 p-1 cursor-pointer" />
                       <Input value={state.secondaryColor} onChange={(e) => update("secondaryColor", e.target.value)} className="flex-1 font-mono text-sm" />
@@ -543,33 +543,33 @@ export default function BrandingTab() {
                 </div>
               </Section>
 
-              <Section icon={Type} title="Typografie" description="Lettertype voor je events en widgets.">
+              <Section icon={Type} title={t("branding.section.typography")} description={t("branding.section.typographyDesc")}>
                 <Select value={state.fontFamily} onValueChange={(v) => update("fontFamily", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {FONT_OPTIONS.map((f) => (
-                      <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                      <SelectItem key={f.value} value={f.value}>{f.labelKey ? t(f.labelKey) : f.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </Section>
 
-              <Section icon={MousePointer} title="Knoppen & CTA" description="Stijl en standaardtekst voor actieknoppen.">
+              <Section icon={MousePointer} title={t("branding.section.buttonsCta")} description={t("branding.section.buttonsCtaDesc")}>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Knopstijl</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("branding.section.buttonStyle")}</Label>
                     <Select value={state.buttonStyle} onValueChange={(v) => update("buttonStyle", v)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {BUTTON_STYLES.map((s) => (
-                          <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                          <SelectItem key={s.value} value={s.value}>{t(s.labelKey)}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Standaard CTA-tekst</Label>
-                    <Input value={state.defaultCtaText} onChange={(e) => update("defaultCtaText", e.target.value)} placeholder="Bijv. Reserveer nu" />
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("branding.section.defaultCta")}</Label>
+                    <Input value={state.defaultCtaText} onChange={(e) => update("defaultCtaText", e.target.value)} placeholder={t("branding.section.defaultCtaPlaceholder")} />
                   </div>
                 </div>
               </Section>
@@ -577,44 +577,44 @@ export default function BrandingTab() {
 
             {/* MERK-DNA */}
             <TabsContent value="dna" className="p-4 sm:p-5 space-y-6 mt-0">
-              <Section icon={Sparkles} title="Tone of voice & beeldstijl" description="AI-functies gebruiken dit om in jouw stijl te schrijven.">
+              <Section icon={Sparkles} title={t("branding.section.toneImage")} description={t("branding.section.toneImageDesc")}>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tone of voice</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("branding.section.tone")}</Label>
                     <Select value={state.toneOfVoice || "none"} onValueChange={(v) => update("toneOfVoice", v === "none" ? "" : v)}>
-                      <SelectTrigger><SelectValue placeholder="Kies een stijl" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={t("branding.section.tonePlaceholder")} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Geen voorkeur</SelectItem>
-                        <SelectItem value="casual">Casual & vriendelijk</SelectItem>
-                        <SelectItem value="professional">Professioneel</SelectItem>
-                        <SelectItem value="energetic">Energiek & enthousiast</SelectItem>
-                        <SelectItem value="elegant">Elegant & stijlvol</SelectItem>
-                        <SelectItem value="playful">Speels & creatief</SelectItem>
+                        <SelectItem value="none">{t("branding.tone.none")}</SelectItem>
+                        <SelectItem value="casual">{t("branding.tone.casual")}</SelectItem>
+                        <SelectItem value="professional">{t("branding.tone.professional")}</SelectItem>
+                        <SelectItem value="energetic">{t("branding.tone.energetic")}</SelectItem>
+                        <SelectItem value="elegant">{t("branding.tone.elegant")}</SelectItem>
+                        <SelectItem value="playful">{t("branding.tone.playful")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Beeldstijl</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("branding.section.imageStyle")}</Label>
                     <Select value={state.imageStyle || "none"} onValueChange={(v) => update("imageStyle", v === "none" ? "" : v)}>
-                      <SelectTrigger><SelectValue placeholder="Kies een stijl" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={t("branding.section.tonePlaceholder")} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Geen voorkeur</SelectItem>
-                        <SelectItem value="vibrant">Levendig & kleurrijk</SelectItem>
-                        <SelectItem value="minimal">Minimalistisch</SelectItem>
-                        <SelectItem value="warm">Warm & gezellig</SelectItem>
-                        <SelectItem value="dark">Donker & stijlvol</SelectItem>
-                        <SelectItem value="natural">Natuurlijk & authentiek</SelectItem>
+                        <SelectItem value="none">{t("branding.tone.none")}</SelectItem>
+                        <SelectItem value="vibrant">{t("branding.image.vibrant")}</SelectItem>
+                        <SelectItem value="minimal">{t("branding.image.minimal")}</SelectItem>
+                        <SelectItem value="warm">{t("branding.image.warm")}</SelectItem>
+                        <SelectItem value="dark">{t("branding.image.dark")}</SelectItem>
+                        <SelectItem value="natural">{t("branding.image.natural")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
               </Section>
 
-              <Section icon={Sparkles} title="Merk samenvatting" description="Wat moet AI weten over jouw merk?">
+              <Section icon={Sparkles} title={t("branding.section.summary")} description={t("branding.section.summaryDesc")}>
                 <Textarea
                   value={state.brandSummary}
                   onChange={(e) => update("brandSummary", e.target.value)}
-                  placeholder="Beschrijf kort je merk: wie je bent, wat je uitstraalt, en wat je doelgroep verwacht..."
+                  placeholder={t("branding.section.summaryPlaceholder")}
                   rows={4}
                   className="text-sm resize-none"
                 />
@@ -639,9 +639,9 @@ export default function BrandingTab() {
 
           {/* Save bar — sticky bottom op mobile */}
           <div className="sticky bottom-0 z-10 border-t border-border bg-card/95 backdrop-blur-sm px-4 sm:px-5 py-3 flex items-center justify-between gap-3">
-            <p className="text-xs text-muted-foreground hidden sm:block">Wijzigingen worden direct in de preview getoond.</p>
+            <p className="text-xs text-muted-foreground hidden sm:block">{t("branding.save.hint")}</p>
             <Button size="sm" onClick={saveBranding} disabled={saving} className="gap-2 ml-auto w-full sm:w-auto">
-              <Save className="w-4 h-4" />{saving ? "Opslaan..." : "Branding opslaan"}
+              <Save className="w-4 h-4" />{saving ? t("branding.save.saving") : t("branding.save.button")}
             </Button>
           </div>
         </motion.div>
@@ -653,23 +653,23 @@ export default function BrandingTab() {
           className="hidden lg:block lg:sticky lg:top-4 rounded-xl bg-card border border-border shadow-card p-4 space-y-3"
         >
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-foreground">Live preview</p>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Realtime</span>
+            <p className="text-sm font-semibold text-foreground">{t("branding.preview.live")}</p>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{t("branding.preview.realtime")}</span>
           </div>
 
           <Tabs value={previewTab} onValueChange={setPreviewTab}>
             <TabsList className="grid grid-cols-4 h-auto bg-muted/50 p-0.5">
-              <TabsTrigger value="card" className="text-[10px] py-1.5 px-1">Card</TabsTrigger>
-              <TabsTrigger value="widget" className="text-[10px] py-1.5 px-1">Widget</TabsTrigger>
-              <TabsTrigger value="single" className="text-[10px] py-1.5 px-1">Single</TabsTrigger>
-              <TabsTrigger value="page" className="text-[10px] py-1.5 px-1">Pagina</TabsTrigger>
+              <TabsTrigger value="card" className="text-[10px] py-1.5 px-1">{t("branding.preview.card")}</TabsTrigger>
+              <TabsTrigger value="widget" className="text-[10px] py-1.5 px-1">{t("branding.preview.widget")}</TabsTrigger>
+              <TabsTrigger value="single" className="text-[10px] py-1.5 px-1">{t("branding.preview.single")}</TabsTrigger>
+              <TabsTrigger value="page" className="text-[10px] py-1.5 px-1">{t("branding.preview.page")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="card" className="mt-3">
               <div className="rounded-xl bg-secondary/30 border border-border p-3">
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm" style={{ fontFamily: state.fontFamily === "system" ? undefined : state.fontFamily }}>
                   <div className="h-28 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                    <span className="text-gray-400 text-xs">Afbeelding</span>
+                    <span className="text-gray-400 text-xs">{t("branding.preview.image")}</span>
                   </div>
                   <div className="p-3 space-y-2">
                     <div className="flex items-center gap-2">
@@ -678,8 +678,8 @@ export default function BrandingTab() {
                         <p className="text-[9px] text-gray-500">20:00</p>
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-gray-900">Live muziek avond</p>
-                        <p className="text-xs text-gray-500">Café de Haven</p>
+                        <p className="text-sm font-bold text-gray-900">{t("branding.preview.sampleEvent")}</p>
+                        <p className="text-xs text-gray-500">{t("branding.preview.sampleVenue")}</p>
                       </div>
                     </div>
                     <button className="w-full text-center text-xs font-semibold text-white py-2" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
@@ -699,7 +699,7 @@ export default function BrandingTab() {
                     ) : (
                       <div className="w-1 h-5 rounded-sm" style={{ backgroundColor: state.primaryColor }} />
                     )}
-                    <p className="text-xs font-bold text-gray-900 truncate">Agenda · {tenant?.name || "Organisatie"}</p>
+                    <p className="text-xs font-bold text-gray-900 truncate">{t("branding.preview.agenda")} · {tenant?.name || t("branding.preview.organization")}</p>
                   </div>
                   {[1, 2].map((i) => (
                     <div key={i} className="rounded-lg border border-gray-200 p-2 flex gap-2 items-start mb-2">
@@ -708,7 +708,7 @@ export default function BrandingTab() {
                         <p className="text-[9px] text-gray-500">{i === 1 ? "20:00" : "14:00"}</p>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-semibold text-gray-900 truncate">{i === 1 ? "Live muziek" : "Wijnproeverij"}</p>
+                        <p className="text-[11px] font-semibold text-gray-900 truncate">{i === 1 ? t("branding.preview.sampleEventShort") : t("branding.preview.sampleWine")}</p>
                         <div className="mt-1 inline-block text-[9px] font-medium text-white px-2 py-0.5" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
                           {state.defaultCtaText}
                         </div>
@@ -723,10 +723,10 @@ export default function BrandingTab() {
               <div className="rounded-xl bg-secondary/30 border border-border p-3">
                 <div className="bg-white rounded-lg border border-gray-200 p-3" style={{ fontFamily: state.fontFamily === "system" ? undefined : state.fontFamily }}>
                   <div className="h-24 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg mb-2 flex items-center justify-center">
-                    <span className="text-gray-400 text-xs">Afbeelding</span>
+                    <span className="text-gray-400 text-xs">{t("branding.preview.image")}</span>
                   </div>
-                  <p className="text-sm font-bold text-gray-900">Live muziek avond</p>
-                  <p className="text-[11px] text-gray-500 mt-0.5">Vrijdag 25 april · 20:00</p>
+                  <p className="text-sm font-bold text-gray-900">{t("branding.preview.sampleEvent")}</p>
+                  <p className="text-[11px] text-gray-500 mt-0.5">{t("branding.preview.sampleDate")}</p>
                   <div className="flex gap-2 mt-2">
                     <button className="flex-1 text-center text-xs font-semibold text-white py-1.5" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
                       {state.defaultCtaText}
@@ -740,7 +740,7 @@ export default function BrandingTab() {
               <div className="rounded-xl bg-secondary/30 border border-border p-3">
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden" style={{ fontFamily: state.fontFamily === "system" ? undefined : state.fontFamily }}>
                   <div className="h-28 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center relative">
-                    <span className="text-gray-400 text-xs">Hero</span>
+                    <span className="text-gray-400 text-xs">{t("branding.preview.hero")}</span>
                     {state.logoUrl && (
                       <div className="absolute bottom-2 left-2">
                         <img src={state.logoUrl} alt="" className="h-5 w-auto object-contain bg-white/80 rounded px-1 py-0.5" />
@@ -748,7 +748,7 @@ export default function BrandingTab() {
                     )}
                   </div>
                   <div className="p-3 space-y-2">
-                    <p className="text-sm font-bold text-gray-900">Live muziek avond</p>
+                    <p className="text-sm font-bold text-gray-900">{t("branding.preview.sampleEvent")}</p>
                     {state.tagline && <p className="text-[10px] italic text-gray-500">{state.tagline}</p>}
                     <button className="w-full text-center text-xs font-semibold text-white py-2" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
                       {state.defaultCtaText}
