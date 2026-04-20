@@ -722,6 +722,21 @@ export default function BrandingTab() {
           </Tabs>
         </motion.div>
       </div>
+
+      <BrandReviewDialog
+        open={reviewOpen}
+        onClose={() => setReviewOpen(false)}
+        scraped={scraped as ScrapedBrandingType | null}
+        current={{
+          tagline: state.tagline,
+          logoUrl: state.logoUrl,
+          primaryColor: state.primaryColor,
+          secondaryColor: state.secondaryColor,
+          fontFamily: state.fontFamily,
+        }}
+        hasClickWise={hasClickWise}
+        onApply={handleReviewApply}
+      />
     </div>
   );
 }
