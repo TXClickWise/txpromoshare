@@ -271,33 +271,35 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(ogProxyUrl)}`;
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 sm:space-y-8 max-w-5xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">{t.distribution.title}</h1>
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground">{t.distribution.title}</h1>
           <p className="text-sm text-muted-foreground mt-1">Bereid je content voor en deel je event overal — in één klik.</p>
         </div>
-        <Button onClick={handleGenerateAll} disabled={generating} className="gap-2 shrink-0">
+        <Button onClick={handleGenerateAll} disabled={generating} className="gap-2 shrink-0 w-full sm:w-auto">
           {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
           {generating ? "Genereren..." : "Genereer alle teksten"}
         </Button>
       </div>
 
       {/* Event selector */}
-      <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border shadow-card">
-        <Zap className="w-4 h-4 text-primary shrink-0" />
-        <span className="text-sm font-medium text-foreground shrink-0">Event:</span>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-card border border-border shadow-card">
+        <div className="flex items-center gap-2 shrink-0">
+          <Zap className="w-4 h-4 text-primary shrink-0" />
+          <span className="text-sm font-medium text-foreground">Event:</span>
+        </div>
         <Select value={selectedEvent} onValueChange={(v) => { setSelectedEvent(v); setChannelTexts({}); }}>
-          <SelectTrigger className="max-w-sm">
+          <SelectTrigger className="w-full sm:max-w-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {publishedEvents.map((e) => (
               <SelectItem key={e.id} value={e.id}>
                 <div className="flex items-center gap-2">
-                  <span>{e.title}</span>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="truncate">{e.title}</span>
+                  <span className="text-[10px] text-muted-foreground shrink-0">
                     {new Date(e.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })}
                   </span>
                 </div>
@@ -500,15 +502,15 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
           <span className="text-[11px] text-muted-foreground hidden sm:inline">— Live op je site, meet wat werkt</span>
         </div>
 
-        <div className="p-5 rounded-xl bg-card border border-border shadow-card flex flex-col sm:flex-row items-center gap-4">
-          <div className="flex-1">
+        <div className="p-4 sm:p-5 rounded-xl bg-card border border-border shadow-card flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
             <h3 className="font-display font-semibold text-foreground text-sm mb-1">Embed op je website</h3>
             <p className="text-xs text-muted-foreground">
               Plaats een agenda- of eventwidget op je eigen website. Altijd up-to-date, in jouw huisstijl.
             </p>
           </div>
-          <Link to="/app/widgets">
-            <Button variant="outline" className="gap-2 shrink-0">
+          <Link to="/app/widgets" className="shrink-0 w-full sm:w-auto">
+            <Button variant="outline" className="gap-2 w-full sm:w-auto justify-center">
               Widgets beheren <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
