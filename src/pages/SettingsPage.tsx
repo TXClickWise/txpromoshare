@@ -251,23 +251,6 @@ export default function SettingsPage() {
               {venues.map((v) => (
                 <div key={v.id} className="rounded-xl bg-card border border-border shadow-card p-4 flex items-start justify-between gap-4">
                   <div className="min-w-0">
-          <Button size="sm" onClick={saveOrganization} disabled={saving} className="gap-2">
-            <Save className="w-4 h-4" />{saving ? t("common.saving") : t("common.save")}
-          </Button>
-        </TabsContent>
-
-        {/* Branding */}
-        <TabsContent value="branding">
-          <BrandingTab />
-        </TabsContent>
-
-        {/* Venues */}
-        <TabsContent value="venue" className="space-y-5">
-          {venues.length > 0 && (
-            <div className="space-y-3">
-              {venues.map((v) => (
-                <div key={v.id} className="rounded-xl bg-card border border-border shadow-card p-4 flex items-start justify-between gap-4">
-                  <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-foreground text-sm truncate">{v.name}</p>
                       {v.is_primary && (
