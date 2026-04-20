@@ -68,7 +68,7 @@ export interface StepValidation {
   errors: string[];
 }
 
-const AUTOSAVE_DELAY_MS = 30_000; // 30 seconds
+const AUTOSAVE_DELAY_MS = 1500; // 1.5 seconds for snappy "concept saved" feedback
 
 export function useEventForm() {
   const navigate = useNavigate();
