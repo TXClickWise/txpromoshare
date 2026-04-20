@@ -137,9 +137,26 @@ export default function PricingPage() {
           <h1 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-4">
             Eerlijke prijzen voor slimme eventpromotie
           </h1>
-          <p className="text-lg text-muted-foreground mb-3">
-            Kies het plan dat past bij jouw events, team en ambities. Geen verborgen kosten, geen verrassingen.
+          <p className="text-lg text-muted-foreground mb-2">
+            Kies het plan dat past bij jouw events, team en ambities.
           </p>
+          <p className="text-sm text-muted-foreground mb-6">
+            Geen verborgen kosten, geen verrassingen.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
+            <Link
+              to="/register"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg gradient-hero text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity shadow-glow"
+            >
+              Start gratis <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              to="/demo"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-secondary text-secondary-foreground font-semibold text-sm hover:bg-secondary/80 transition-colors"
+            >
+              Bekijk hoe het werkt
+            </Link>
+          </div>
           <p className="text-xs text-muted-foreground">{t.plans.vatNote}</p>
         </div>
 
