@@ -1,5 +1,6 @@
 import { Code2, Copy, Check, Trash2, Power, PowerOff, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/useUILanguage";
 import type { Tables } from "@/integrations/supabase/types";
 
 interface WidgetCardProps {
@@ -13,6 +14,7 @@ interface WidgetCardProps {
 }
 
 export function WidgetCard({ widget, isSelected, copied, onSelect, onCopy, onToggleActive, onDelete }: WidgetCardProps) {
+  const { t } = useTranslation();
   return (
     <div
       onClick={onSelect}
@@ -27,25 +29,25 @@ export function WidgetCard({ widget, isSelected, copied, onSelect, onCopy, onTog
             <h3 className="font-display font-bold text-foreground text-sm truncate">{widget.name}</h3>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            {widget.type === "agenda" ? "Agenda widget" : "Enkel event widget"}
+            {widget.type === "agenda" ? t("widgets.typeAgenda") : t("widgets.typeSingle")}
           </p>
         </div>
         <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${
           widget.is_active ? "bg-accent/20 text-accent" : "bg-muted text-muted-foreground"
         }`}>
-          {widget.is_active ? "Actief" : "Inactief"}
+          {widget.is_active ? t("common.active") : t("common.inactive")}
         </span>
       </div>
 
       <div className="flex gap-1.5 mt-3" onClick={(e) => e.stopPropagation()}>
         <Button variant="outline" size="sm" onClick={onCopy} className="gap-1.5 flex-1 h-8 text-xs">
           {copied ? <Check className="w-3.5 h-3.5 text-accent" /> : <Copy className="w-3.5 h-3.5" />}
-          {copied ? "Gekopieerd!" : "Code"}
+          {copied ? t("widgets.copied") : t("widgets.code")}
         </Button>
         <Button variant="outline" size="sm" onClick={onSelect} className="gap-1.5 h-8 text-xs">
           <Settings2 className="w-3.5 h-3.5" />
         </Button>
-        <Button variant="outline" size="sm" onClick={onToggleActive} className="h-8 w-8 p-0" title={widget.is_active ? "Deactiveren" : "Activeren"}>
+        <Button variant="outline" size="sm" onClick={onToggleActive} className="h-8 w-8 p-0" title={widget.is_active ? t("widgets.deactivate") : t("widgets.activate")}>
           {widget.is_active ? <PowerOff className="w-3.5 h-3.5" /> : <Power className="w-3.5 h-3.5" />}
         </Button>
         <Button variant="outline" size="sm" onClick={onDelete} className="h-8 w-8 p-0 text-destructive hover:text-destructive">

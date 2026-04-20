@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Copy, Check, Code2, Globe, Box, ExternalLink, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTranslation } from "@/hooks/useUILanguage";
 import { toast } from "sonner";
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function WidgetEmbedInstructions({ widgetId }: Props) {
+  const { t } = useTranslation();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const baseUrl = import.meta.env.VITE_SUPABASE_URL || "";
   const scriptUrl = `${baseUrl}/functions/v1/widget-embed?widget_id=${widgetId}&format=js`;
@@ -20,59 +22,49 @@ export function WidgetEmbedInstructions({ widgetId }: Props) {
   function copy(key: string, text: string) {
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
-    toast.success("Code gekopieerd");
+    toast.success(t("embed.codeCopied"));
     setTimeout(() => setCopiedKey(null), 2000);
   }
 
   return (
     <Tabs defaultValue="html" className="w-full">
       <TabsList className="grid grid-cols-4 w-full h-9">
-        <TabsTrigger value="html" className="gap-1.5 text-xs"><Code2 className="w-3.5 h-3.5" />HTML</TabsTrigger>
-        <TabsTrigger value="wordpress" className="gap-1.5 text-xs"><Globe className="w-3.5 h-3.5" />WordPress</TabsTrigger>
-        <TabsTrigger value="iframe" className="gap-1.5 text-xs"><Box className="w-3.5 h-3.5" />iframe</TabsTrigger>
-        <TabsTrigger value="other" className="gap-1.5 text-xs"><Sparkles className="w-3.5 h-3.5" />Anders</TabsTrigger>
+        <TabsTrigger value="html" className="gap-1.5 text-xs"><Code2 className="w-3.5 h-3.5" />{t("embed.tab.html")}</TabsTrigger>
+        <TabsTrigger value="wordpress" className="gap-1.5 text-xs"><Globe className="w-3.5 h-3.5" />{t("embed.tab.wordpress")}</TabsTrigger>
+        <TabsTrigger value="iframe" className="gap-1.5 text-xs"><Box className="w-3.5 h-3.5" />{t("embed.tab.iframe")}</TabsTrigger>
+        <TabsTrigger value="other" className="gap-1.5 text-xs"><Sparkles className="w-3.5 h-3.5" />{t("embed.tab.other")}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="html" className="space-y-3 mt-3">
         <InfoBox>
-          <strong>Aanbevolen.</strong> Plak deze code op de plek waar de widget moet verschijnen. Werkt op elke website (HTML, Webflow, Squarespace, Framer, eigen build).
+          <span dangerouslySetInnerHTML={{ __html: t("embed.htmlInfo") }} />
         </InfoBox>
-        <CodeBlock code={htmlSnippet} onCopy={() => copy("html", htmlSnippet)} copied={copiedKey === "html"} />
-        <p className="text-[11px] text-muted-foreground">
-          De widget update automatisch wanneer je evenementen wijzigt — geen herpublicatie van je site nodig.
-        </p>
+        <CodeBlock code={htmlSnippet} onCopy={() => copy("html", htmlSnippet)} copied={copiedKey === "html"} t={t} />
+        <p className="text-[11px] text-muted-foreground">{t("embed.htmlFooter")}</p>
       </TabsContent>
 
       <TabsContent value="wordpress" className="space-y-3 mt-3">
         <InfoBox>
-          Voor de meeste WordPress thema's werkt het <strong>Custom HTML</strong> blok perfect. Geen plugin nodig.
+          <span dangerouslySetInnerHTML={{ __html: t("embed.wpInfo") }} />
         </InfoBox>
         <ol className="text-[11px] text-muted-foreground space-y-1.5 list-decimal list-inside pl-1">
-          <li>Open je pagina of post in de WordPress editor.</li>
-          <li>Klik op <kbd className="px-1.5 py-0.5 rounded bg-secondary text-foreground text-[10px] font-mono">+</kbd> en zoek naar <strong>Custom HTML</strong>.</li>
-          <li>Plak de code hieronder in het blok.</li>
-          <li>Publiceer of werk de pagina bij.</li>
+          <li>{t("embed.wp.step1")}</li>
+          <li>{t("embed.wp.step2Pre")} <kbd className="px-1.5 py-0.5 rounded bg-secondary text-foreground text-[10px] font-mono">+</kbd> {t("embed.wp.step2Post")} <strong>Custom HTML</strong>.</li>
+          <li>{t("embed.wp.step3")}</li>
+          <li>{t("embed.wp.step4")}</li>
         </ol>
-        <CodeBlock code={htmlSnippet} onCopy={() => copy("wp", htmlSnippet)} copied={copiedKey === "wp"} />
-        <p className="text-[11px] text-muted-foreground">
-          Werkt ook met Elementor (HTML widget), Divi (Code module) en Gutenberg.
-        </p>
+        <CodeBlock code={htmlSnippet} onCopy={() => copy("wp", htmlSnippet)} copied={copiedKey === "wp"} t={t} />
+        <p className="text-[11px] text-muted-foreground">{t("embed.wp.footer")}</p>
       </TabsContent>
 
       <TabsContent value="iframe" className="space-y-3 mt-3">
-        <InfoBox tone="warning">
-          Gebruik alleen als script-embed niet mogelijk is (bv. strenge CMS'en). De hoogte schaalt minder vloeiend mee.
-        </InfoBox>
-        <CodeBlock code={iframeSnippet} onCopy={() => copy("iframe", iframeSnippet)} copied={copiedKey === "iframe"} />
-        <p className="text-[11px] text-muted-foreground">
-          Pas <code className="bg-secondary px-1 rounded">min-height</code> aan voor jouw aantal evenementen.
-        </p>
+        <InfoBox tone="warning">{t("embed.iframeInfo")}</InfoBox>
+        <CodeBlock code={iframeSnippet} onCopy={() => copy("iframe", iframeSnippet)} copied={copiedKey === "iframe"} t={t} />
+        <p className="text-[11px] text-muted-foreground" dangerouslySetInnerHTML={{ __html: t("embed.iframeFooter") }} />
       </TabsContent>
 
       <TabsContent value="other" className="space-y-3 mt-3">
-        <InfoBox>
-          Werkt jouw platform er niet bij? Probeer eerst de HTML-snippet — die werkt op 95% van de sites.
-        </InfoBox>
+        <InfoBox>{t("embed.otherInfo")}</InfoBox>
         <ul className="space-y-2 text-[11px]">
           <PlatformRow name="Wix" hint="Voeg een 'Embed HTML' element toe en plak de HTML-snippet." />
           <PlatformRow name="Squarespace" hint="Gebruik een 'Code Block' en plak de HTML-snippet." />
@@ -84,14 +76,14 @@ export function WidgetEmbedInstructions({ widgetId }: Props) {
           href="mailto:info@txeventshare.nl?subject=Hulp%20bij%20widget%20embed"
           className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
         >
-          Hulp nodig? Mail support<ExternalLink className="w-3 h-3" />
+          {t("embed.help")}<ExternalLink className="w-3 h-3" />
         </a>
       </TabsContent>
     </Tabs>
   );
 }
 
-function CodeBlock({ code, onCopy, copied }: { code: string; onCopy: () => void; copied: boolean }) {
+function CodeBlock({ code, onCopy, copied, t }: { code: string; onCopy: () => void; copied: boolean; t: (k: string) => string }) {
   return (
     <div className="relative">
       <code className="block text-[11px] bg-secondary p-3 pr-20 rounded-lg text-muted-foreground whitespace-pre-wrap font-mono break-all">
@@ -104,7 +96,7 @@ function CodeBlock({ code, onCopy, copied }: { code: string; onCopy: () => void;
         className="absolute top-2 right-2 h-7 px-2 gap-1 text-[11px]"
       >
         {copied ? <Check className="w-3 h-3 text-accent" /> : <Copy className="w-3 h-3" />}
-        {copied ? "OK" : "Kopieer"}
+        {copied ? t("embed.copyOk") : t("embed.copy")}
       </Button>
     </div>
   );

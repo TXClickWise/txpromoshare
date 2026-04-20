@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { CheckCircle2, AlertCircle, XCircle, Shield, Sparkles, Megaphone, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "@/hooks/useUILanguage";
 import type { Tables } from "@/integrations/supabase/types";
 
 interface QualityCheckProps {
@@ -32,15 +33,13 @@ interface CheckGroup {
   items: CheckItem[];
 }
 
-/** Heuristic: text has CTA-like word or link. */
 function hasCta(text: string): boolean {
   if (!text) return false;
   const lower = text.toLowerCase();
-  const ctaWords = ["meer info", "boek", "reserveer", "kom", "schrijf je in", "tickets", "kijk op", "bekijk", "doe mee", "rsvp", "klik", "link in bio"];
+  const ctaWords = ["meer info", "boek", "reserveer", "kom", "schrijf je in", "tickets", "kijk op", "bekijk", "doe mee", "rsvp", "klik", "link in bio", "more info", "book", "view", "join", "click"];
   return ctaWords.some((w) => lower.includes(w)) || /https?:\/\//.test(text);
 }
 
-/** Count emoji clusters in a text (rough heuristic). */
 function emojiCount(text: string): number {
   if (!text) return 0;
   const matches = text.match(/\p{Extended_Pictographic}/gu);
@@ -54,6 +53,8 @@ function lengthStatus(len: number, ideal: [number, number], min: number): Status
 }
 
 export function QualityCheck({ event, texts }: QualityCheckProps) {
+  const { t } = useTranslation();
+
   const groups = useMemo<CheckGroup[]>(() => {
     const whatsappShort = texts.whatsapp_short || "";
     const whatsapp = texts.whatsapp || "";
@@ -66,112 +67,60 @@ export function QualityCheck({ event, texts }: QualityCheckProps) {
     return [
       {
         id: "completeness",
-        title: "Volledigheid",
+        title: t("qc.group.completeness"),
         icon: FileText,
         items: [
+          { label: t("qc.item.title"), status: event.title ? "pass" : "fail", hint: t("qc.item.titleHint") },
           {
-            label: "Titel",
-            status: event.title ? "pass" : "fail",
-            hint: "Verplicht voor elk event",
-          },
-          {
-            label: "Korte beschrijving",
+            label: t("qc.item.shortDesc"),
             status: event.short_description && event.short_description.length > 20 ? "pass" : event.short_description ? "warn" : "fail",
-            hint: ">20 tekens helpt bij delen",
+            hint: t("qc.item.shortDescHint"),
           },
-          {
-            label: "Uitgelichte afbeelding",
-            status: event.featured_image_id ? "pass" : "fail",
-            hint: "Verhoogt klikratio op social",
-          },
-          {
-            label: "Locatie",
-            status: event.venue_id ? "pass" : "warn",
-            hint: "Maakt het event compleet",
-          },
+          { label: t("qc.item.featured"), status: event.featured_image_id ? "pass" : "fail", hint: t("qc.item.featuredHint") },
+          { label: t("qc.item.location"), status: event.venue_id ? "pass" : "warn", hint: t("qc.item.locationHint") },
         ],
       },
       {
         id: "channels",
-        title: "Kanaal-copy",
+        title: t("qc.group.channels"),
         icon: Megaphone,
         items: [
-          {
-            label: "WhatsApp (kort)",
-            status: lengthStatus(whatsappShort.length, [60, 200], 30),
-            hint: "Ideaal 60-200 tekens",
-          },
-          {
-            label: "WhatsApp (medium)",
-            status: lengthStatus(whatsapp.length, [150, 400], 50),
-            hint: "Ideaal 150-400 tekens",
-          },
-          {
-            label: "Social teaser",
-            status: lengthStatus(teaser.length, [80, 220], 30),
-            hint: "Ideaal 80-220 tekens",
-          },
-          {
-            label: "Instagram/Facebook post",
-            status: lengthStatus(social.length, [200, 1500], 80),
-            hint: "Ideaal 200-1500 tekens",
-          },
-          {
-            label: "Lange promo",
-            status: lengthStatus(promo.length, [400, 2000], 150),
-            hint: "Voor blog/nieuwsbrief",
-          },
-          {
-            label: "Nieuwsbriefintro",
-            status: lengthStatus(newsletter.length, [80, 400], 40),
-            hint: "Korte hook voor mailings",
-          },
-          {
-            label: "Website-snippet",
-            status: lengthStatus(website.length, [100, 500], 40),
-            hint: "Voor je eigen site",
-          },
+          { label: t("qc.item.waShort"), status: lengthStatus(whatsappShort.length, [60, 200], 30), hint: t("qc.item.waShortHint") },
+          { label: t("qc.item.waMed"), status: lengthStatus(whatsapp.length, [150, 400], 50), hint: t("qc.item.waMedHint") },
+          { label: t("qc.item.teaser"), status: lengthStatus(teaser.length, [80, 220], 30), hint: t("qc.item.teaserHint") },
+          { label: t("qc.item.igPost"), status: lengthStatus(social.length, [200, 1500], 80), hint: t("qc.item.igPostHint") },
+          { label: t("qc.item.longPromo"), status: lengthStatus(promo.length, [400, 2000], 150), hint: t("qc.item.longPromoHint") },
+          { label: t("qc.item.newsletter"), status: lengthStatus(newsletter.length, [80, 400], 40), hint: t("qc.item.newsletterHint") },
+          { label: t("qc.item.website"), status: lengthStatus(website.length, [100, 500], 40), hint: t("qc.item.websiteHint") },
         ],
       },
       {
         id: "promo",
-        title: "Promotiekracht",
+        title: t("qc.group.promo"),
         icon: Sparkles,
         items: [
           {
-            label: "Duidelijke CTA in copy",
-            status: [whatsapp, social, newsletter].some((t) => hasCta(t)) ? "pass" : "warn",
-            hint: "Bv. 'Reserveer', 'Bekijk' of een link",
+            label: t("qc.item.cta"),
+            status: [whatsapp, social, newsletter].some((s) => hasCta(s)) ? "pass" : "warn",
+            hint: t("qc.item.ctaHint"),
           },
+          { label: t("qc.item.ctaLink"), status: event.cta_link ? "pass" : "warn", hint: t("qc.item.ctaLinkHint") },
           {
-            label: "CTA-link op event",
-            status: event.cta_link ? "pass" : "warn",
-            hint: "Verhoogt conversie meetbaar",
-          },
-          {
-            label: "Emoji-balans WhatsApp",
+            label: t("qc.item.emoji"),
             status: (() => {
               const c = emojiCount(whatsapp);
               if (whatsapp.length === 0) return "warn";
               if (c >= 1 && c <= 4) return "pass";
-              return c === 0 ? "warn" : "warn";
+              return "warn";
             })(),
-            hint: "1-4 emoji's voelt menselijk",
+            hint: t("qc.item.emojiHint"),
           },
-          {
-            label: "SEO-titel ingevuld",
-            status: event.seo_title ? "pass" : "warn",
-            hint: "Verbetert vindbaarheid",
-          },
-          {
-            label: "Tags voor categorisatie",
-            status: event.tags && event.tags.length > 0 ? "pass" : "warn",
-            hint: "Helpt bij filtering & ontdekking",
-          },
+          { label: t("qc.item.seoTitle"), status: event.seo_title ? "pass" : "warn", hint: t("qc.item.seoTitleHint") },
+          { label: t("qc.item.tags"), status: event.tags && event.tags.length > 0 ? "pass" : "warn", hint: t("qc.item.tagsHint") },
         ],
       },
     ];
-  }, [event, texts]);
+  }, [event, texts, t]);
 
   const allItems = groups.flatMap((g) => g.items);
   const passCount = allItems.filter((c) => c.status === "pass").length;
@@ -181,7 +130,7 @@ export function QualityCheck({ event, texts }: QualityCheckProps) {
 
   const scoreColor = score >= 80 ? "text-accent" : score >= 50 ? "text-[hsl(38_92%_50%)]" : "text-destructive";
   const scoreBar = score >= 80 ? "bg-accent" : score >= 50 ? "bg-[hsl(38_92%_50%)]" : "bg-destructive";
-  const scoreLabel = score >= 80 ? "Uitstekend" : score >= 50 ? "Redelijk" : "Onvolledig";
+  const scoreLabel = score >= 80 ? t("qc.scoreExcellent") : score >= 50 ? t("qc.scoreOk") : t("qc.scoreWeak");
 
   const StatusIcon = ({ status }: { status: Status }) => {
     if (status === "pass") return <CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0" />;
@@ -191,13 +140,12 @@ export function QualityCheck({ event, texts }: QualityCheckProps) {
 
   return (
     <div className="p-4 rounded-xl bg-card border border-border shadow-card space-y-4">
-      {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <Shield className="w-4 h-4 text-primary shrink-0" />
-          <h3 className="font-display font-semibold text-foreground text-sm truncate">Kwaliteitscheck</h3>
+          <h3 className="font-display font-semibold text-foreground text-sm truncate">{t("qc.title")}</h3>
           <span className="text-[11px] text-muted-foreground hidden sm:inline">
-            — {passCount} ok · {warnCount} tip · {failCount} actie
+            {t("qc.summary", { pass: String(passCount), warn: String(warnCount), fail: String(failCount) })}
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -208,12 +156,10 @@ export function QualityCheck({ event, texts }: QualityCheckProps) {
         </div>
       </div>
 
-      {/* Progress bar */}
       <div className="w-full bg-secondary rounded-full h-1.5">
         <div className={`h-1.5 rounded-full transition-all ${scoreBar}`} style={{ width: `${score}%` }} />
       </div>
 
-      {/* Groups */}
       <div className="grid gap-3 md:grid-cols-3">
         {groups.map((group) => {
           const GIcon = group.icon;

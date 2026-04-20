@@ -1,7 +1,8 @@
-import { Code2, Copy, Check, Palette, Eye } from "lucide-react";
+import { Code2, Copy, Check } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTranslation } from "@/hooks/useUILanguage";
 import { toast } from "sonner";
 
 interface EmbedCodeCardProps {
@@ -11,14 +12,12 @@ interface EmbedCodeCardProps {
 }
 
 export function EmbedCodeCard({ type, tenantSlug, eventSlug }: EmbedCodeCardProps) {
+  const { t } = useTranslation();
   const [theme, setTheme] = useState("light");
   const [copied, setCopied] = useState(false);
 
   const isAgenda = type === "agenda";
-  const title = isAgenda ? "Agenda Widget" : "Event Widget";
-  const desc = isAgenda
-    ? "Toon al je aankomende evenementen op je eigen website. Altijd up-to-date."
-    : "Highlight dit evenement als compacte promo card op je website.";
+  const title = isAgenda ? t("widgets.agenda") : t("widgets.singleEvent");
 
   const dataAttr = isAgenda
     ? `data-tenant="${tenantSlug}"`
@@ -26,18 +25,14 @@ export function EmbedCodeCard({ type, tenantSlug, eventSlug }: EmbedCodeCardProp
 
   const widgetId = isAgenda ? "tx-agenda-widget" : "tx-event-widget";
 
-  const code = `<!-- Gebruik de Widgets pagina om een embed-code te genereren -->\n<div id="${widgetId}" ${dataAttr} data-theme="${theme}"></div>`;
+  const code = `<!-- ${t("widgetWizard.embedDesc")} -->\n<div id="${widgetId}" ${dataAttr} data-theme="${theme}"></div>`;
 
   const copy = () => {
     navigator.clipboard.writeText(code);
     setCopied(true);
-    toast.success("Embed code gekopieerd");
+    toast.success(t("distribution.embedCopied"));
     setTimeout(() => setCopied(false), 2000);
   };
-
-  const features = isAgenda
-    ? ["Automatisch bijgewerkt", "Responsive design", "Jouw huisstijl", "Klikt door naar eventpagina"]
-    : ["Compacte weergave", "Auto-verwijderd na afloop", "CTA knop inbegrepen", "Past in elke pagina"];
 
   return (
     <div className="rounded-xl bg-card border border-border shadow-card overflow-hidden">
@@ -53,8 +48,8 @@ export function EmbedCodeCard({ type, tenantSlug, eventSlug }: EmbedCodeCardProp
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="light">Light</SelectItem>
-              <SelectItem value="dark">Dark</SelectItem>
+              <SelectItem value="light">{t("widgetWizard.themeLight")}</SelectItem>
+              <SelectItem value="dark">{t("widgetWizard.themeDark")}</SelectItem>
               <SelectItem value="auto">Auto</SelectItem>
             </SelectContent>
           </Select>
@@ -62,19 +57,10 @@ export function EmbedCodeCard({ type, tenantSlug, eventSlug }: EmbedCodeCardProp
       </div>
 
       <div className="p-4 space-y-3">
-        <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
-
-        <ul className="grid grid-cols-2 gap-1">
-          {features.map((f) => (
-            <li key={f} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <Check className="w-3 h-3 text-accent shrink-0" />
-              {f}
-            </li>
-          ))}
-        </ul>
+        <p className="text-xs text-muted-foreground leading-relaxed">{t("widgetWizard.embedDesc")}</p>
 
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Plak op je website:</p>
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">{t("distribution.embedTitle")}:</p>
           <code className="block text-[11px] bg-secondary p-3 rounded-lg text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">
             {code}
           </code>
@@ -83,7 +69,7 @@ export function EmbedCodeCard({ type, tenantSlug, eventSlug }: EmbedCodeCardProp
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={copy} className="gap-2 flex-1">
             {copied ? <Check className="w-3.5 h-3.5 text-accent" /> : <Copy className="w-3.5 h-3.5" />}
-            {copied ? "Gekopieerd!" : "Kopieer code"}
+            {copied ? t("widgets.copied") : t("embed.copy")}
           </Button>
         </div>
       </div>

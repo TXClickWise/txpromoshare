@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Loader2 } from "lucide-react";
+import { useTranslation } from "@/hooks/useUILanguage";
 import { ShareTextCard } from "./ShareTextCard";
 
 export interface CopyVariant {
@@ -46,6 +47,7 @@ export function ChannelCopyGroup({
   saved,
   actions,
 }: ChannelCopyGroupProps) {
+  const { t } = useTranslation();
   const initial = variants.find((v) => v.recommended)?.id ?? variants[0]?.id;
   const [activeId, setActiveId] = useState(initial);
 
@@ -78,7 +80,7 @@ export function ChannelCopyGroup({
                 exit={{ opacity: 0 }}
                 className="flex items-center gap-1 text-[10px] text-muted-foreground"
               >
-                <Loader2 className="w-3 h-3 animate-spin" /> Opslaan…
+                <Loader2 className="w-3 h-3 animate-spin" /> {t("ccg.savingLabel")}
               </motion.span>
             )}
             {!saving && saved && (
@@ -88,7 +90,7 @@ export function ChannelCopyGroup({
                 exit={{ opacity: 0 }}
                 className="flex items-center gap-1 text-[10px] text-accent"
               >
-                <Check className="w-3 h-3" /> Opgeslagen
+                <Check className="w-3 h-3" /> {t("ccg.savedLabel")}
               </motion.span>
             )}
           </AnimatePresence>
