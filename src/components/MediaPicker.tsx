@@ -380,6 +380,20 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
                 <MediaGrid items={filteredItems} />
               </div>
             )}
+
+            {hoveredItem && (
+              <div className="sticky bottom-0 -mx-1 mt-3 p-3 rounded-xl bg-card border border-border shadow-card">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 font-medium">
+                  Crop preview
+                </p>
+                <CropHintGuide
+                  imageUrl={hoveredItem.original_url || ""}
+                  imageWidth={hoveredItem.width}
+                  imageHeight={hoveredItem.height}
+                  role={activeRole}
+                />
+              </div>
+            )}
           </TabsContent>
 
           {/* Stock photos tab */}
