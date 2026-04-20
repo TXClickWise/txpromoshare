@@ -323,7 +323,7 @@ export default function CreateEventPage() {
             )}
             {ctx.publishedEventId && (
               <Button variant="outline" asChild className="w-full gap-2">
-                <Link to={`/app/distribution/${ctx.publishedEventId}`} onClick={() => ctx.dismissPublishSuccess()}>
+                <Link to={`/app/distribution?event=${ctx.publishedEventId}`} onClick={() => ctx.dismissPublishSuccess()}>
                   <Share2 className="w-4 h-4" />
                   Nu delen
                 </Link>
