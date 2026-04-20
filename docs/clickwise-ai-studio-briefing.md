@@ -62,7 +62,55 @@ Bij elke statuswijziging van een event vuurt TX EventShare een server-side sync 
 > - Trigger een welkomstworkflow
 >
 > #### B. Eventoverzicht-widget op de website
-> Embed de TX EventShare agenda-widget (de organisator heeft hiervoor een snippet beschikbaar via TX EventShare → Widgets). Zorg dat deze visueel matcht met de huisstijl van de site. Voeg er onder een duidelijke CTA aan toe: **"Mis geen evenement → Meld je aan voor WhatsApp-updates"** die naar formulier A linkt.
+> Twee opties:
+> 1. **Snel**: embed de TX EventShare agenda-widget (snippet beschikbaar via TX EventShare → Widgets). Visueel matchen met de huisstijl.
+> 2. **Volledige stijlvrijheid**: bouw een **eigen native HighLevel-pagina** die de [Public Events API](#eventdata-ophalen-via-de-public-events-api) consumeert (zie sectie hieronder). Hiermee heb je volledige controle over layout, typografie en interacties.
+>
+> Voeg er onder een duidelijke CTA aan toe: **"Mis geen evenement → Meld je aan voor WhatsApp-updates"** die naar formulier A linkt.
+>
+> #### C. Event-detailpagina (optioneel, native gebouwd)
+> Bouw via de Public Events API een eigen detailpagina met:
+> - Hero met `featured_image_url` + titel, datum, locatie
+> - Beschrijving (`description`)
+> - **Galerij-grid** met klikbare thumbnails uit het `gallery` array → opent een **lightbox** (prev/next-knoppen, ESC sluit, klik op backdrop sluit, pijltjestoetsen voor navigatie)
+> - CTA-knop met `cta_link` / `cta_button_text`
+>
+> ### Eventdata ophalen via de Public Events API
+>
+> Naast de automatische CRM-sync (contacts/appointments in deze sub-account) kan de website **events direct ophalen** via een publieke read-only JSON API. Geen auth nodig, CORS staat open voor alle origins, responses zijn 5 minuten cachebaar.
+>
+> **Endpoints**:
+> - **Lijst**: `GET https://ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/public-events-api/v1/tenants/{tenant_slug}/events`
+>   - Query params: `from`, `to`, `category`, `limit` (max 100), `offset`
+> - **Detail (incl. galerij)**: `GET .../v1/tenants/{tenant_slug}/events/{event_slug}`
+>
+> Zie `docs/public-events-api.md` voor de volledige spec, foutcodes en voorbeelden.
+>
+> **Gallery-veld** — alleen aanwezig in de detail-response (om de lijst lichtgewicht te houden):
+> ```json
+> "gallery": [
+>   { "url": "https://.../foto-1.jpg", "alt": "Sfeerbeeld" },
+>   { "url": "https://.../foto-2.jpg", "alt": null }
+> ]
+> ```
+> Gebruik `alt` voor toegankelijkheid; fallback naar de event-titel als `alt` `null` is.
+>
+> **Voorbeeld (fetch)**:
+> ```js
+> const res = await fetch(
+>   "https://ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/public-events-api/v1/tenants/demo-cafe/events/zomerfeest-2026"
+> );
+> const { event } = await res.json();
+> // event.featured_image_url → hero
+> // event.gallery → lightbox grid
+> ```
+>
+> **Do's & don'ts voor de API**:
+> - ✅ Cache responses minimaal 5 minuten client-side (matcht de server `Cache-Control: max-age=300`)
+> - ✅ Gebruik `featured_image_url` voor lijst-/overzichtsweergaves, `gallery` alleen op de detailpagina
+> - ✅ Lazy-load gallery-thumbnails (`loading="lazy"`) — kan om 12 foto's per event gaan
+> - ❌ Niet pollen — vertrouw op de cache headers
+> - ❌ Niet de API gebruiken om event-broadcasts te triggeren — daarvoor blijven de Calendar appointment workflows (1–4) leidend
 >
 > ### Workflows die je MOET bouwen in HighLevel
 >
