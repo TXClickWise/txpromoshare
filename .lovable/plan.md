@@ -1,33 +1,38 @@
 
-## Plan: Galerij voor evenementen (beheer + lightbox + API)
+User wil een korte aanvulling op de bestaande AI Studio briefing (`docs/clickwise-ai-studio-briefing.md`) zodat de AI Studio agent weet:
+1. Dat de Public Events API bestaat
+2. Dat het detail-endpoint een `gallery` array bevat met extra foto's
+3. Hoe deze te gebruiken voor een evenementen-detailpagina met klikbare lightbox-galerij
 
-### 1. Database
-- **Migratie**: RLS-policies op `event_gallery` toevoegen voor INSERT/UPDATE/DELETE door `editor+`. Nu bestaan alleen SELECT-policies, terwijl ik in de wizard gallery-rijen wil aanmaken/verwijderen.
-  - INSERT/UPDATE/DELETE: WHERE event behoort tot tenant en gebruiker is owner/admin/editor.
+## Plan
 
-### 2. Form state (`useEventForm.ts`)
-- Nieuw veld `gallery: { mediaId: string; url: string }[]` in `EventFormState`.
-- **Laden** (bij edit): `event_gallery` joinen met `media` op sort_order, zetten in form.
-- **Opslaan**: nieuwe helper `saveGallery(eventId)` die alle bestaande rijen verwijdert en in volgorde herinvoegt — analoog aan `saveSponsors`. Aanroepen vanuit `handleSave` en `handlePublish` (waar `saveSponsors` ook wordt aangeroepen).
+**Eén bestandswijziging**: `docs/clickwise-ai-studio-briefing.md` uitbreiden met een nieuwe sectie **"Eventdata ophalen via de Public Events API"** die het volgende bevat:
 
-### 3. Wizard UI (`StepMedia.tsx`)
-Nieuw blok "Galerij (extra foto's)" onder de Featured Image, boven Sponsors:
-- Grid met thumbnails + verwijder-knop per foto.
-- "Foto toevoegen" knop opent `MediaPicker` in een **multi-select** mode (of per foto één).
-- Eenvoudige "verplaats omhoog/omlaag" pijltjes voor sort_order (geen drag-drop voor scope).
-- Limit: max 12 foto's (UI-validatie).
+1. **Korte intro** — naast de automatische CRM-sync (contacts/appointments) kan de website ook direct events ophalen via de publieke read-API. Geen auth nodig, CORS open, 5 min cache.
 
-**MediaPicker uitbreiding**: optionele `mode="multi"` prop. Bij multi: selecties verzamelen en met "Toevoegen" callback geven `(items: {id, url}[]) => void`. Eenvoudige toevoeging — bestaande single-select gedrag blijft default.
+2. **Endpoints**:
+   - Lijst: `GET https://ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/public-events-api/v1/tenants/{tenant_slug}/events`
+   - Detail (incl. galerij): `.../events/{event_slug}`
+   - Verwijzing naar `docs/public-events-api.md` voor volledige spec
 
-### 4. Lightbox op publieke pagina (`PublicEventPage.tsx`)
-- Vervang de huidige `<a target="_blank">` door klikbare thumbnails die een **lightbox dialog** openen (shadcn `Dialog`).
-- Lightbox features: grote weergave, links/rechts navigatie (knoppen + pijltjestoetsen), Esc om te sluiten, foto-counter (3/8), backdrop-click sluit.
-- Behoud het huidige aspect-square grid; voeg subtle hover-zoom + "vergroot" icoon toe.
+3. **Gallery-veld uitleg** — alleen aanwezig in detail-response:
+   ```json
+   "gallery": [
+     { "url": "https://.../foto-1.jpg", "alt": "Sfeerbeeld" },
+     { "url": "https://.../foto-2.jpg", "alt": null }
+   ]
+   ```
 
-### 5. Public Events API
-- Voeg `gallery: [{ url, alt }]` toe aan de event-detail response (en optioneel ook aan list response — beter alleen detail om payload klein te houden). Update `docs/public-events-api.md`.
+4. **Aanbevolen UI-implementatie voor AI Studio**:
+   - Op de eventoverzicht-widget (sectie B): toon `featured_image_url` als thumbnail
+   - Op een event-detailpagina: toon hero met `featured_image_url`, plus klikbare gallery-grid die een lightbox opent (prev/next, ESC, klik buiten = sluiten)
+   - Gebruik `alt` voor toegankelijkheid; fallback naar event-titel als `alt` null is
 
-### Niet in scope
-- Drag-and-drop sorteren (pijltjes volstaan).
-- Bulk upload direct vanuit de wizard (gaat via bestaande MediaPicker upload-tab).
-- Captions per foto (kan later via `event_gallery.alt` of `media.alt_text`).
+5. **Do's & don'ts toevoegen**:
+   - ✅ Cache responses minimaal 5 min client-side (matcht server cache)
+   - ✅ Gebruik `featured_image_url` voor lijst, `gallery` alleen op detailpagina
+   - ❌ Niet pollen — gebruik `Cache-Control` header
+
+6. **Update sectie B** ("Eventoverzicht-widget") met optie: in plaats van de TX EventShare embed-widget kan AI Studio ook een **eigen native HighLevel-pagina** bouwen die de Public API consumeert voor volledige stijlvrijheid.
+
+Geen andere bestanden wijzigen. Geen code/DB-changes.
