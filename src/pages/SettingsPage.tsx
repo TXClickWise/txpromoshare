@@ -99,9 +99,9 @@ export default function SettingsPage() {
       .eq("id", tenant.id);
     setSaving(false);
     if (error) {
-      toast.error("Opslaan mislukt: " + error.message);
+      toast.error(t("settings.org.saveFailed", { msg: error.message }));
     } else {
-      toast.success("Organisatie-instellingen opgeslagen");
+      toast.success(t("settings.org.saved"));
       logAudit({ tenantId: tenant.id, entityType: "tenant", action: "settings_updated", entityId: tenant.id });
       refetch();
     }
@@ -109,7 +109,7 @@ export default function SettingsPage() {
 
   async function saveVenue() {
     if (!tenantId || !venueName.trim()) {
-      toast.error("Vul minimaal een naam in");
+      toast.error(t("settings.venues.nameRequired2"));
       return;
     }
     setVenueLoading(true);
@@ -120,7 +120,7 @@ export default function SettingsPage() {
         .eq("id", editingVenueId);
       setVenueLoading(false);
       if (error) { toast.error(error.message); return; }
-      toast.success("Locatie bijgewerkt");
+      toast.success(t("settings.venues.updated"));
     } else {
       const isPrimary = venues.length === 0;
       const { error } = await supabase.from("venues").insert({
@@ -133,7 +133,7 @@ export default function SettingsPage() {
       });
       setVenueLoading(false);
       if (error) { toast.error(error.message); return; }
-      toast.success("Locatie toegevoegd");
+      toast.success(t("settings.venues.added"));
     }
     resetVenueForm();
     fetchVenues();
@@ -142,7 +142,7 @@ export default function SettingsPage() {
   async function deleteVenue(id: string) {
     const { error } = await supabase.from("venues").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
-    toast.success("Locatie verwijderd");
+    toast.success(t("settings.venues.deleted"));
     if (editingVenueId === id) resetVenueForm();
     fetchVenues();
   }
@@ -172,64 +172,64 @@ export default function SettingsPage() {
 
       <Tabs defaultValue="organization">
         <TabsList className="mb-6 flex-wrap h-auto gap-1">
-          <TabsTrigger value="organization" className="gap-1.5 text-xs"><Building2 className="w-3.5 h-3.5" />Organisatie</TabsTrigger>
-          <TabsTrigger value="branding" className="gap-1.5 text-xs"><Palette className="w-3.5 h-3.5" />Branding</TabsTrigger>
-          <TabsTrigger value="venue" className="gap-1.5 text-xs"><MapPin className="w-3.5 h-3.5" />Locaties</TabsTrigger>
-          <TabsTrigger value="visibility" className="gap-1.5 text-xs"><Globe className="w-3.5 h-3.5" />Zichtbaarheid</TabsTrigger>
-          <TabsTrigger value="plan" className="gap-1.5 text-xs"><Key className="w-3.5 h-3.5" />Abonnement</TabsTrigger>
+          <TabsTrigger value="organization" className="gap-1.5 text-xs"><Building2 className="w-3.5 h-3.5" />{t("settings.tab.organization")}</TabsTrigger>
+          <TabsTrigger value="branding" className="gap-1.5 text-xs"><Palette className="w-3.5 h-3.5" />{t("settings.tab.branding")}</TabsTrigger>
+          <TabsTrigger value="venue" className="gap-1.5 text-xs"><MapPin className="w-3.5 h-3.5" />{t("settings.tab.venues")}</TabsTrigger>
+          <TabsTrigger value="visibility" className="gap-1.5 text-xs"><Globe className="w-3.5 h-3.5" />{t("settings.tab.visibility")}</TabsTrigger>
+          <TabsTrigger value="plan" className="gap-1.5 text-xs"><Key className="w-3.5 h-3.5" />{t("settings.tab.plan")}</TabsTrigger>
         </TabsList>
 
         {/* Organization */}
         <TabsContent value="organization" className="space-y-5">
-          <SettingsCard title="Bedrijfsgegevens" description="Deze informatie wordt gebruikt voor facturen en communicatie.">
+          <SettingsCard title={t("settings.org.title")} description={t("settings.org.subtitle")}>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Bedrijfsnaam</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.org.name")}</Label>
                 <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Contactpersoon</Label>
-                <Input value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} placeholder="Naam contactpersoon" />
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.org.contact")}</Label>
+                <Input value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} placeholder={t("settings.org.contactPlaceholder")} />
               </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Type bedrijf</Label>
-                <Input value={businessType} onChange={(e) => setBusinessType(e.target.value)} placeholder="Bijv. Café, Restaurant, Evenementenlocatie" />
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.org.businessType")}</Label>
+                <Input value={businessType} onChange={(e) => setBusinessType(e.target.value)} placeholder={t("settings.org.businessPlaceholder")} />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Website</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.org.website")}</Label>
                 <Input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://" />
               </div>
             </div>
           </SettingsCard>
 
-          <SettingsCard title="Contactgegevens">
+          <SettingsCard title={t("settings.contact.title")}>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Mail className="w-3 h-3" />E-mail</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Mail className="w-3 h-3" />{t("settings.contact.email")}</Label>
                 <Input value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Phone className="w-3 h-3" />Telefoon</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Phone className="w-3 h-3" />{t("settings.contact.phone")}</Label>
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+31..." />
               </div>
             </div>
           </SettingsCard>
 
-          <SettingsCard title="Adresgegevens">
+          <SettingsCard title={t("settings.address.title")}>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Adres</Label>
-                <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Straat en huisnummer" />
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.address.street")}</Label>
+                <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t("settings.address.streetPlaceholder")} />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Stad</Label>
-                <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Stad" />
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.address.city")}</Label>
+                <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder={t("settings.org.cityPlaceholder")} />
               </div>
             </div>
             <div className="space-y-2 max-w-[200px]">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Postcode</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.address.postal")}</Label>
               <Input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="1234 AB" />
             </div>
           </SettingsCard>
@@ -254,7 +254,7 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-foreground text-sm truncate">{v.name}</p>
                       {v.is_primary && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent font-medium">Standaard</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent font-medium">{t("settings.venues.primary")}</span>
                       )}
                     </div>
                     {(v.address || v.city) && (
@@ -264,7 +264,7 @@ export default function SettingsPage() {
                     )}
                   </div>
                   <div className="flex gap-1 shrink-0">
-                    <Button variant="ghost" size="sm" onClick={() => editVenue(v)} className="text-xs h-7 px-2">Bewerk</Button>
+                    <Button variant="ghost" size="sm" onClick={() => editVenue(v)} className="text-xs h-7 px-2">{t("settings.venues.edit")}</Button>
                     <Button variant="ghost" size="sm" onClick={() => deleteVenue(v.id)} className="text-destructive hover:text-destructive h-7 px-2">
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
@@ -275,33 +275,33 @@ export default function SettingsPage() {
           )}
 
           <SettingsCard
-            title={editingVenueId ? "Locatie bewerken" : "Nieuwe locatie toevoegen"}
-            description="Je standaard locatie wordt automatisch ingevuld bij nieuwe evenementen."
+            title={editingVenueId ? t("settings.venues.editing") : t("settings.venues.adding")}
+            description={t("settings.venues.help")}
           >
             <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Locatienaam *</Label>
-              <Input value={venueName} onChange={(e) => setVenueName(e.target.value)} placeholder="Naam van je locatie" />
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.venues.nameRequired")}</Label>
+              <Input value={venueName} onChange={(e) => setVenueName(e.target.value)} placeholder={t("settings.venues.namePlaceholder")} />
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Adres</Label>
-                <Input value={venueAddress} onChange={(e) => setVenueAddress(e.target.value)} placeholder="Straat en huisnummer" />
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.address.street")}</Label>
+                <Input value={venueAddress} onChange={(e) => setVenueAddress(e.target.value)} placeholder={t("settings.address.streetPlaceholder")} />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Stad</Label>
-                <Input value={venueCity} onChange={(e) => setVenueCity(e.target.value)} placeholder="Stad" />
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.address.city")}</Label>
+                <Input value={venueCity} onChange={(e) => setVenueCity(e.target.value)} placeholder={t("settings.org.cityPlaceholder")} />
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Postcode</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.address.postal")}</Label>
               <Input value={venuePostal} onChange={(e) => setVenuePostal(e.target.value)} placeholder="1234 AB" className="max-w-[200px]" />
             </div>
             <div className="flex gap-2">
               <Button size="sm" onClick={saveVenue} disabled={venueLoading} className="gap-2">
-                <Save className="w-4 h-4" />{venueLoading ? "Opslaan..." : editingVenueId ? "Bijwerken" : "Toevoegen"}
+                <Save className="w-4 h-4" />{venueLoading ? t("common.saving") : editingVenueId ? t("settings.venues.update") : t("settings.venues.add")}
               </Button>
               {editingVenueId && (
-                <Button size="sm" variant="outline" onClick={resetVenueForm}>Annuleren</Button>
+                <Button size="sm" variant="outline" onClick={resetVenueForm}>{t("common.cancel")}</Button>
               )}
             </div>
           </SettingsCard>
@@ -309,11 +309,11 @@ export default function SettingsPage() {
 
         {/* Visibility */}
         <TabsContent value="visibility" className="space-y-5">
-          <SettingsCard title="Publieke zichtbaarheid" description="Bepaal of jouw evenementen zichtbaar zijn op de publieke ontdekkingspagina van TX EventShare.">
+          <SettingsCard title={t("settings.visibility.title")} description={t("settings.visibility.subtitle")}>
             <div className="flex items-center justify-between rounded-xl bg-secondary/30 border border-border p-4">
               <div>
-                <p className="text-sm font-medium text-foreground">Toon evenementen op ontdekkingspagina</p>
-                <p className="text-xs text-muted-foreground">Je kunt dit per evenement nog overschrijven.</p>
+                <p className="text-sm font-medium text-foreground">{t("settings.visibility.toggleLabel")}</p>
+                <p className="text-xs text-muted-foreground">{t("settings.visibility.toggleHelp")}</p>
               </div>
               <Switch checked={showOnDiscovery} onCheckedChange={setShowOnDiscovery} />
             </div>
@@ -326,38 +326,38 @@ export default function SettingsPage() {
                 .eq("id", tenant.id);
               setSaving(false);
               if (error) {
-                toast.error("Opslaan mislukt: " + error.message);
+                toast.error(t("settings.org.saveFailed", { msg: error.message }));
               } else {
-                toast.success("Zichtbaarheid opgeslagen");
+                toast.success(t("settings.visibility.saved"));
                 logAudit({ tenantId: tenant.id, entityType: "tenant", action: "visibility_updated", entityId: tenant.id });
                 refetch();
               }
             }} disabled={saving} className="gap-2">
-              <Save className="w-4 h-4" />{saving ? "Opslaan..." : "Opslaan"}
+              <Save className="w-4 h-4" />{saving ? t("common.saving") : t("common.save")}
             </Button>
           </SettingsCard>
         </TabsContent>
 
         {/* Plan / Subscription */}
         <TabsContent value="plan" className="space-y-5">
-          <SettingsCard title="Huidig abonnement" description="Bekijk je actieve abonnement en limieten.">
+          <SettingsCard title={t("settings.plan.title")} description={t("settings.plan.subtitle")}>
             <div className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 border border-border">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Key className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1">
-                <p className="text-lg font-display font-bold text-foreground capitalize">{effectivePlanId} plan</p>
+                <p className="text-lg font-display font-bold text-foreground capitalize">{t("nav.plan", { plan: effectivePlanId })}</p>
                 <p className="text-xs text-muted-foreground">
-                  {effectivePlanId === "free" && "Beperkt tot 3 actieve events, 1 widget en 1 teamlid"}
-                  {effectivePlanId === "basic" && "Tot 15 events, 3 widgets, 3 teamleden en custom branding"}
-                  {effectivePlanId === "pro" && "Onbeperkte events, widgets, tot 10 teamleden en alle features"}
+                  {effectivePlanId === "free" && t("settings.plan.freeDesc")}
+                  {effectivePlanId === "basic" && t("settings.plan.basicDesc")}
+                  {effectivePlanId === "pro" && t("settings.plan.proDesc")}
                 </p>
               </div>
             </div>
             {effectivePlanId !== "pro" && (
               <Button variant="outline" size="sm" className="gap-2" asChild>
                 <a href="/app/billing">
-                  <ExternalLink className="w-3.5 h-3.5" />Upgraden
+                  <ExternalLink className="w-3.5 h-3.5" />{t("settings.plan.upgrade")}
                 </a>
               </Button>
             )}
