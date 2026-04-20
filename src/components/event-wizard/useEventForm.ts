@@ -60,6 +60,7 @@ export interface EventFormState {
   featuredImageId: string | null;
   featuredImageUrl: string | null;
   sponsors: { name: string; logo_url: string; website_url: string }[];
+  gallery: { mediaId: string; url: string }[];
 }
 
 export interface StepValidation {
@@ -121,6 +122,7 @@ export function useEventForm() {
     featuredImageId: null,
     featuredImageUrl: null,
     sponsors: [],
+    gallery: [],
   });
 
   const [availableCategories, setAvailableCategories] = useState<Pick<Tables<"categories">, "id" | "name" | "slug">[]>([]);
@@ -264,6 +266,16 @@ export function useEventForm() {
         }
         const { data: spData } = await supabase.from("event_sponsors").select("*").eq("event_id", data.id).order("sort_order");
         if (spData) updates.sponsors = spData.map(s => ({ name: s.name, logo_url: s.logo_url || "", website_url: s.website_url || "" }));
+        const { data: galData } = await supabase
+          .from("event_gallery")
+          .select("media_id, media:media_id(original_url)")
+          .eq("event_id", data.id)
+          .order("sort_order");
+        if (galData) {
+          updates.gallery = galData
+            .map((g: any) => ({ mediaId: g.media_id, url: g.media?.original_url || "" }))
+            .filter((g) => g.url);
+        }
         loadedStatusRef.current = data.status;
         setForm(prev => ({ ...prev, ...updates }));
         setTimeout(() => {
@@ -397,6 +409,20 @@ export function useEventForm() {
     }
   }
 
+  async function saveGallery(eventId: string) {
+    await supabase.from("event_gallery").delete().eq("event_id", eventId);
+    const valid = form.gallery.filter((g) => g.mediaId);
+    if (valid.length > 0) {
+      await supabase.from("event_gallery").insert(
+        valid.map((g, i) => ({
+          event_id: eventId,
+          media_id: g.mediaId,
+          sort_order: i,
+        }))
+      );
+    }
+  }
+
   async function generateOccurrences(eventId: string) {
     if (!form.isRecurring || !tenantId) return;
     const dates = generatePreviewDates(form);
@@ -458,6 +484,7 @@ export function useEventForm() {
     }
     if (!error && eventId) {
       await saveSponsors(eventId);
+      await saveGallery(eventId);
       if (form.isRecurring) await generateOccurrences(eventId);
     }
     setSaving(false);
@@ -503,6 +530,7 @@ export function useEventForm() {
     }
     if (!error && eventId) {
       await saveSponsors(eventId);
+      await saveGallery(eventId);
       if (form.isRecurring) await generateOccurrences(eventId);
     }
     setSaving(false);

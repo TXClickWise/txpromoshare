@@ -43,11 +43,13 @@ interface MediaPickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (mediaId: string, url: string) => void;
+  onSelectMulti?: (items: { id: string; url: string }[]) => void;
   selectedId?: string | null;
   role?: keyof typeof IMAGE_ROLES;
+  mode?: "single" | "multi";
 }
 
-export default function MediaPicker({ open, onOpenChange, onSelect, selectedId, role = "featured" }: MediaPickerProps) {
+export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMulti, selectedId, role = "featured", mode = "single" }: MediaPickerProps) {
   const { tenantId } = useTenant();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,6 +61,7 @@ export default function MediaPicker({ open, onOpenChange, onSelect, selectedId, 
   const [stockLoading, setStockLoading] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [multiSelected, setMultiSelected] = useState<{ id: string; url: string }[]>([]);
 
   const roleInfo = IMAGE_ROLES[role] || IMAGE_ROLES.featured;
 
@@ -171,37 +174,58 @@ export default function MediaPicker({ open, onOpenChange, onSelect, selectedId, 
   };
 
   const selectExisting = (item: Tables<"media">) => {
+    if (mode === "multi") {
+      const url = item.original_url || "";
+      setMultiSelected((prev) => {
+        const exists = prev.find((p) => p.id === item.id);
+        if (exists) return prev.filter((p) => p.id !== item.id);
+        return [...prev, { id: item.id, url }];
+      });
+      return;
+    }
     onSelect(item.id, item.original_url || "");
     onOpenChange(false);
   };
 
+  const confirmMulti = () => {
+    if (multiSelected.length === 0) return;
+    onSelectMulti?.(multiSelected);
+    setMultiSelected([]);
+    onOpenChange(false);
+  };
+
+  const isMultiSelected = (id: string) => multiSelected.some((m) => m.id === id);
+
   const MediaGrid = ({ items }: { items: Tables<"media">[] }) => (
     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-      {items.map((item) => (
-        <button
-          key={item.id}
-          onClick={() => selectExisting(item)}
-          className={`group relative rounded-lg border-2 overflow-hidden aspect-square transition-all ${
-            selectedId === item.id ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
-          }`}
-        >
-          <img src={item.original_url || ""} alt={item.alt_text || item.filename}
-            className="w-full h-full object-cover" loading="lazy" />
-          {selectedId === item.id && (
-            <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-              <Check className="w-6 h-6 text-primary" />
+      {items.map((item) => {
+        const isSelected = mode === "multi" ? isMultiSelected(item.id) : selectedId === item.id;
+        return (
+          <button
+            key={item.id}
+            onClick={() => selectExisting(item)}
+            className={`group relative rounded-lg border-2 overflow-hidden aspect-square transition-all ${
+              isSelected ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
+            }`}
+          >
+            <img src={item.original_url || ""} alt={item.alt_text || item.filename}
+              className="w-full h-full object-cover" loading="lazy" />
+            {isSelected && (
+              <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                <Check className="w-6 h-6 text-primary" />
+              </div>
+            )}
+            <div className="absolute bottom-0 left-0 right-0 px-1.5 py-1 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+              <p className="text-[9px] text-white truncate">{item.filename}</p>
             </div>
-          )}
-          <div className="absolute bottom-0 left-0 right-0 px-1.5 py-1 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-            <p className="text-[9px] text-white truncate">{item.filename}</p>
-          </div>
-          <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Badge variant="secondary" className="text-[8px] h-4 bg-black/50 text-white border-0">
-              {item.source === "stock" ? "Stock" : "Upload"}
-            </Badge>
-          </div>
-        </button>
-      ))}
+            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Badge variant="secondary" className="text-[8px] h-4 bg-black/50 text-white border-0">
+                {item.source === "stock" ? "Stock" : "Upload"}
+              </Badge>
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 
@@ -384,6 +408,22 @@ export default function MediaPicker({ open, onOpenChange, onSelect, selectedId, 
             </div>
           </TabsContent>
         </Tabs>
+
+        {mode === "multi" && (
+          <div className="flex items-center justify-between border-t border-border pt-3 mt-2">
+            <p className="text-xs text-muted-foreground">
+              {multiSelected.length} foto{multiSelected.length === 1 ? "" : "'s"} geselecteerd
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => { setMultiSelected([]); onOpenChange(false); }}>
+                Annuleren
+              </Button>
+              <Button size="sm" onClick={confirmMulti} disabled={multiSelected.length === 0}>
+                Toevoegen ({multiSelected.length})
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

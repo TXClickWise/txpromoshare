@@ -75,12 +75,21 @@ GET /v1/tenants/{tenant_slug}/events
 GET /v1/tenants/{tenant_slug}/events/{event_slug}
 ```
 
+Bevat — naast alle velden uit de lijst — ook een `gallery` array met extra foto's bij het evenement (alleen aanwezig in de detail-response om de lijst lichtgewicht te houden).
+
 **Response 200**
 
 ```json
 {
   "tenant": { "...": "..." },
-  "event": { "...": "..." }
+  "event": {
+    "...": "...",
+    "featured_image_url": "https://.../storage/v1/object/public/media/...",
+    "gallery": [
+      { "url": "https://.../storage/v1/object/public/media/foto-1.jpg", "alt": "Sfeerbeeld" },
+      { "url": "https://.../storage/v1/object/public/media/foto-2.jpg", "alt": null }
+    ]
+  }
 }
 ```
 
