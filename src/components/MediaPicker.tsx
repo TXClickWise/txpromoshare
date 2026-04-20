@@ -262,14 +262,19 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
                 <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
               </div>
             )}
-          >
-            <img src={item.original_url || ""} alt={item.alt_text || item.filename}
-              className="w-full h-full object-cover" loading="lazy" />
-            {isSelected && (
-              <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                <Check className="w-6 h-6 text-primary" />
-              </div>
-            )}
+            <div className="absolute bottom-0 left-0 right-0 px-1.5 py-1 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+              <p className="text-[9px] text-white truncate">{item.filename}</p>
+            </div>
+            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Badge variant="secondary" className="text-[8px] h-4 bg-black/50 text-white border-0">
+                {item.source === "stock" ? "Stock" : "Upload"}
+              </Badge>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
             <div className="absolute bottom-0 left-0 right-0 px-1.5 py-1 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
               <p className="text-[9px] text-white truncate">{item.filename}</p>
             </div>
