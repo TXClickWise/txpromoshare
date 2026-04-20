@@ -472,6 +472,87 @@ export type Database = {
           },
         ]
       }
+      event_translations: {
+        Row: {
+          ai_generated_at: string | null
+          created_at: string
+          cta_button_text: string | null
+          event_id: string
+          full_description: string | null
+          id: string
+          is_ai_generated: boolean
+          language_code: string
+          last_edited_by: string | null
+          seo_description: string | null
+          seo_title: string | null
+          short_description: string | null
+          slug: string | null
+          social_share_text: string | null
+          subtitle: string | null
+          tenant_id: string
+          title: string | null
+          updated_at: string
+          whatsapp_share_text: string | null
+        }
+        Insert: {
+          ai_generated_at?: string | null
+          created_at?: string
+          cta_button_text?: string | null
+          event_id: string
+          full_description?: string | null
+          id?: string
+          is_ai_generated?: boolean
+          language_code: string
+          last_edited_by?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          short_description?: string | null
+          slug?: string | null
+          social_share_text?: string | null
+          subtitle?: string | null
+          tenant_id: string
+          title?: string | null
+          updated_at?: string
+          whatsapp_share_text?: string | null
+        }
+        Update: {
+          ai_generated_at?: string | null
+          created_at?: string
+          cta_button_text?: string | null
+          event_id?: string
+          full_description?: string | null
+          id?: string
+          is_ai_generated?: boolean
+          language_code?: string
+          last_edited_by?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          short_description?: string | null
+          slug?: string | null
+          social_share_text?: string | null
+          subtitle?: string | null
+          tenant_id?: string
+          title?: string | null
+          updated_at?: string
+          whatsapp_share_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_translations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_translations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           auto_end_behavior: string | null
@@ -1050,6 +1131,7 @@ export type Database = {
           id: string
           phone: string | null
           status: string
+          ui_language: string
           updated_at: string
         }
         Insert: {
@@ -1059,6 +1141,7 @@ export type Database = {
           id: string
           phone?: string | null
           status?: string
+          ui_language?: string
           updated_at?: string
         }
         Update: {
@@ -1068,6 +1151,7 @@ export type Database = {
           id?: string
           phone?: string | null
           status?: string
+          ui_language?: string
           updated_at?: string
         }
         Relationships: []
@@ -1645,6 +1729,23 @@ export type Database = {
           venue_address: string
           venue_city: string
           venue_name: string
+        }[]
+      }
+      get_event_localized: {
+        Args: { _event_id: string; _language_code?: string }
+        Returns: {
+          cta_button_text: string
+          full_description: string
+          is_fallback: boolean
+          language_code: string
+          seo_description: string
+          seo_title: string
+          short_description: string
+          slug: string
+          social_share_text: string
+          subtitle: string
+          title: string
+          whatsapp_share_text: string
         }[]
       }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
