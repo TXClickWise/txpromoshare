@@ -96,7 +96,7 @@ export default function PublicLayout() {
           <div className="md:hidden border-t border-border px-4 py-4 space-y-3 bg-background">
             {navLinks.map((link) => (
               link.hash ? (
-                <a key={link.to} href={link.to} onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-muted-foreground">{link.label}</a>
+                <a key={link.to} href={link.to} onClick={(e) => handleHashClick(e, link.to)} className="block text-sm font-medium text-muted-foreground">{link.label}</a>
               ) : (
                 <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-muted-foreground">{link.label}</Link>
               )
