@@ -26,17 +26,18 @@ export default function PublicLayout() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Scroll to hash target when navigating to /#section from another route
+  // Scroll to hash target when navigating to /#section from another route.
+  // When navigating without a hash, scroll to top.
   useEffect(() => {
     if (location.hash) {
       const id = location.hash.replace("#", "");
-      // Wait for the target route to render
       const timer = setTimeout(() => {
         const el = document.getElementById(id);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
       return () => clearTimeout(timer);
     }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [location.pathname, location.hash]);
 
   const handleHashClick = (e: React.MouseEvent, to: string) => {
@@ -54,6 +55,14 @@ export default function PublicLayout() {
     }
   };
 
+  const handleHomeClick = (e: React.MouseEvent) => {
+    if (location.pathname === "/" && !location.hash) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setMenuOpen(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className={cn(
@@ -61,7 +70,7 @@ export default function PublicLayout() {
         scrolled ? "bg-background/90 backdrop-blur-md border-b border-border shadow-card" : "bg-transparent"
       )}>
         <div className="container flex items-center justify-between h-16 px-4">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" onClick={handleHomeClick} className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg gradient-hero flex items-center justify-center">
               <span className="text-primary-foreground font-display font-bold text-sm">TX</span>
             </div>
@@ -75,7 +84,7 @@ export default function PublicLayout() {
                   {link.label}
                 </a>
               ) : (
-                <Link key={link.to} to={link.to} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                <Link key={link.to} to={link.to} onClick={link.to === "/" ? handleHomeClick : undefined} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                   {link.label}
                 </Link>
               )
@@ -107,7 +116,7 @@ export default function PublicLayout() {
               link.hash ? (
                 <a key={link.to} href={link.to} onClick={(e) => handleHashClick(e, link.to)} className="block text-sm font-medium text-muted-foreground">{link.label}</a>
               ) : (
-                <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-muted-foreground">{link.label}</Link>
+                <Link key={link.to} to={link.to} onClick={(e) => { if (link.to === "/") handleHomeClick(e); setMenuOpen(false); }} className="block text-sm font-medium text-muted-foreground">{link.label}</Link>
               )
             ))}
             <Link
