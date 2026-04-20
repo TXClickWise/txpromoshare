@@ -584,7 +584,7 @@ export function useEventForm() {
   }
 
   return {
-    form, updateForm, isEditing, id, saving, loading,
+    form, updateForm, isEditing, id, saving, autosaving, loading,
     availableCategories, venues,
     mediaPickerOpen, setMediaPickerOpen,
     mediaItems, mediaLoading, uploading,
@@ -592,6 +592,7 @@ export function useEventForm() {
     loadMediaItems,
     handleSave, handlePublish, handleDelete,
     validateStep, isDirty, lastSavedAt,
+    publishedEventId, publishedStatus, dismissPublishSuccess,
     navigate, tenantId,
   };
 }
