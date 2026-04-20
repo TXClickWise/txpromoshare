@@ -160,11 +160,21 @@ Deno.serve(async (req) => {
       media:featured_image_id ( storage_path, original_url )
     `;
 
-    // Single event
+    // Single event (includes gallery)
     if (eventSlug) {
+      const detailSelect = `
+        id, slug, title, subtitle, short_description, full_description,
+        start_date, end_date, start_time, end_time,
+        organizer_name, cta_link, cta_button_text, tags,
+        is_featured, featured_until, status,
+        categories:category_id ( slug, name, color ),
+        venues:venue_id ( name, address, city, postal_code ),
+        media:featured_image_id ( storage_path, original_url ),
+        event_gallery ( sort_order, media:media_id ( storage_path, original_url, alt_text ) )
+      `;
       const { data, error } = await supabase
         .from("events")
-        .select(baseSelect)
+        .select(detailSelect)
         .eq("tenant_id", tenant.id)
         .eq("slug", eventSlug)
         .eq("status", "published")
@@ -173,7 +183,7 @@ Deno.serve(async (req) => {
       if (error) throw error;
       if (!data) return errorResponse("Event not found", 404);
 
-      return jsonResponse({ tenant: tenantPayload, event: serializeEvent(data) });
+      return jsonResponse({ tenant: tenantPayload, event: serializeEvent(data, true) });
     }
 
     // List
