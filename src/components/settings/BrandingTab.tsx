@@ -11,12 +11,13 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { logAudit } from "@/lib/audit";
 import { useTenant } from "@/hooks/useTenant";
+import { useTranslation } from "@/hooks/useUILanguage";
 import BrandReviewDialog, { type ScrapedBranding as ScrapedBrandingType } from "./BrandReviewDialog";
 import BrandPreviewGrid from "./BrandPreviewGrid";
 import LogoUploader from "./LogoUploader";
 
 const FONT_OPTIONS = [
-  { value: "system", label: "Systeem (standaard)" },
+  { value: "system", labelKey: "branding.font.system" },
   { value: "inter", label: "Inter" },
   { value: "poppins", label: "Poppins" },
   { value: "roboto", label: "Roboto" },
@@ -25,13 +26,13 @@ const FONT_OPTIONS = [
   { value: "montserrat", label: "Montserrat" },
   { value: "playfair", label: "Playfair Display" },
   { value: "dm-sans", label: "DM Sans" },
-];
+] as const;
 
 const BUTTON_STYLES = [
-  { value: "rounded", label: "Afgerond" },
-  { value: "pill", label: "Pill" },
-  { value: "square", label: "Vierkant" },
-];
+  { value: "rounded", labelKey: "branding.btn.rounded" },
+  { value: "pill", labelKey: "branding.btn.pill" },
+  { value: "square", labelKey: "branding.btn.square" },
+] as const;
 
 interface BrandingState {
   logoUrl: string | null;
