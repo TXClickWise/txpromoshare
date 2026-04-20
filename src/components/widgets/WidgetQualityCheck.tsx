@@ -212,6 +212,6 @@ export function WidgetQualityCheck({ widget }: Props) {
 
 function StatusIcon({ status }: { status: CheckStatus }) {
   if (status === "ok") return <CheckCircle2 className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />;
-  if (status === "warn") return <AlertTriangle className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />;
+  if (status === "warn") return <AlertTriangle className="w-3.5 h-3.5 text-[hsl(38_92%_50%)] mt-0.5 shrink-0" />;
   return <XCircle className="w-3.5 h-3.5 text-destructive mt-0.5 shrink-0" />;
 }
