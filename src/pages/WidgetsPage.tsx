@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { toast } from "sonner";
 import { WidgetCard } from "@/components/widgets/WidgetCard";
-import { WidgetConfigPanel } from "@/components/widgets/WidgetConfigPanel";
+import { WidgetWizard } from "@/components/widgets/WidgetWizard";
 import type { Tables } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -230,7 +230,7 @@ export default function WidgetsPage() {
                 animate={{ opacity: 1, x: 0 }}
                 className="rounded-xl bg-card border border-border shadow-card p-6"
               >
-                <WidgetConfigPanel
+                <WidgetWizard
                   widget={selectedWidget}
                   events={events}
                   onUpdated={fetchWidgets}
