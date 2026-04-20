@@ -81,6 +81,7 @@ function Section({ icon: Icon, title, description, children }: { icon: React.Ele
 }
 
 export default function BrandingTab() {
+  const { t } = useTranslation();
   const { tenant, tenantId, refetch } = useTenant();
   const logoInputRef = useRef<HTMLInputElement>(null);
 
@@ -153,7 +154,7 @@ export default function BrandingTab() {
 
     const { error: uploadError } = await supabase.storage.from("media").upload(path, file, { upsert: true, contentType: file.type });
     if (uploadError) {
-      toast.error("Logo upload mislukt: " + uploadError.message);
+      toast.error(`${t("branding.toast.logoUploadFailed")}: ${uploadError.message}`);
       setLogoUploading(false);
       return;
     }
@@ -162,10 +163,10 @@ export default function BrandingTab() {
     const { error } = await supabase.from("tenants").update({ logo_url: newUrl }).eq("id", tenantId);
     setLogoUploading(false);
     if (error) {
-      toast.error("Opslaan mislukt: " + error.message);
+      toast.error(`${t("branding.toast.saveFailed")}: ${error.message}`);
     } else {
       update("logoUrl", newUrl);
-      toast.success("Logo geüpload");
+      toast.success(t("branding.toast.logoUploaded"));
       refetch();
     }
   }
@@ -175,7 +176,7 @@ export default function BrandingTab() {
     await supabase.from("tenants").update({ logo_url: null }).eq("id", tenant.id);
     update("logoUrl", null);
     refetch();
-    toast.success("Logo verwijderd");
+    toast.success(t("branding.toast.logoRemoved"));
   }
 
   async function saveBranding() {
@@ -197,9 +198,9 @@ export default function BrandingTab() {
       .eq("id", tenant.id);
     setSaving(false);
     if (error) {
-      toast.error("Opslaan mislukt: " + error.message);
+      toast.error(`${t("branding.toast.saveFailed")}: ${error.message}`);
     } else {
-      toast.success("Branding opgeslagen");
+      toast.success(t("branding.toast.saved"));
       logAudit({ tenantId: tenant.id, entityType: "tenant", action: "branding_updated", entityId: tenant.id });
       refetch();
     }
@@ -207,7 +208,7 @@ export default function BrandingTab() {
 
   async function handleScrape() {
     if (!scrapeUrl.trim()) {
-      toast.error("Vul een website URL in");
+      toast.error(t("branding.import.urlRequired"));
       return;
     }
     setScraping(true);
@@ -226,7 +227,7 @@ export default function BrandingTab() {
       const metadata = data?.data?.metadata || data?.metadata;
 
       if (!branding && !metadata) {
-        throw new Error("Geen branding data gevonden op deze website");
+        throw new Error(t("branding.import.noData"));
       }
 
       const result: ScrapedBranding = { confidence: {} };
@@ -279,8 +280,8 @@ export default function BrandingTab() {
       setReviewOpen(true);
     } catch (err: any) {
       console.error("Scrape error:", err);
-      setScrapeError(err.message || "Er ging iets mis bij het analyseren");
-      toast.error("Analyse mislukt");
+      setScrapeError(err.message || t("branding.import.error"));
+      toast.error(t("branding.import.failed"));
     } finally {
       setScraping(false);
     }
