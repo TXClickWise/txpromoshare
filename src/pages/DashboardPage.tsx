@@ -2,7 +2,7 @@ import { Calendar, Eye, TrendingUp, Plus, ArrowRight, Share2, Code2, Zap, Clock,
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useUILanguage";
 import { EventStatusBadge } from "@/components/EventStatusBadge";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { QuickActionCard } from "@/components/QuickActionCard";
@@ -13,12 +13,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { supabase } from "@/integrations/supabase/client";
 
-const quickActions = [
-  { icon: Plus, title: "Nieuw evenement", description: "Begin blanco of kies een sjabloon", to: "/app/events/new", gradient: "gradient-hero" },
-  { icon: Copy, title: "Event dupliceren", description: "Kopieer een bestaand evenement", to: "/app/events", gradient: "gradient-accent" },
-  { icon: Share2, title: "Verspreid nu", description: "Deel via WhatsApp, link of embed", to: "/app/distribution", gradient: "gradient-hero" },
-  { icon: Code2, title: "Widget plaatsen", description: "Agenda op je website tonen", to: "/app/widgets", gradient: "gradient-dark" },
-];
 
 interface DashboardEvent {
   id: string;
@@ -33,6 +27,7 @@ interface DashboardEvent {
 }
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const { effectivePlanId, upgradePlan } = usePlan();
   const { user } = useAuth();
   const { tenant, tenantId } = useTenant();
@@ -40,6 +35,13 @@ export default function DashboardPage() {
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "daar";
   const orgName = tenant?.name || "Mijn organisatie";
+
+  const quickActions = [
+    { icon: Plus, title: t("dashboard.qa.newEvent"), description: t("dashboard.qa.newEventDesc"), to: "/app/events/new", gradient: "gradient-hero" },
+    { icon: Copy, title: t("dashboard.qa.duplicate"), description: t("dashboard.qa.duplicateDesc"), to: "/app/events", gradient: "gradient-accent" },
+    { icon: Share2, title: t("dashboard.qa.distribute"), description: t("dashboard.qa.distributeDesc"), to: "/app/distribution", gradient: "gradient-hero" },
+    { icon: Code2, title: t("dashboard.qa.widget"), description: t("dashboard.qa.widgetDesc"), to: "/app/widgets", gradient: "gradient-dark" },
+  ];
 
   const [events, setEvents] = useState<DashboardEvent[]>([]);
   const [stats, setStats] = useState({ active: 0, upcoming: 0, widgets: 0, team: 1 });
@@ -90,9 +92,9 @@ export default function DashboardPage() {
   }, [tenantId]);
 
   const statCards = [
-    { label: t.dashboard.activeEvents, value: String(stats.active), icon: Calendar, color: "gradient-hero", change: stats.active > 0 ? "Live op je agenda" : "Maak je eerste event" },
-    { label: t.dashboard.upcomingEvents, value: String(stats.upcoming), icon: TrendingUp, color: "gradient-accent", change: stats.upcoming > 0 ? "In voorbereiding" : "Nog geen events" },
-    { label: "Widgets", value: String(stats.widgets), icon: Code2, color: "gradient-dark", change: stats.widgets > 0 ? "Actief op je site" : "Nog geen widgets" },
+    { label: t("dashboard.activeEvents"), value: String(stats.active), icon: Calendar, color: "gradient-hero" },
+    { label: t("dashboard.upcomingEvents"), value: String(stats.upcoming), icon: TrendingUp, color: "gradient-accent" },
+    { label: t("dashboard.widgets"), value: String(stats.widgets), icon: Code2, color: "gradient-dark" },
   ];
 
   return (
@@ -100,12 +102,12 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">{t.dashboard.welcome}, {firstName} 👋</h1>
+          <h1 className="text-2xl font-display font-bold text-foreground">{t("dashboard.welcome")}, {firstName} 👋</h1>
           <p className="text-muted-foreground text-sm mt-1">{orgName} · {planLabel} plan</p>
         </div>
         <Link to="/app/events/new" className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity shadow-glow">
           <Plus className="w-4 h-4" />
-          {t.dashboard.createEvent}
+          {t("dashboard.createEvent")}
         </Link>
       </div>
 
@@ -129,7 +131,6 @@ export default function DashboardPage() {
             </div>
             <div className="text-2xl font-display font-bold text-foreground">{s.value}</div>
             <div className="text-xs text-muted-foreground mt-1">{s.label}</div>
-            <div className="text-[11px] text-accent font-medium mt-2">{s.change}</div>
           </motion.div>
         ))}
       </div>
@@ -137,12 +138,12 @@ export default function DashboardPage() {
       {/* Quick actions mobile */}
       <Link to="/app/events/new" className="sm:hidden flex items-center justify-center gap-2 p-3 rounded-xl gradient-hero text-primary-foreground font-semibold">
         <Plus className="w-4 h-4" />
-        {t.dashboard.createEvent}
+        {t("dashboard.createEvent")}
       </Link>
 
       {/* Quick actions grid */}
       <div>
-        <h2 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider mb-3">Snelle acties</h2>
+        <h2 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("dashboard.quickActions")}</h2>
         <div className="grid sm:grid-cols-2 gap-3">
           {quickActions.map((a) => (
             <QuickActionCard key={a.title} {...a} />
@@ -155,16 +156,16 @@ export default function DashboardPage() {
         {/* Recent events */}
         <div className="lg:col-span-3">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider">{t.dashboard.recentEvents}</h2>
+            <h2 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider">{t("dashboard.recentEvents")}</h2>
             <Link to="/app/events" className="text-xs text-primary font-medium flex items-center gap-1 hover:underline">
-              Alle evenementen <ArrowRight className="w-3 h-3" />
+              {t("dashboard.allEvents")} <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
           <div className="space-y-2">
             {events.length === 0 ? (
               <div className="p-8 text-center rounded-xl bg-card border border-border">
                 <Calendar className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">Nog geen evenementen. Maak je eerste event!</p>
+                <p className="text-sm text-muted-foreground">{t("dashboard.noEvents")}</p>
               </div>
             ) : events.map((event) => (
               <Link key={event.id} to={`/app/events/${event.id}`} className="flex items-center gap-3 p-3.5 rounded-xl bg-card border border-border shadow-card hover:shadow-elevated transition-all group">
@@ -192,10 +193,10 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 space-y-4">
           {/* Usage meters */}
           <div className="rounded-xl bg-card border border-border shadow-card p-4 space-y-4">
-            <h3 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider">Gebruik</h3>
-            <UsageMeter metric="events" current={stats.active} label="Actieve evenementen" />
-            <UsageMeter metric="widgets" current={stats.widgets} label="Widgets" />
-            <UsageMeter metric="team" current={stats.team} label="Teamleden" />
+            <h3 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider">{t("dashboard.usage")}</h3>
+            <UsageMeter metric="events" current={stats.active} label={t("dashboard.activeEvents")} />
+            <UsageMeter metric="widgets" current={stats.widgets} label={t("dashboard.widgets")} />
+            <UsageMeter metric="team" current={stats.team} label={t("billing.teamMembers")} />
           </div>
 
           {/* Smart upgrade prompt — alleen tonen als upgrade mogelijk én zinvol (limiet bijna bereikt) */}
@@ -231,10 +232,10 @@ export default function DashboardPage() {
             <div className="flex items-start gap-2">
               <Zap className="w-4 h-4 text-primary mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs font-medium text-foreground">💡 Tip</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Gebruik sjablonen om terugkerende events in seconden aan te maken.</p>
+                <p className="text-xs font-medium text-foreground">💡 {t("dashboard.tip")}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.tipText")}</p>
                 <Link to="/app/templates" className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1 mt-1">
-                  Sjablonen bekijken <ArrowRight className="w-3 h-3" />
+                  {t("dashboard.viewTemplates")} <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
             </div>

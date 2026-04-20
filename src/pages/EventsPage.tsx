@@ -3,7 +3,7 @@ import { Copy, Check, Trash2, Archive } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Plus, Search, LayoutGrid, List, Calendar, Filter, Clock, MapPin, ArrowUpDown, RefreshCw, X } from "lucide-react";
 import { motion } from "framer-motion";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useUILanguage";
 import { EventStatusBadge } from "@/components/EventStatusBadge";
 import { EventActionMenu } from "@/components/EventActionMenu";
 import { EmptyState } from "@/components/EmptyState";
@@ -19,33 +19,35 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type StatusTab = "all" | "draft" | "scheduled" | "published" | "ended_archived" | "recurring";
 
-const statusTabs: { value: StatusTab; label: string; hint?: string }[] = [
-  { value: "all", label: "Alle" },
-  { value: "draft", label: "Concepten" },
-  { value: "scheduled", label: "Gepland" },
-  { value: "published", label: "Live" },
-  { value: "ended_archived", label: "Afgelopen" },
-  { value: "recurring", label: "Terugkerend" },
-];
-
-const sortOptions = [
-  { value: "date_desc", label: "Datum (nieuwst)" },
-  { value: "date_asc", label: "Datum (oudst)" },
-  { value: "title_asc", label: "Naam (A-Z)" },
-  { value: "title_desc", label: "Naam (Z-A)" },
-  { value: "updated", label: "Laatst bewerkt" },
-];
-
 function formatDateLong(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
 }
 
+
 export default function EventsPage() {
+  const { t } = useTranslation();
   const [view, setView] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<StatusTab>("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date_desc");
+
+  const statusTabs: { value: StatusTab; label: string }[] = [
+    { value: "all", label: t("events.tab.all") },
+    { value: "draft", label: t("events.tab.draft") },
+    { value: "scheduled", label: t("events.tab.scheduled") },
+    { value: "published", label: t("events.tab.published") },
+    { value: "ended_archived", label: t("events.tab.archived") },
+    { value: "recurring", label: t("events.tab.recurring") },
+  ];
+
+  const sortOptions = [
+    { value: "date_desc", label: t("events.sort.dateDesc") },
+    { value: "date_asc", label: t("events.sort.dateAsc") },
+    { value: "title_asc", label: t("events.sort.titleAsc") },
+    { value: "title_desc", label: t("events.sort.titleDesc") },
+    { value: "updated", label: t("events.sort.updated") },
+  ];
   const [events, setEvents] = useState<any[]>([]);
   const [categories, setCategories] = useState<Tables<"categories">[]>([]);
   const [loading, setLoading] = useState(true);
@@ -212,14 +214,14 @@ export default function EventsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">{t.events.title}</h1>
+          <h1 className="text-2xl font-display font-bold text-foreground">{t("events.title")}</h1>
           <p className="text-xs text-muted-foreground mt-1">
-            {events.length} {events.length === 1 ? "evenement" : "evenementen"} totaal
+            {events.length} {events.length === 1 ? t("events.totalSingular") : t("events.totalPlural")}
           </p>
         </div>
         <Link to="/app/events/new" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold hover:opacity-90 shadow-glow">
           <Plus className="w-4 h-4" />
-          {t.events.create}
+          {t("events.create")}
         </Link>
       </div>
 
@@ -267,7 +269,7 @@ export default function EventsPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Zoek op titel, locatie, datum, organisator..."
+            placeholder={t("events.searchPlaceholder")}
             className="pl-9 pr-9 h-9 text-sm"
           />
           {search && (
@@ -283,10 +285,10 @@ export default function EventsPage() {
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-[150px] h-9 text-xs">
             <Filter className="w-3 h-3 mr-1 text-muted-foreground" />
-            <SelectValue placeholder="Categorie" />
+            <SelectValue placeholder={t("nav.categories")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Alle categorieën</SelectItem>
+            <SelectItem value="all">{t("events.allCategories")}</SelectItem>
             {categories.map((c) => (
               <SelectItem key={c.id} value={c.id}>
                 <span className="flex items-center gap-2">
@@ -322,32 +324,32 @@ export default function EventsPage() {
       {selected.size > 0 && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
           <Checkbox checked={selected.size === filtered.length} onCheckedChange={selectAll} />
-          <span className="text-sm font-medium text-foreground">{selected.size} geselecteerd</span>
+          <span className="text-sm font-medium text-foreground">{selected.size} {t("events.bulk.selected")}</span>
           <div className="flex-1" />
           <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => bulkAction("archive")}>
-            <Archive className="w-3 h-3" />Archiveren
+            <Archive className="w-3 h-3" />{t("events.bulk.archive")}
           </Button>
           <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => bulkAction("delete")}>
-            <Trash2 className="w-3 h-3" />Verwijderen
+            <Trash2 className="w-3 h-3" />{t("events.bulk.delete")}
           </Button>
-          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelected(new Set())}>Deselecteer</Button>
+          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelected(new Set())}>{t("events.bulk.deselect")}</Button>
         </motion.div>
       )}
 
       {filtered.length === 0 ? (
         <EmptyState
           icon={Calendar}
-          title={search || activeTab !== "all" ? "Geen resultaten" : t.events.noEvents}
+          title={search || activeTab !== "all" ? t("events.noResults") : t("events.noEvents")}
           description={
             search
-              ? `Geen evenementen gevonden voor "${search}".`
+              ? `${t("events.noResults")}: "${search}"`
               : activeTab !== "all"
-                ? `Geen evenementen in deze categorie. Wissel naar 'Alle' om alles te zien.`
-                : t.events.noEventsDesc
+                ? t("events.noEventsDesc")
+                : t("events.noEventsDesc")
           }
-          actionLabel={search || activeTab !== "all" ? undefined : "Eerste evenement aanmaken"}
+          actionLabel={search || activeTab !== "all" ? undefined : t("events.firstEvent")}
           actionTo={search || activeTab !== "all" ? undefined : "/app/events/new"}
-          secondaryLabel={search || activeTab !== "all" ? undefined : "Sjabloon kiezen"}
+          secondaryLabel={search || activeTab !== "all" ? undefined : t("events.chooseTemplate")}
           secondaryTo={search || activeTab !== "all" ? undefined : "/app/templates"}
         />
       ) : view === "grid" ? (
