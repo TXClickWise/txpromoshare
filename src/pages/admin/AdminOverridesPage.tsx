@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowUpDown, Plus, Undo2, Search } from "lucide-react";
+import { ArrowUpDown, Plus, Undo2, Search, Info } from "lucide-react";
 import { format, addWeeks, addMonths } from "date-fns";
 import { nl } from "date-fns/locale";
 import { toast } from "sonner";
@@ -48,13 +48,30 @@ export default function AdminOverridesPage() {
 
   useEffect(() => { fetchData(); }, []);
 
+  const now = new Date();
+
+  const enriched = useMemo(() => {
+    return overrides.map((o) => {
+      const expired = !o.is_active && !o.reverted_at;
+      const reverted = !o.is_active && !!o.reverted_at;
+      const endingSoon = o.is_active && o.ends_at && new Date(o.ends_at) < new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      return { ...o, expired, reverted, endingSoon };
+    });
+  }, [overrides]);
+
   const filtered = useMemo(() => {
-    return overrides.filter((o) => {
+    return enriched.filter((o) => {
       const matchSearch = !search || o.tenant_name.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === "all" || (statusFilter === "active" && o.is_active) || (statusFilter === "expired" && !o.is_active);
+      const matchStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && o.is_active) ||
+        (statusFilter === "reverted" && o.reverted) ||
+        (statusFilter === "expired" && o.expired);
       return matchSearch && matchStatus;
     });
-  }, [overrides, search, statusFilter]);
+  }, [enriched, search, statusFilter]);
+
+  const activeCount = enriched.filter((o) => o.is_active).length;
 
   async function createOverride() {
     if (!form.tenant_id) { toast.error("Selecteer een organisatie"); return; }
@@ -118,15 +135,33 @@ export default function AdminOverridesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground">Plan Overrides</h1>
-          <p className="text-muted-foreground mt-1">Tijdelijke plan-upgrades en admin overrides</p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Tijdelijke plan-upgrades — <span className="font-medium text-foreground">{activeCount}</span> actief van {overrides.length} totaal
+          </p>
         </div>
         <Button onClick={() => { setForm({ tenant_id: "", override_plan: "pro", duration: "1_month", custom_date: "", reason: "" }); setCreateOpen(true); }} className="gap-2">
           <Plus className="w-4 h-4" /> Nieuwe Override
         </Button>
       </div>
+
+      {/* Uitleg */}
+      <Card className="border-dashed">
+        <CardContent className="py-3 flex items-start gap-2.5">
+          <Info className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+          <div className="text-xs text-muted-foreground space-y-1">
+            <p>
+              <span className="font-semibold text-foreground">Overrides</span> verhogen tijdelijk het effectieve plan van een tenant zonder de Stripe-subscription te raken.
+              De originele subscription blijft draaien op het basis-plan; alleen feature-limieten worden opgewaardeerd.
+            </p>
+            <p>
+              <span className="font-medium text-foreground">Verlopen</span> = einddatum gepasseerd · <span className="font-medium text-foreground">Teruggedraaid</span> = handmatig gestopt door admin · <span className="font-medium text-foreground">Actief</span> = telt nu mee voor de tenant.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
@@ -139,6 +174,7 @@ export default function AdminOverridesPage() {
             <SelectItem value="all">Alles</SelectItem>
             <SelectItem value="active">Actief</SelectItem>
             <SelectItem value="expired">Verlopen</SelectItem>
+            <SelectItem value="reverted">Teruggedraaid</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -173,9 +209,15 @@ export default function AdminOverridesPage() {
                   <TableCell><Badge variant="outline" className="capitalize">{o.original_plan_slug}</Badge></TableCell>
                   <TableCell><Badge variant="default" className="capitalize">{o.override_plan_slug}</Badge></TableCell>
                   <TableCell>
-                    <Badge variant={o.is_active ? "default" : "secondary"} className={o.is_active ? "bg-green-600" : ""}>
-                      {o.is_active ? "Actief" : o.reverted_at ? "Teruggedraaid" : "Verlopen"}
-                    </Badge>
+                    {o.is_active ? (
+                      <Badge className={o.endingSoon ? "bg-accent text-accent-foreground" : "bg-primary text-primary-foreground"}>
+                        {o.endingSoon ? "Eindigt binnenkort" : "Actief"}
+                      </Badge>
+                    ) : o.reverted_at ? (
+                      <Badge variant="secondary">Teruggedraaid</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground">Verlopen</Badge>
+                    )}
                   </TableCell>
                   <TableCell className="text-sm">{format(new Date(o.started_at), "d MMM yyyy", { locale: nl })}</TableCell>
                   <TableCell className="text-sm">{o.ends_at ? format(new Date(o.ends_at), "d MMM yyyy", { locale: nl }) : "Onbeperkt"}</TableCell>
