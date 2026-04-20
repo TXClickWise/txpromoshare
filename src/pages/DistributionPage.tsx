@@ -467,21 +467,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         </div>
       </div>
 
-      <div className="space-y-3">
-        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
-          <Share2 className="w-4 h-4 text-primary" />
-          Uitgebreide promotietekst
-        </h2>
-        <ShareTextCard
-          icon={<Share2 className="w-4 h-4 text-primary" />}
-          title="Langere promotietekst"
-          description="Voor persberichten, uitnodigingen of uitgebreide promotie"
-          text={getText("promo")}
-          onTextChange={(t) => setText("promo", t)}
-          onAiRewrite={handleRewrite}
-          aiLoading={!!rewriting}
-        />
-      </div>
+
 
       {/* Widgets section */}
       <div className="space-y-3">
