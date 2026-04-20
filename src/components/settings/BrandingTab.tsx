@@ -13,6 +13,7 @@ import { logAudit } from "@/lib/audit";
 import { useTenant } from "@/hooks/useTenant";
 import BrandReviewDialog, { type ScrapedBranding as ScrapedBrandingType } from "./BrandReviewDialog";
 import BrandPreviewGrid from "./BrandPreviewGrid";
+import LogoUploader from "./LogoUploader";
 
 const FONT_OPTIONS = [
   { value: "system", label: "Systeem (standaard)" },
