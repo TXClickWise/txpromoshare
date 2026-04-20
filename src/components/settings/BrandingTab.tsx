@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { logAudit } from "@/lib/audit";
 import { useTenant } from "@/hooks/useTenant";
+import BrandReviewDialog, { type ScrapedBranding as ScrapedBrandingType } from "./BrandReviewDialog";
 
 const FONT_OPTIONS = [
   { value: "system", label: "Systeem (standaard)" },
@@ -102,6 +103,21 @@ export default function BrandingTab() {
   const [scraping, setScraping] = useState(false);
   const [scraped, setScraped] = useState<ScrapedBranding | null>(null);
   const [scrapeError, setScrapeError] = useState<string | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [hasClickWise, setHasClickWise] = useState(false);
+
+  // Detect ClickWise connection (read-only check, doesn't trigger sync)
+  useEffect(() => {
+    if (!tenantId) return;
+    supabase
+      .from("integration_connections")
+      .select("status")
+      .eq("tenant_id", tenantId)
+      .eq("provider", "clickwise")
+      .eq("status", "connected")
+      .maybeSingle()
+      .then(({ data }) => setHasClickWise(!!data));
+  }, [tenantId]);
 
   useEffect(() => {
     if (tenant) {
