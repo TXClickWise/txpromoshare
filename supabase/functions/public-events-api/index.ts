@@ -60,8 +60,8 @@ async function fetchTenant(slug: string) {
   return data;
 }
 
-function serializeEvent(e: any) {
-  return {
+function serializeEvent(e: any, includeGallery = false) {
+  const base: any = {
     id: e.id,
     slug: e.slug,
     title: e.title,
@@ -92,6 +92,18 @@ function serializeEvent(e: any) {
     featured_image_url: buildImageUrl(e.media ?? null),
     public_url: `${PUBLIC_BASE_URL}/e/${e.slug}`,
   };
+  if (includeGallery) {
+    const gallery = (e.event_gallery ?? [])
+      .slice()
+      .sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      .map((g: any) => ({
+        url: buildImageUrl(g.media ?? null),
+        alt: g.media?.alt_text ?? null,
+      }))
+      .filter((g: any) => g.url);
+    base.gallery = gallery;
+  }
+  return base;
 }
 
 Deno.serve(async (req) => {
