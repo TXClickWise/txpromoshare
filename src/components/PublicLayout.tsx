@@ -101,11 +101,12 @@ export default function PublicLayout() {
               {featuredLink.label}
             </Link>
             <Link to="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              {t.auth.login}
+              {t("publicNav.login")}
             </Link>
             <Link to="/register" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity">
-              Start gratis <ArrowRight className="w-3.5 h-3.5" />
+              {t("publicNav.startFree")} <ArrowRight className="w-3.5 h-3.5" />
             </Link>
+            <UILanguageSwitcher variant="compact" />
           </nav>
 
           <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-foreground">
