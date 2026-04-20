@@ -486,8 +486,11 @@ export type Database = {
           featured_until: string | null
           full_description: string | null
           id: string
+          instagram_share_text: string | null
           is_featured: boolean
           is_recurring: boolean
+          long_promo_text: string | null
+          newsletter_intro: string | null
           organizer_name: string | null
           publish_at: string | null
           recurring_rule_id: string | null
@@ -502,11 +505,14 @@ export type Database = {
           status: Database["public"]["Enums"]["event_status"]
           subtitle: string | null
           tags: string[] | null
+          teaser_text: string | null
           tenant_id: string
           title: string
           updated_at: string
           venue_id: string | null
+          website_snippet: string | null
           whatsapp_share_text: string | null
+          whatsapp_share_text_short: string | null
         }
         Insert: {
           auto_end_behavior?: string | null
@@ -521,8 +527,11 @@ export type Database = {
           featured_until?: string | null
           full_description?: string | null
           id?: string
+          instagram_share_text?: string | null
           is_featured?: boolean
           is_recurring?: boolean
+          long_promo_text?: string | null
+          newsletter_intro?: string | null
           organizer_name?: string | null
           publish_at?: string | null
           recurring_rule_id?: string | null
@@ -537,11 +546,14 @@ export type Database = {
           status?: Database["public"]["Enums"]["event_status"]
           subtitle?: string | null
           tags?: string[] | null
+          teaser_text?: string | null
           tenant_id: string
           title: string
           updated_at?: string
           venue_id?: string | null
+          website_snippet?: string | null
           whatsapp_share_text?: string | null
+          whatsapp_share_text_short?: string | null
         }
         Update: {
           auto_end_behavior?: string | null
@@ -556,8 +568,11 @@ export type Database = {
           featured_until?: string | null
           full_description?: string | null
           id?: string
+          instagram_share_text?: string | null
           is_featured?: boolean
           is_recurring?: boolean
+          long_promo_text?: string | null
+          newsletter_intro?: string | null
           organizer_name?: string | null
           publish_at?: string | null
           recurring_rule_id?: string | null
@@ -572,11 +587,14 @@ export type Database = {
           status?: Database["public"]["Enums"]["event_status"]
           subtitle?: string | null
           tags?: string[] | null
+          teaser_text?: string | null
           tenant_id?: string
           title?: string
           updated_at?: string
           venue_id?: string | null
+          website_snippet?: string | null
           whatsapp_share_text?: string | null
+          whatsapp_share_text_short?: string | null
         }
         Relationships: [
           {
