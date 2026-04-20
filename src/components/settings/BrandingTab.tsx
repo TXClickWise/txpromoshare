@@ -13,6 +13,7 @@ import { logAudit } from "@/lib/audit";
 import { useTenant } from "@/hooks/useTenant";
 import BrandReviewDialog, { type ScrapedBranding as ScrapedBrandingType } from "./BrandReviewDialog";
 import BrandPreviewGrid from "./BrandPreviewGrid";
+import LogoUploader from "./LogoUploader";
 
 const FONT_OPTIONS = [
   { value: "system", label: "Systeem (standaard)" },
@@ -444,54 +445,17 @@ export default function BrandingTab() {
             {/* IDENTITEIT */}
             <TabsContent value="identity" className="p-5 space-y-6 mt-0">
               <Section icon={ImageIcon} title="Logo" description="Wordt getoond op eventpagina's, widgets en e-mails.">
-                <input
-                  ref={logoInputRef}
-                  type="file"
-                  accept="image/png,image/svg+xml,image/jpeg,image/webp"
-                  className="hidden"
-                  onChange={(e) => handleLogoUpload(e.target.files)}
+                <LogoUploader
+                  logoUrl={state.logoUrl}
+                  primaryColor={state.primaryColor}
+                  uploading={logoUploading}
+                  onUpload={(file) => {
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    return handleLogoUpload(dt.files);
+                  }}
+                  onRemove={removeLogo}
                 />
-                {state.logoUrl ? (
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    {/* Preview op licht */}
-                    <div className="rounded-lg border border-border bg-white p-4 flex items-center justify-center min-h-[100px]">
-                      <img
-                        src={state.logoUrl}
-                        alt="Logo"
-                        className="max-h-[80px] max-w-full object-contain"
-                        onError={(e) => { e.currentTarget.style.display = "none"; }}
-                      />
-                    </div>
-                    {/* Preview op donker */}
-                    <div className="rounded-lg border border-border bg-foreground p-4 flex items-center justify-center min-h-[100px]">
-                      <img
-                        src={state.logoUrl}
-                        alt="Logo donker"
-                        className="max-h-[80px] max-w-full object-contain"
-                        onError={(e) => { e.currentTarget.style.display = "none"; }}
-                      />
-                    </div>
-                    <div className="sm:col-span-2 flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => logoInputRef.current?.click()} disabled={logoUploading} className="gap-2 text-xs">
-                        <Upload className="w-3.5 h-3.5" />{logoUploading ? "Uploaden..." : "Wijzig logo"}
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-destructive gap-2 text-xs" onClick={removeLogo}>
-                        <X className="w-3.5 h-3.5" />Verwijder
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 cursor-pointer transition-colors bg-muted/30"
-                    onClick={() => logoInputRef.current?.click()}
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
-                      <Upload className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                    <p className="text-sm font-medium text-foreground">{logoUploading ? "Uploaden..." : "Upload je logo"}</p>
-                    <p className="text-xs text-muted-foreground mt-1">PNG, SVG of JPG — minimaal 200×200px, transparant aanbevolen</p>
-                  </div>
-                )}
               </Section>
 
               <Section icon={Type} title="Tagline" description="Korte slogan onder je naam op de eventpagina.">
