@@ -19,13 +19,41 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false },
 });
 
+const SUPPORTED_LANGS = ["nl", "en", "de", "fy"] as const;
+type Lang = (typeof SUPPORTED_LANGS)[number];
+
 const ListQuerySchema = z.object({
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   category: z.string().min(1).max(100).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).default(0),
+  lang: z.enum(SUPPORTED_LANGS).default("nl"),
 });
+
+const DetailQuerySchema = z.object({
+  lang: z.enum(SUPPORTED_LANGS).default("nl"),
+});
+
+/** Apply translation to event row, with per-field NL fallback. */
+function applyTranslation(event: any, translation: any | null): any {
+  if (!translation) return event;
+  const pick = (field: string) => {
+    const t = translation[field];
+    return typeof t === "string" && t.trim().length > 0 ? t : event[field];
+  };
+  return {
+    ...event,
+    title: pick("title"),
+    subtitle: pick("subtitle"),
+    short_description: pick("short_description"),
+    full_description: pick("full_description"),
+    cta_button_text: pick("cta_button_text"),
+    seo_title: pick("seo_title"),
+    seo_description: pick("seo_description"),
+    // slug stays as the canonical NL slug for routing
+  };
+}
 
 function jsonResponse(body: unknown, status = 200, extraHeaders: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
