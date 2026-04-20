@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Calendar, Clock, MapPin, User, Share2, ExternalLink, ChevronLeft,
-  Tag, CalendarPlus, MessageCircle, Facebook, Copy, Check, Mail,
+  Tag, CalendarPlus, MessageCircle, Facebook, Copy, Check, Mail, ChevronDown,
   Instagram, Music, Building2, ZoomIn, ChevronRight, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -75,6 +75,7 @@ export default function PublicEventPage() {
   const [gallery, setGallery] = useState<string[]>([]);
   const [upcomingOccurrences, setUpcomingOccurrences] = useState<Array<{ date: string; start_time: string | null; end_time: string | null; label: string | null }>>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
 
   useEffect(() => {
@@ -301,7 +302,7 @@ export default function PublicEventPage() {
       </section>
 
       {/* MAIN CONTENT */}
-      <main className="max-w-5xl mx-auto px-4 -mt-6 relative z-20 pb-16">
+      <main className="max-w-5xl mx-auto px-4 -mt-6 relative z-20 pb-24 md:pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {/* Quick info cards */}
@@ -539,11 +540,19 @@ export default function PublicEventPage() {
 
             {/* Share */}
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-              className="rounded-xl border border-border bg-card p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Share2 className="w-4 h-4 text-primary" />Delen
-              </h3>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              className="rounded-xl border border-border bg-card p-4">
+              <button
+                type="button"
+                onClick={() => setShareOpen((v) => !v)}
+                className="w-full flex items-center justify-between gap-2 text-sm font-semibold text-foreground"
+                aria-expanded={shareOpen}
+              >
+                <span className="flex items-center gap-2">
+                  <Share2 className="w-4 h-4 text-primary" />Delen
+                </span>
+                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${shareOpen ? "rotate-180" : ""}`} />
+              </button>
+              <div className={`grid grid-cols-4 gap-1.5 mt-3 ${shareOpen ? "" : "hidden"}`}>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
                   <a href={`https://wa.me/?text=${encodeURIComponent(visitorWhatsappText)}`} target="_blank" rel="noopener noreferrer">
                     <MessageCircle className="w-3.5 h-3.5" />WhatsApp
@@ -604,6 +613,41 @@ export default function PublicEventPage() {
           </div>
         </div>
       </main>
+
+      {/* Mobile sticky CTA bar — respects safe area */}
+      <div
+        className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-md shadow-elevated"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        <div className="max-w-5xl mx-auto px-3 py-2.5 flex items-center gap-2">
+          {event.cta_link ? (
+            <Button asChild className="flex-1 h-11 text-sm font-semibold gap-1.5">
+              <a href={event.cta_link} target="_blank" rel="noopener noreferrer">
+                {ctaText}<ExternalLink className="w-4 h-4" />
+              </a>
+            </Button>
+          ) : (
+            <div className="flex-1 text-center text-xs text-muted-foreground py-2">
+              Vrije toegang — geen aanmelding nodig
+            </div>
+          )}
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-11 w-11 shrink-0"
+            aria-label="Delen"
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({ title: event.title, text: shareText, url: previewShareUrl }).catch(() => {});
+              } else {
+                copyLink();
+              }
+            }}
+          >
+            <Share2 className="w-5 h-5" />
+          </Button>
+        </div>
+      </div>
 
       {/* Lightbox */}
       <Dialog open={lightboxIndex !== null} onOpenChange={(open) => { if (!open) closeLightbox(); }}>
