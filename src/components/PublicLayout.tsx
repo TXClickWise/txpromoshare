@@ -6,12 +6,13 @@ import { cn } from "@/lib/utils";
 
 const navLinks = [
   { to: "/", label: "Home", hash: false },
-  { to: "/evenementen", label: "Evenementen", hash: false },
   { to: "/event-agenda-software", label: "Features", hash: false },
   { to: "/#hoe-het-werkt", label: "Hoe het werkt", hash: true },
-  { to: "/pricing", label: "Prijzen", hash: false },
+  { to: "/#prijzen", label: "Prijzen", hash: true },
   { to: "/demo", label: "Demo", hash: false },
 ];
+
+const featuredLink = { to: "/evenementen", label: "Evenementen" };
 
 export default function PublicLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
