@@ -401,91 +401,17 @@ export default function BrandingTab() {
           </div>
         )}
 
-        <AnimatePresence>
-          {scraped && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="rounded-lg border border-primary/30 bg-card p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-primary" />
-                  <p className="text-sm font-semibold text-foreground">Gevonden branding</p>
-                </div>
-
-                <div className="grid gap-2 text-xs">
-                  {scraped.companyName && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Bedrijfsnaam</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{scraped.companyName}</span>
-                        <ConfidenceBadge level={scraped.confidence.companyName} />
-                      </div>
-                    </div>
-                  )}
-                  {scraped.tagline && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Tagline</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium truncate max-w-[200px]">{scraped.tagline}</span>
-                        <ConfidenceBadge level={scraped.confidence.tagline} />
-                      </div>
-                    </div>
-                  )}
-                  {scraped.primaryColor && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Primaire kleur</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded border border-border" style={{ backgroundColor: scraped.primaryColor }} />
-                        <span className="font-mono">{scraped.primaryColor}</span>
-                        <ConfidenceBadge level={scraped.confidence.primaryColor} />
-                      </div>
-                    </div>
-                  )}
-                  {scraped.secondaryColor && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Secundaire kleur</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded border border-border" style={{ backgroundColor: scraped.secondaryColor }} />
-                        <span className="font-mono">{scraped.secondaryColor}</span>
-                        <ConfidenceBadge level={scraped.confidence.secondaryColor} />
-                      </div>
-                    </div>
-                  )}
-                  {scraped.logo && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Logo</span>
-                      <div className="flex items-center gap-2">
-                        <img src={scraped.logo} alt="" className="h-6 w-auto object-contain" onError={(e) => (e.currentTarget.style.display = "none")} />
-                        <ConfidenceBadge level={scraped.confidence.logo} />
-                      </div>
-                    </div>
-                  )}
-                  {scraped.fontFamily && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Lettertype</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium capitalize">{scraped.fontFamily}</span>
-                        <ConfidenceBadge level={scraped.confidence.fontFamily} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-2 pt-1">
-                  <Button size="sm" onClick={applyScraped} className="gap-2 text-xs">
-                    <CheckCircle2 className="w-3.5 h-3.5" />Toepassen
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setScraped(null)} className="text-xs">
-                    Negeren
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {scraped && !reviewOpen && (
+          <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+            <div className="flex items-center gap-2 text-xs">
+              <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+              <span className="text-foreground">Voorstel klaar — open om te bekijken</span>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setReviewOpen(true)} className="text-xs">
+              Bekijk voorstel
+            </Button>
+          </div>
+        )}
       </motion.div>
 
       {/* 2-koloms layout: links form, rechts sticky preview */}
