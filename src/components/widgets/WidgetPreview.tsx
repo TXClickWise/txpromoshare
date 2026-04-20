@@ -129,9 +129,9 @@ function DesktopFrame({ children }: { children: React.ReactNode }) {
       {/* Browser chrome */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-background/60">
         <div className="flex gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
-          <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
-          <span className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
+          <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30" />
+          <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30" />
+          <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30" />
         </div>
         <div className="flex-1 mx-2 px-3 py-1 rounded-md bg-muted text-[11px] text-muted-foreground truncate">
           jouwwebsite.nl
