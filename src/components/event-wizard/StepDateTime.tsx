@@ -1,4 +1,4 @@
-import { CalendarDays, MapPin, Repeat, Globe } from "lucide-react";
+import { CalendarDays, MapPin, Repeat, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,6 +6,21 @@ import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
 import type { EventFormState } from "./useEventForm";
 import type { Tables } from "@/integrations/supabase/types";
+import { generateDates as libGenerateDates, summarizeRecurrence, type RecurrenceInput } from "@/lib/recurrence";
+
+function toRecurrenceInput(form: EventFormState): RecurrenceInput {
+  return {
+    startDate: form.startDate,
+    isRecurring: form.isRecurring,
+    recurringFreq: form.recurringFreq,
+    recurringCustomFreq: form.recurringCustomFreq,
+    recurringInterval: form.recurringInterval,
+    recurringDays: form.recurringDays,
+    recurringEndType: form.recurringEndType,
+    recurringEndDate: form.recurringEndDate,
+    recurringEndCount: form.recurringEndCount,
+  };
+}
 
 interface StepDateTimeProps {
   form: EventFormState;
