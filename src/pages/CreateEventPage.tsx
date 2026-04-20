@@ -10,6 +10,7 @@ import { StepPromotion } from "@/components/event-wizard/StepPromotion";
 import { StepPublish } from "@/components/event-wizard/StepPublish";
 import { OccurrencesTab } from "@/components/event-wizard/OccurrencesTab";
 import { useEventForm } from "@/components/event-wizard/useEventForm";
+import { RecurringEditScopeDialog } from "@/components/event-wizard/RecurringEditScopeDialog";
 import { AnimatePresence } from "framer-motion";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
