@@ -182,7 +182,7 @@ Deno.serve(async (req) => {
       id, slug, title, subtitle, short_description, full_description,
       start_date, end_date, start_time, end_time,
       organizer_name, cta_link, cta_button_text, tags,
-      is_featured, featured_until, status,
+      is_featured, featured_until, status, seo_title, seo_description,
       categories:category_id ( slug, name, color ),
       venues:venue_id ( name, address, city, postal_code ),
       media:featured_image_id ( storage_path, original_url )
