@@ -267,11 +267,11 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col gap-0">
+      <DialogContent className="sm:max-w-2xl max-h-[100dvh] sm:max-h-[85vh] h-[100dvh] sm:h-auto flex flex-col gap-0 p-4 sm:p-6 rounded-none sm:rounded-lg">
         <DialogHeader className="pb-3 space-y-2">
-          <DialogTitle className="text-lg font-display">Afbeelding kiezen</DialogTitle>
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
+          <DialogTitle className="text-base sm:text-lg font-display">Afbeelding kiezen</DialogTitle>
+          <div className="flex items-start sm:items-center justify-between gap-2 flex-col sm:flex-row">
+            <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline" className="text-[10px]">
                 {roleInfo.label}
               </Badge>
@@ -285,13 +285,13 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
 
         <Tabs value={tab} onValueChange={setTab} className="flex-1 flex flex-col min-h-0">
           <TabsList className="w-full grid grid-cols-3 mb-3">
-            <TabsTrigger value="library" className="text-xs gap-1.5">
-              <Image className="w-3.5 h-3.5" />Bibliotheek
+            <TabsTrigger value="library" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5">
+              <Image className="w-3.5 h-3.5" /><span className="hidden xs:inline">Bibliotheek</span><span className="xs:hidden">Mijn</span>
             </TabsTrigger>
-            <TabsTrigger value="stock" className="text-xs gap-1.5">
-              <ImagePlus className="w-3.5 h-3.5" />Stockfoto's
+            <TabsTrigger value="stock" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5">
+              <ImagePlus className="w-3.5 h-3.5" /><span className="hidden xs:inline">Stockfoto's</span><span className="xs:hidden">Stock</span>
             </TabsTrigger>
-            <TabsTrigger value="upload" className="text-xs gap-1.5">
+            <TabsTrigger value="upload" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5">
               <Upload className="w-3.5 h-3.5" />Upload
             </TabsTrigger>
           </TabsList>
