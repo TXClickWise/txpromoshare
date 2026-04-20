@@ -10,6 +10,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
+import { CropHintGuide, RolePresetSwitcher, IMAGE_ROLE_SPECS, type ImageRoleKey } from "@/components/media/CropHintGuide";
 
 interface StockImage {
   id: string;
@@ -23,29 +24,13 @@ interface StockImage {
   downloadUrl: string;
 }
 
-interface ImageRole {
-  label: string;
-  ratio: string;
-  minWidth?: number;
-  minHeight?: number;
-}
-
-const IMAGE_ROLES: Record<string, ImageRole> = {
-  featured: { label: "Uitgelichte afbeelding", ratio: "16:9", minWidth: 1200, minHeight: 675 },
-  gallery: { label: "Galerij", ratio: "4:3", minWidth: 800, minHeight: 600 },
-  card: { label: "Event card", ratio: "16:9", minWidth: 600, minHeight: 338 },
-  widget: { label: "Widget", ratio: "3:2", minWidth: 400, minHeight: 267 },
-  social: { label: "Social media", ratio: "1.91:1", minWidth: 1200, minHeight: 628 },
-  square: { label: "Vierkant", ratio: "1:1", minWidth: 400, minHeight: 400 },
-};
-
 interface MediaPickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (mediaId: string, url: string) => void;
   onSelectMulti?: (items: { id: string; url: string }[]) => void;
   selectedId?: string | null;
-  role?: keyof typeof IMAGE_ROLES;
+  role?: ImageRoleKey;
   mode?: "single" | "multi";
 }
 
@@ -62,8 +47,10 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
   const [saving, setSaving] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [multiSelected, setMultiSelected] = useState<{ id: string; url: string }[]>([]);
+  const [activeRole, setActiveRole] = useState<ImageRoleKey>(role);
+  const [hoveredItem, setHoveredItem] = useState<Tables<"media"> | null>(null);
 
-  const roleInfo = IMAGE_ROLES[role] || IMAGE_ROLES.featured;
+  const roleInfo = IMAGE_ROLE_SPECS[activeRole];
 
   const { data: mediaItems = [], isLoading: mediaLoading } = useQuery({
     queryKey: ["media", tenantId],
