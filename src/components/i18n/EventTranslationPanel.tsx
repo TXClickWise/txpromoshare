@@ -259,7 +259,8 @@ export function EventTranslationPanel({
             <div className="flex items-start gap-2 rounded-lg border border-border bg-secondary/40 p-3 text-xs text-muted-foreground">
               <AlertTriangle className="h-3.5 w-3.5 mt-0.5 text-muted-foreground/70" />
               <span>
-                AI-vertaling is een Pro-feature. Je kunt nog wel handmatig vertalen en opslaan.
+                AI-vertaling zit standaard in <strong>Pro</strong>. Op je huidige plan kun je
+                vertalingen handmatig invoeren en opslaan.
               </span>
             </div>
           )}

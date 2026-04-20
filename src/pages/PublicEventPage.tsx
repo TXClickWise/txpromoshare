@@ -1,5 +1,5 @@
-import { useParams, Link } from "react-router-dom";
-import { useEffect, useState, useCallback } from "react";
+import { useParams, Link, useSearchParams } from "react-router-dom";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Calendar, Clock, MapPin, User, Share2, ExternalLink, ChevronLeft,
@@ -11,6 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { isContentLanguage, type ContentLanguageCode, DEFAULT_CONTENT_LANGUAGE } from "@/lib/i18n/languages";
+import { PublicLanguageSwitcher } from "@/components/i18n/PublicLanguageSwitcher";
+
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -51,10 +54,18 @@ function useSEO(title: string, description: string, image?: string, url?: string
 
 export default function PublicEventPage() {
   const params = useParams<{ slug: string; "*": string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   // Support /e/:slug and /s/*.html (wildcard route)
   const slug = params.slug || (params["*"] ? params["*"].replace(/\.html$/, "") : "");
+
+  // Read language from ?lang=xx (defaults to NL)
+  const langParam = searchParams.get("lang");
+  const activeLang: ContentLanguageCode =
+    langParam && isContentLanguage(langParam) ? langParam : DEFAULT_CONTENT_LANGUAGE;
+
   const [copied, setCopied] = useState(false);
   const [event, setEvent] = useState<Tables<"events"> | null>(null);
+  const [translations, setTranslations] = useState<Tables<"event_translations">[]>([]);
   const [venue, setVenue] = useState<Tables<"venues"> | null>(null);
   const [category, setCategory] = useState<{ name: string; color: string | null } | null>(null);
   const [relatedEvents, setRelatedEvents] = useState<(Tables<"events"> & { _imageUrl?: string })[]>([]);
@@ -64,6 +75,7 @@ export default function PublicEventPage() {
   const [gallery, setGallery] = useState<string[]>([]);
   const [upcomingOccurrences, setUpcomingOccurrences] = useState<Array<{ date: string; start_time: string | null; end_time: string | null; label: string | null }>>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
 
   useEffect(() => {
     async function load() {
@@ -78,17 +90,20 @@ export default function PublicEventPage() {
       if (!ev) { setLoading(false); return; }
       setEvent(ev);
 
-      const [venueRes, sponsorsRes, relatedRes, catRes, imgRes, galleryRes] = await Promise.all([
+      const [venueRes, sponsorsRes, relatedRes, catRes, imgRes, galleryRes, transRes] = await Promise.all([
         ev.venue_id ? supabase.from("venues").select("*").eq("id", ev.venue_id).maybeSingle().then(r => r) : Promise.resolve({ data: null }),
         supabase.from("event_sponsors").select("*").eq("event_id", ev.id).order("sort_order").then(r => r),
         supabase.from("events").select("*, media!events_featured_image_id_fkey(original_url)").eq("tenant_id", ev.tenant_id).eq("status", "published").neq("id", ev.id).order("start_date").limit(4).then(r => r),
         ev.category_id ? supabase.from("categories").select("name, color").eq("id", ev.category_id).maybeSingle().then(r => r) : Promise.resolve({ data: null }),
         ev.featured_image_id ? supabase.from("media").select("original_url").eq("id", ev.featured_image_id).maybeSingle().then(r => r) : Promise.resolve({ data: null }),
         supabase.from("event_gallery").select("media(original_url)").eq("event_id", ev.id).order("sort_order").then(r => r),
+        supabase.from("event_translations").select("*").eq("event_id", ev.id).then(r => r),
       ]);
       setVenue(venueRes.data);
       setSponsors(sponsorsRes.data ?? []);
       setCategory(catRes.data);
+      setTranslations((transRes.data as Tables<"event_translations">[]) ?? []);
+
       if (imgRes.data?.original_url) setFeaturedImageUrl(imgRes.data.original_url);
 
       // Map related events with images
@@ -132,17 +147,53 @@ export default function PublicEventPage() {
     load();
   }, [slug]);
 
-  const publicEventUrl = `https://txeventshare.nl/e/${slug}`;
+  // Build localized view of the event with NL fallback per field
+  const localized = useMemo(() => {
+    const t = translations.find((x) => x.language_code === activeLang);
+    const pick = (field: keyof Tables<"event_translations">) => {
+      const tv = t?.[field];
+      if (typeof tv === "string" && tv.trim().length > 0) return tv;
+      const ev = event ? (event as any)[field] : null;
+      return typeof ev === "string" ? ev : null;
+    };
+    return {
+      title: pick("title") || event?.title || "",
+      subtitle: pick("subtitle") || event?.subtitle || null,
+      short_description: pick("short_description") || event?.short_description || null,
+      full_description: pick("full_description") || event?.full_description || null,
+      cta_button_text: pick("cta_button_text") || event?.cta_button_text || null,
+      whatsapp_share_text: pick("whatsapp_share_text") || event?.whatsapp_share_text || null,
+      social_share_text: pick("social_share_text") || event?.social_share_text || null,
+      seo_title: pick("seo_title") || event?.seo_title || null,
+      seo_description: pick("seo_description") || event?.seo_description || null,
+      isFallback: !t && activeLang !== "nl",
+    };
+  }, [translations, activeLang, event]);
+
+  const availableLanguages = useMemo<ContentLanguageCode[]>(
+    () => translations.map((t) => t.language_code).filter(isContentLanguage),
+    [translations],
+  );
+
+  const handleLanguageChange = (lang: ContentLanguageCode) => {
+    const next = new URLSearchParams(searchParams);
+    if (lang === "nl") next.delete("lang");
+    else next.set("lang", lang);
+    setSearchParams(next, { replace: true });
+  };
+
+  const publicEventUrl = `https://txeventshare.nl/e/${slug}${activeLang !== "nl" ? `?lang=${activeLang}` : ""}`;
  const cacheBuster = Math.floor(Date.now() / 60000); // refreshes every minute
- const previewShareUrl = `https://txeventshare.nl/e/${slug}/index.html?v=${cacheBuster}`;
+ const previewShareUrl = `https://txeventshare.nl/e/${slug}/index.html?v=${cacheBuster}${activeLang !== "nl" ? `&lang=${activeLang}` : ""}`;
   const heroImg = featuredImageUrl || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop";
 
   useSEO(
-    event?.seo_title || event?.title || "Evenement",
-    event?.seo_description || event?.short_description || "",
+    localized.seo_title || localized.title || "Evenement",
+    localized.seo_description || localized.short_description || "",
     heroImg,
     publicEventUrl,
   );
+
 
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
   const prevLightbox = useCallback(() => {
@@ -188,8 +239,8 @@ export default function PublicEventPage() {
   const days = daysUntil(event.start_date);
   const countdownLabel = days === 0 ? "Vandaag!" : days === 1 ? "Morgen" : days > 0 ? `Nog ${days} dagen` : "Afgelopen";
 
-  const ctaText = event.cta_button_text || "Meer info";
-  const shareText = `${event.title} — ${formatDate(event.start_date)} om ${formatTime(event.start_time)}${venueName ? ` bij ${venueName}` : ""}. Bekijk alle details van dit evenement.`;
+  const ctaText = localized.cta_button_text || "Meer info";
+  const shareText = `${localized.title} — ${formatDate(event.start_date)} om ${formatTime(event.start_time)}${venueName ? ` bij ${venueName}` : ""}. Bekijk alle details van dit evenement.`;
 
  const visitorWhatsappText = `Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?\n\n${previewShareUrl}`;
 
@@ -203,12 +254,17 @@ export default function PublicEventPage() {
     <div className="min-h-screen bg-background">
       {/* HERO */}
       <section className="relative w-full overflow-hidden" style={{ minHeight: "min(55vh, 440px)" }}>
-        <img src={heroImg} alt={event.title} className="absolute inset-0 w-full h-full object-cover" loading="eager" />
+        <img src={heroImg} alt={localized.title} className="absolute inset-0 w-full h-full object-cover" loading="eager" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/5" />
-        <div className="relative z-10 max-w-5xl mx-auto px-4 pt-4">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 pt-4 flex items-center justify-between gap-2">
           <Link to="/evenementen" className="inline-flex items-center gap-1 text-white/70 hover:text-white text-sm transition-colors backdrop-blur-sm bg-white/10 rounded-full px-3 py-1">
             <ChevronLeft className="w-4 h-4" />Alle evenementen
           </Link>
+          <PublicLanguageSwitcher
+            availableLanguages={availableLanguages}
+            current={activeLang}
+            onChange={handleLanguageChange}
+          />
         </div>
         <div className="relative z-10 max-w-5xl mx-auto px-4 flex flex-col justify-end" style={{ minHeight: "min(55vh, 440px)", paddingBottom: "2rem" }}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -232,8 +288,8 @@ export default function PublicEventPage() {
                 </Badge>
               ))}
             </div>
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">{event.title}</h1>
-            {event.subtitle && <p className="text-lg sm:text-xl text-white/80 mt-2 max-w-2xl">{event.subtitle}</p>}
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">{localized.title}</h1>
+            {localized.subtitle && <p className="text-lg sm:text-xl text-white/80 mt-2 max-w-2xl">{localized.subtitle}</p>}
             {/* Quick meta row */}
             <div className="flex flex-wrap items-center gap-4 mt-4 text-white/70 text-sm">
               <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" />{formatShortDate(event.start_date)}</span>
@@ -289,7 +345,7 @@ export default function PublicEventPage() {
               className="rounded-xl bg-card border border-border shadow-card p-6">
               <h2 className="font-display text-xl font-bold text-foreground mb-3">Over dit evenement</h2>
               <div className="prose prose-sm max-w-none text-muted-foreground leading-relaxed whitespace-pre-line">
-                {event.full_description || event.short_description || "Meer informatie volgt binnenkort."}
+                {localized.full_description || localized.short_description || "Meer informatie volgt binnenkort."}
               </div>
               {event.is_recurring && (
                 <div className="mt-4 flex items-center gap-2 text-xs text-primary font-medium bg-primary/5 rounded-lg px-3 py-2">
@@ -438,7 +494,7 @@ export default function PublicEventPage() {
                 <>
                   <Button asChild className="w-full h-12 text-base font-semibold gap-2">
                     <a href={event.cta_link} target="_blank" rel="noopener noreferrer">
-                      {event.cta_button_text || "Aanmelden"}<ExternalLink className="w-4 h-4" />
+                      {localized.cta_button_text || "Aanmelden"}<ExternalLink className="w-4 h-4" />
                     </a>
                   </Button>
                   <p className="text-[11px] text-center text-muted-foreground">Direct bevestigd • Geen account nodig</p>
@@ -603,8 +659,8 @@ export default function PublicEventPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Event",
-        name: event.title,
-        description: event.seo_description || event.short_description || event.full_description,
+        name: localized.title,
+        description: localized.seo_description || localized.short_description || localized.full_description,
         startDate: `${event.start_date}T${event.start_time}`,
         endDate: event.end_date ? `${event.end_date}T${event.end_time || event.start_time}` : undefined,
         location: venue ? {
