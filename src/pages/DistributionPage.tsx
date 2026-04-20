@@ -1,5 +1,5 @@
 import { Share2, Smartphone, Zap, BarChart3, ArrowRight, Sparkles, Loader2, Globe, Mail, QrCode, Code2, Shield } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 
 function buildGoogleCalendarUrl(event: Tables<"events">, venueName: string) {
@@ -30,6 +30,7 @@ function buildGoogleCalendarUrl(event: Tables<"events">, venueName: string) {
 export default function DistributionPage() {
   const { tenantId, tenant } = useTenant();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [selectedEvent, setSelectedEvent] = useState("");
   const [showQR, setShowQR] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -52,6 +53,14 @@ export default function DistributionPage() {
     },
     enabled: !!tenantId,
   });
+
+  // Pre-select event from ?event= URL param (e.g. coming from publish-success modal)
+  useEffect(() => {
+    const eventParam = searchParams.get("event");
+    if (eventParam && !selectedEvent && publishedEvents.some((e) => e.id === eventParam)) {
+      setSelectedEvent(eventParam);
+    }
+  }, [searchParams, publishedEvents, selectedEvent]);
 
   // Fetch venue for selected event
   const { data: venue } = useQuery({

@@ -68,7 +68,7 @@ export interface StepValidation {
   errors: string[];
 }
 
-const AUTOSAVE_DELAY_MS = 30_000; // 30 seconds
+const AUTOSAVE_DELAY_MS = 1500; // 1.5 seconds for snappy "concept saved" feedback
 
 export function useEventForm() {
   const navigate = useNavigate();
@@ -128,6 +128,7 @@ export function useEventForm() {
   const [availableCategories, setAvailableCategories] = useState<Pick<Tables<"categories">, "id" | "name" | "slug">[]>([]);
   const [venues, setVenues] = useState<Tables<"venues">[]>([]);
   const [saving, setSaving] = useState(false);
+  const [autosaving, setAutosaving] = useState(false);
   const [loading, setLoading] = useState(isEditing);
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [mediaItems, setMediaItems] = useState<Tables<"media">[]>([]);
@@ -136,6 +137,8 @@ export function useEventForm() {
   const [isDirty, setIsDirty] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [autoSavedEventId, setAutoSavedEventId] = useState<string | null>(id || null);
+  const [publishedEventId, setPublishedEventId] = useState<string | null>(null);
+  const [publishedStatus, setPublishedStatus] = useState<"published" | "scheduled" | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initialFormRef = useRef<string>("");
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -171,19 +174,33 @@ export function useEventForm() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
 
-  // Autosave for drafts (only when editing or after first save)
+  // Autosave drafts: works for both existing drafts and brand-new events (creates first, then updates).
+  // Skipped for already-published events (those require explicit "Save changes").
   useEffect(() => {
-    if (!isDirty || !autoSavedEventId || !tenantId) return;
+    if (!isDirty || !tenantId) return;
+    if (loadedStatusRef.current === "published" || loadedStatusRef.current === "scheduled") return;
+    if (!form.title.trim()) return;
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     autosaveTimerRef.current = setTimeout(async () => {
-      if (!form.title.trim()) return;
-      const data = buildEventData("draft");
-      const { tenant_id, created_by, ...updateData } = data;
-      const { error } = await supabase.from("events").update(updateData).eq("id", autoSavedEventId);
-      if (!error) {
+      setAutosaving(true);
+      try {
+        const data = buildEventData("draft");
+        if (autoSavedEventId) {
+          const { tenant_id, created_by, ...updateData } = data;
+          const { error } = await supabase.from("events").update(updateData).eq("id", autoSavedEventId);
+          if (error) return;
+        } else {
+          const { data: inserted, error } = await supabase.from("events").insert(data).select("id").single();
+          if (error || !inserted) return;
+          setAutoSavedEventId(inserted.id);
+          // Replace URL silently so refresh works, without triggering a full reload
+          window.history.replaceState(null, "", `/app/events/${inserted.id}`);
+        }
         setLastSavedAt(new Date());
         setIsDirty(false);
         initialFormRef.current = JSON.stringify(form);
+      } finally {
+        setAutosaving(false);
       }
     }, AUTOSAVE_DELAY_MS);
     return () => { if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current); };
@@ -495,14 +512,13 @@ export function useEventForm() {
     setIsDirty(false);
     setLastSavedAt(new Date());
     initialFormRef.current = JSON.stringify(form);
-    toast.success("Concept opgeslagen ✓", { description: "Je kunt later verder werken aan dit event." });
+    toast.success("Concept opgeslagen ✓");
     logAudit({ tenantId, entityType: "event", action: isEditing ? "updated" : "created", entityId: eventId });
-    // If event is already published, trigger update sync
     if (isEditing && eventId && loadedStatusRef.current === "published") {
       triggerClickWiseSync(tenantId, "event.updated", eventId, { title: form.title, slug: form.slug });
     }
     if (!isEditing && eventId) {
-      navigate(`/app/events/${eventId}`, { replace: true });
+      window.history.replaceState(null, "", `/app/events/${eventId}`);
     }
     return true;
   }
@@ -539,19 +555,24 @@ export function useEventForm() {
       return false;
     }
     setIsDirty(false);
+    initialFormRef.current = JSON.stringify(form);
     const syncEventType = isEditing && loadedStatusRef.current === "published"
       ? "event.updated"
       : "event.published";
-    toast.success(
-      status === "scheduled" ? "Evenement ingepland! 📅" : "Evenement gepubliceerd! 🎉",
-      { description: status === "scheduled" ? "Het event gaat automatisch live op de ingestelde datum." : "Je event is nu zichtbaar voor bezoekers." }
-    );
     logAudit({ tenantId, entityType: "event", action: status === "scheduled" ? "scheduled" : "published", entityId: eventId });
     if (status === "published" && eventId) {
       triggerClickWiseSync(tenantId, syncEventType, eventId, { title: form.title, slug: form.slug });
     }
-    navigate("/app/events");
+    // Surface success modal instead of toast+redirect
+    setPublishedEventId(eventId!);
+    setPublishedStatus(status as "published" | "scheduled");
+    loadedStatusRef.current = status;
     return true;
+  }
+
+  function dismissPublishSuccess() {
+    setPublishedEventId(null);
+    setPublishedStatus(null);
   }
 
   async function handleDelete() {
@@ -562,7 +583,7 @@ export function useEventForm() {
   }
 
   return {
-    form, updateForm, isEditing, id, saving, loading,
+    form, updateForm, isEditing, id, saving, autosaving, loading,
     availableCategories, venues,
     mediaPickerOpen, setMediaPickerOpen,
     mediaItems, mediaLoading, uploading,
@@ -570,6 +591,7 @@ export function useEventForm() {
     loadMediaItems,
     handleSave, handlePublish, handleDelete,
     validateStep, isDirty, lastSavedAt,
+    publishedEventId, publishedStatus, dismissPublishSuccess,
     navigate, tenantId,
   };
 }
