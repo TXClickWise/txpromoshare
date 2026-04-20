@@ -70,7 +70,7 @@ export default function PublicLayout() {
         scrolled ? "bg-background/90 backdrop-blur-md border-b border-border shadow-card" : "bg-transparent"
       )}>
         <div className="container flex items-center justify-between h-16 px-4">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" onClick={handleHomeClick} className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg gradient-hero flex items-center justify-center">
               <span className="text-primary-foreground font-display font-bold text-sm">TX</span>
             </div>
@@ -84,7 +84,7 @@ export default function PublicLayout() {
                   {link.label}
                 </a>
               ) : (
-                <Link key={link.to} to={link.to} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                <Link key={link.to} to={link.to} onClick={link.to === "/" ? handleHomeClick : undefined} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                   {link.label}
                 </Link>
               )
