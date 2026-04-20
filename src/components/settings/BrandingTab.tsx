@@ -416,7 +416,60 @@ export default function BrandingTab() {
         )}
       </motion.div>
 
-      {/* 2-koloms layout: links form, rechts sticky preview */}
+      {/* Mobile-only: compacte live preview-strip bovenaan */}
+      <div className="lg:hidden rounded-xl bg-card border border-border shadow-card p-3">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-semibold text-foreground">Live preview</p>
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">Realtime</span>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory">
+          {/* Mini card preview */}
+          <div className="snap-start shrink-0 w-[180px] rounded-lg bg-secondary/30 border border-border p-2">
+            <div className="bg-white rounded-md border border-gray-200 overflow-hidden" style={{ fontFamily: state.fontFamily === "system" ? undefined : state.fontFamily }}>
+              <div className="h-16 bg-gradient-to-br from-gray-200 to-gray-300" />
+              <div className="p-2 space-y-1.5">
+                <p className="text-[10px] font-bold text-gray-900 truncate">Live muziek avond</p>
+                <button className="w-full text-[9px] font-semibold text-white py-1.5" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
+                  {state.defaultCtaText}
+                </button>
+              </div>
+            </div>
+            <p className="text-[9px] text-muted-foreground text-center mt-1">Card</p>
+          </div>
+          {/* Mini widget preview */}
+          <div className="snap-start shrink-0 w-[180px] rounded-lg bg-secondary/30 border border-border p-2">
+            <div className="bg-white rounded-md border border-gray-200 p-2" style={{ fontFamily: state.fontFamily === "system" ? undefined : state.fontFamily }}>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                {state.logoUrl ? (
+                  <img src={state.logoUrl} alt="" className="h-3 w-auto object-contain" />
+                ) : (
+                  <div className="w-1 h-3 rounded-sm" style={{ backgroundColor: state.primaryColor }} />
+                )}
+                <p className="text-[9px] font-bold text-gray-900 truncate">{tenant?.name || "Agenda"}</p>
+              </div>
+              <div className="rounded border border-gray-200 p-1.5">
+                <p className="text-[9px] font-semibold text-gray-900 truncate">Live muziek</p>
+                <div className="mt-0.5 inline-block text-[8px] text-white px-1.5 py-0.5" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
+                  {state.defaultCtaText}
+                </div>
+              </div>
+            </div>
+            <p className="text-[9px] text-muted-foreground text-center mt-1">Widget</p>
+          </div>
+          {/* Mini knop preview */}
+          <div className="snap-start shrink-0 w-[180px] rounded-lg bg-secondary/30 border border-border p-2 flex flex-col justify-center">
+            <button className="w-full text-[10px] font-semibold text-white py-2.5" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
+              {state.defaultCtaText}
+            </button>
+            <button className="w-full text-[10px] font-semibold py-2.5 mt-1.5 border" style={{ color: state.secondaryColor, borderColor: state.secondaryColor, borderRadius: btnRadius }}>
+              Secundair
+            </button>
+            <p className="text-[9px] text-muted-foreground text-center mt-1">Knoppen</p>
+          </div>
+        </div>
+      </div>
+
+      {/* 2-koloms layout: links form, rechts sticky preview (vanaf lg) */}
       <div className="grid lg:grid-cols-[1fr_minmax(320px,400px)] gap-5 items-start">
         {/* LINKS — Form in tabs */}
         <motion.div
@@ -425,25 +478,25 @@ export default function BrandingTab() {
           className="rounded-xl bg-card border border-border shadow-card overflow-hidden"
         >
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <div className="border-b border-border bg-muted/30 px-2 pt-2">
-              <TabsList className="bg-transparent h-auto p-0 gap-1 w-full justify-start flex-wrap">
-                <TabsTrigger value="identity" className="text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
-                  <Building2 className="w-3.5 h-3.5" />Identiteit
+            <div className="border-b border-border bg-muted/30 px-2 pt-2 overflow-x-auto">
+              <TabsList className="bg-transparent h-auto p-0 gap-1 w-full justify-start flex-nowrap sm:flex-wrap">
+                <TabsTrigger value="identity" className="text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm shrink-0">
+                  <Building2 className="w-3.5 h-3.5" /><span className="hidden xs:inline">Identiteit</span><span className="xs:hidden">Identi.</span>
                 </TabsTrigger>
-                <TabsTrigger value="style" className="text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
-                  <Palette className="w-3.5 h-3.5" />Kleuren & stijl
+                <TabsTrigger value="style" className="text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm shrink-0">
+                  <Palette className="w-3.5 h-3.5" /><span className="hidden xs:inline">Kleuren & stijl</span><span className="xs:hidden">Stijl</span>
                 </TabsTrigger>
-                <TabsTrigger value="dna" className="text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                <TabsTrigger value="dna" className="text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm shrink-0">
                   <Sparkles className="w-3.5 h-3.5" />Merk-DNA
                 </TabsTrigger>
-                <TabsTrigger value="overview" className="text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                <TabsTrigger value="overview" className="text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm shrink-0">
                   <ImageIcon className="w-3.5 h-3.5" />Overzicht
                 </TabsTrigger>
               </TabsList>
             </div>
 
             {/* IDENTITEIT */}
-            <TabsContent value="identity" className="p-5 space-y-6 mt-0">
+            <TabsContent value="identity" className="p-4 sm:p-5 space-y-6 mt-0">
               <Section icon={ImageIcon} title="Logo" description="Wordt getoond op eventpagina's, widgets en e-mails.">
                 <LogoUploader
                   logoUrl={state.logoUrl}
@@ -468,7 +521,7 @@ export default function BrandingTab() {
             </TabsContent>
 
             {/* KLEUREN & STIJL */}
-            <TabsContent value="style" className="p-5 space-y-6 mt-0">
+            <TabsContent value="style" className="p-4 sm:p-5 space-y-6 mt-0">
               <Section icon={Palette} title="Kleuren" description="Worden gebruikt op eventpagina's, widgets en deelkaarten.">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -521,7 +574,7 @@ export default function BrandingTab() {
             </TabsContent>
 
             {/* MERK-DNA */}
-            <TabsContent value="dna" className="p-5 space-y-6 mt-0">
+            <TabsContent value="dna" className="p-4 sm:p-5 space-y-6 mt-0">
               <Section icon={Sparkles} title="Tone of voice & beeldstijl" description="AI-functies gebruiken dit om in jouw stijl te schrijven.">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -566,7 +619,7 @@ export default function BrandingTab() {
               </Section>
             </TabsContent>
             {/* OVERZICHT — alle previews tegelijk */}
-            <TabsContent value="overview" className="p-5 mt-0">
+            <TabsContent value="overview" className="p-4 sm:p-5 mt-0">
               <BrandPreviewGrid
                 state={{
                   logoUrl: state.logoUrl,
@@ -582,20 +635,20 @@ export default function BrandingTab() {
             </TabsContent>
           </Tabs>
 
-          {/* Sticky save bar */}
-          <div className="border-t border-border bg-muted/30 px-5 py-3 flex items-center justify-between gap-3">
+          {/* Save bar — sticky bottom op mobile */}
+          <div className="sticky bottom-0 z-10 border-t border-border bg-card/95 backdrop-blur-sm px-4 sm:px-5 py-3 flex items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground hidden sm:block">Wijzigingen worden direct in de preview getoond.</p>
-            <Button size="sm" onClick={saveBranding} disabled={saving} className="gap-2 ml-auto">
+            <Button size="sm" onClick={saveBranding} disabled={saving} className="gap-2 ml-auto w-full sm:w-auto">
               <Save className="w-4 h-4" />{saving ? "Opslaan..." : "Branding opslaan"}
             </Button>
           </div>
         </motion.div>
 
-        {/* RECHTS — Sticky preview */}
+        {/* RECHTS — Sticky preview (alleen vanaf lg) */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="lg:sticky lg:top-4 rounded-xl bg-card border border-border shadow-card p-4 space-y-3"
+          className="hidden lg:block lg:sticky lg:top-4 rounded-xl bg-card border border-border shadow-card p-4 space-y-3"
         >
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">Live preview</p>
