@@ -273,7 +273,7 @@ export default function BrandingTab() {
       }
 
       setScraped(result);
-      toast.success("Website geanalyseerd! Controleer het voorstel hieronder.");
+      setReviewOpen(true);
     } catch (err: any) {
       console.error("Scrape error:", err);
       setScrapeError(err.message || "Er ging iets mis bij het analyseren");
@@ -283,15 +283,75 @@ export default function BrandingTab() {
     }
   }
 
-  function applyScraped() {
-    if (!scraped) return;
-    if (scraped.primaryColor) update("primaryColor", scraped.primaryColor);
-    if (scraped.secondaryColor) update("secondaryColor", scraped.secondaryColor);
-    if (scraped.tagline) update("tagline", scraped.tagline);
-    const matchedFont = FONT_OPTIONS.find((f) => f.value === scraped.fontFamily);
-    if (matchedFont) update("fontFamily", matchedFont.value);
-    toast.success("Voorstel toegepast — controleer en sla op");
+  async function handleReviewApply(selection: import("./BrandReviewDialog").BrandReviewSelection) {
+    if (!tenant) return;
+
+    // Build update payload from selected fields only
+    const updates: Record<string, any> = {};
+    if (selection.tagline !== undefined) updates.tagline = selection.tagline;
+    if (selection.primaryColor !== undefined) updates.primary_color = selection.primaryColor;
+    if (selection.secondaryColor !== undefined) updates.secondary_color = selection.secondaryColor;
+    if (selection.fontFamily !== undefined) {
+      const matched = FONT_OPTIONS.find((f) => f.value === selection.fontFamily);
+      updates.font_family = matched ? matched.value : "system";
+    }
+
+    // Logo: re-upload to our own storage to avoid hotlinking external URLs
+    if (selection.logoUrl) {
+      try {
+        const resp = await fetch(selection.logoUrl);
+        if (resp.ok) {
+          const blob = await resp.blob();
+          const ext = (blob.type.split("/")[1] || "png").replace("svg+xml", "svg");
+          const path = `${tenant.id}/logo_imported_${Date.now()}.${ext}`;
+          const { error: upErr } = await supabase.storage.from("media").upload(path, blob, { upsert: true, contentType: blob.type });
+          if (!upErr) {
+            const { data: urlData } = supabase.storage.from("media").getPublicUrl(path);
+            updates.logo_url = `${urlData.publicUrl}?t=${Date.now()}`;
+          }
+        }
+      } catch (e) {
+        console.warn("Logo import failed, falling back to direct URL", e);
+        updates.logo_url = selection.logoUrl;
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      setReviewOpen(false);
+      return;
+    }
+
+    const { error } = await supabase.from("tenants").update(updates).eq("id", tenant.id);
+    if (error) {
+      toast.error("Toepassen mislukt: " + error.message);
+      return;
+    }
+
+    // Update local state
+    if (updates.tagline !== undefined) update("tagline", updates.tagline);
+    if (updates.primary_color) update("primaryColor", updates.primary_color);
+    if (updates.secondary_color) update("secondaryColor", updates.secondary_color);
+    if (updates.font_family) update("fontFamily", updates.font_family);
+    if (updates.logo_url) update("logoUrl", updates.logo_url);
+
+    logAudit({ tenantId: tenant.id, entityType: "tenant", action: "branding_imported", entityId: tenant.id, metadata: { fields: Object.keys(updates) } });
+
+    // Optional ClickWise logo sync — only if user explicitly opted in
+    if (selection.syncLogoToClickWise && updates.logo_url && hasClickWise) {
+      try {
+        await supabase.functions.invoke("clickwise-tenant-sync", { body: { tenantId: tenant.id } });
+        toast.success("Branding toegepast en gesynced naar ClickWise");
+      } catch (e) {
+        console.warn("ClickWise sync failed", e);
+        toast.success("Branding toegepast (ClickWise sync mislukt)");
+      }
+    } else {
+      toast.success("Branding toegepast");
+    }
+
+    setReviewOpen(false);
     setScraped(null);
+    refetch();
   }
 
   const btnRadius = state.buttonStyle === "pill" ? "9999px" : state.buttonStyle === "square" ? "4px" : "8px";
