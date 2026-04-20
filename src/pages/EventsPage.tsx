@@ -214,14 +214,14 @@ export default function EventsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">{t.events.title}</h1>
+          <h1 className="text-2xl font-display font-bold text-foreground">{t("events.title")}</h1>
           <p className="text-xs text-muted-foreground mt-1">
-            {events.length} {events.length === 1 ? "evenement" : "evenementen"} totaal
+            {events.length} {events.length === 1 ? t("events.totalSingular") : t("events.totalPlural")}
           </p>
         </div>
         <Link to="/app/events/new" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold hover:opacity-90 shadow-glow">
           <Plus className="w-4 h-4" />
-          {t.events.create}
+          {t("events.create")}
         </Link>
       </div>
 
@@ -269,7 +269,7 @@ export default function EventsPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Zoek op titel, locatie, datum, organisator..."
+            placeholder={t("events.searchPlaceholder")}
             className="pl-9 pr-9 h-9 text-sm"
           />
           {search && (
@@ -285,10 +285,10 @@ export default function EventsPage() {
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-[150px] h-9 text-xs">
             <Filter className="w-3 h-3 mr-1 text-muted-foreground" />
-            <SelectValue placeholder="Categorie" />
+            <SelectValue placeholder={t("nav.categories")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Alle categorieën</SelectItem>
+            <SelectItem value="all">{t("events.allCategories")}</SelectItem>
             {categories.map((c) => (
               <SelectItem key={c.id} value={c.id}>
                 <span className="flex items-center gap-2">
@@ -324,32 +324,32 @@ export default function EventsPage() {
       {selected.size > 0 && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
           <Checkbox checked={selected.size === filtered.length} onCheckedChange={selectAll} />
-          <span className="text-sm font-medium text-foreground">{selected.size} geselecteerd</span>
+          <span className="text-sm font-medium text-foreground">{selected.size} {t("events.bulk.selected")}</span>
           <div className="flex-1" />
           <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => bulkAction("archive")}>
-            <Archive className="w-3 h-3" />Archiveren
+            <Archive className="w-3 h-3" />{t("events.bulk.archive")}
           </Button>
           <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => bulkAction("delete")}>
-            <Trash2 className="w-3 h-3" />Verwijderen
+            <Trash2 className="w-3 h-3" />{t("events.bulk.delete")}
           </Button>
-          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelected(new Set())}>Deselecteer</Button>
+          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelected(new Set())}>{t("events.bulk.deselect")}</Button>
         </motion.div>
       )}
 
       {filtered.length === 0 ? (
         <EmptyState
           icon={Calendar}
-          title={search || activeTab !== "all" ? "Geen resultaten" : t.events.noEvents}
+          title={search || activeTab !== "all" ? t("events.noResults") : t("events.noEvents")}
           description={
             search
-              ? `Geen evenementen gevonden voor "${search}".`
+              ? `${t("events.noResults")}: "${search}"`
               : activeTab !== "all"
-                ? `Geen evenementen in deze categorie. Wissel naar 'Alle' om alles te zien.`
-                : t.events.noEventsDesc
+                ? t("events.noEventsDesc")
+                : t("events.noEventsDesc")
           }
-          actionLabel={search || activeTab !== "all" ? undefined : "Eerste evenement aanmaken"}
+          actionLabel={search || activeTab !== "all" ? undefined : t("events.firstEvent")}
           actionTo={search || activeTab !== "all" ? undefined : "/app/events/new"}
-          secondaryLabel={search || activeTab !== "all" ? undefined : "Sjabloon kiezen"}
+          secondaryLabel={search || activeTab !== "all" ? undefined : t("events.chooseTemplate")}
           secondaryTo={search || activeTab !== "all" ? undefined : "/app/templates"}
         />
       ) : view === "grid" ? (
