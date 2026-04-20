@@ -190,11 +190,14 @@ Deno.serve(async (req) => {
 
     // Single event (includes gallery)
     if (eventSlug) {
+      const detailParams = DetailQuerySchema.safeParse(Object.fromEntries(url.searchParams));
+      const lang: Lang = detailParams.success ? detailParams.data.lang : "nl";
+
       const detailSelect = `
         id, slug, title, subtitle, short_description, full_description,
         start_date, end_date, start_time, end_time,
         organizer_name, cta_link, cta_button_text, tags,
-        is_featured, featured_until, status,
+        is_featured, featured_until, status, seo_title, seo_description,
         categories:category_id ( slug, name, color ),
         venues:venue_id ( name, address, city, postal_code ),
         media:featured_image_id ( storage_path, original_url ),
@@ -211,7 +214,24 @@ Deno.serve(async (req) => {
       if (error) throw error;
       if (!data) return errorResponse("Event not found", 404);
 
-      return jsonResponse({ tenant: tenantPayload, event: serializeEvent(data, true) });
+      // Fetch translation for the requested language (skip lookup for nl - source of truth)
+      let translation: any = null;
+      if (lang !== "nl") {
+        const { data: trans } = await supabase
+          .from("event_translations")
+          .select("*")
+          .eq("event_id", (data as any).id)
+          .eq("language_code", lang)
+          .maybeSingle();
+        translation = trans;
+      }
+
+      const localized = applyTranslation(data, translation);
+      const payload = serializeEvent(localized, true);
+      payload.language = lang;
+      payload.is_translated = !!translation;
+
+      return jsonResponse({ tenant: tenantPayload, event: payload });
     }
 
     // List
@@ -219,7 +239,7 @@ Deno.serve(async (req) => {
     if (!parsed.success) {
       return errorResponse("Invalid query parameters", 400, parsed.error.flatten().fieldErrors);
     }
-    const { from, to, category, limit, offset } = parsed.data;
+    const { from, to, category, limit, offset, lang } = parsed.data;
     const today = new Date().toISOString().slice(0, 10);
     const fromDate = from ?? today;
 
@@ -238,7 +258,30 @@ Deno.serve(async (req) => {
     const { data, error, count } = await query;
     if (error) throw error;
 
-    let events = (data ?? []).map(serializeEvent);
+    let rows = data ?? [];
+
+    // Bulk-fetch translations for the requested language
+    let translationMap: Record<string, any> = {};
+    if (lang !== "nl" && rows.length > 0) {
+      const ids = rows.map((r: any) => r.id);
+      const { data: trans } = await supabase
+        .from("event_translations")
+        .select("*")
+        .in("event_id", ids)
+        .eq("language_code", lang);
+      if (trans) {
+        for (const t of trans as any[]) translationMap[t.event_id] = t;
+      }
+    }
+
+    let events = rows.map((row: any) => {
+      const localized = applyTranslation(row, translationMap[row.id] ?? null);
+      const out = serializeEvent(localized);
+      out.language = lang;
+      out.is_translated = !!translationMap[row.id];
+      return out;
+    });
+
     if (category) {
       events = events.filter((e) => e.category?.slug === category);
     }
@@ -246,6 +289,7 @@ Deno.serve(async (req) => {
     return jsonResponse({
       tenant: tenantPayload,
       events,
+      language: lang,
       pagination: {
         total: count ?? events.length,
         limit,
