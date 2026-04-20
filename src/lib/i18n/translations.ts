@@ -23,6 +23,33 @@ export const UI_TRANSLATIONS: Record<UILanguageCode, TranslationDict> = {
     "common.next": "Volgende",
     "common.optional": "optioneel",
     "common.required": "verplicht",
+    "common.signOut": "Uitloggen",
+    "common.user": "Gebruiker",
+
+    // Navigation (dashboard sidebar)
+    "nav.dashboard": "Dashboard",
+    "nav.events": "Evenementen",
+    "nav.templates": "Sjablonen",
+    "nav.distribution": "Delen & Posten",
+    "nav.widgets": "Widgets",
+    "nav.categories": "Categorieën",
+    "nav.media": "Media",
+    "nav.team": "Team",
+    "nav.integrations": "Integraties",
+    "nav.settings": "Instellingen",
+    "nav.billing": "Abonnement",
+    "nav.admin": "Admin",
+    "nav.plan": "{plan} plan",
+
+    // Public navigation (landing)
+    "publicNav.home": "Home",
+    "publicNav.benefits": "Voordelen",
+    "publicNav.howItWorks": "Hoe het werkt",
+    "publicNav.pricing": "Prijzen",
+    "publicNav.demo": "Demo",
+    "publicNav.events": "Evenementen",
+    "publicNav.login": "Inloggen",
+    "publicNav.startFree": "Start gratis",
 
     // Languages
     "lang.ui": "Interface-taal",
@@ -40,6 +67,7 @@ export const UI_TRANSLATIONS: Record<UILanguageCode, TranslationDict> = {
     "lang.notTranslatedYet": "Nog niet vertaald",
     "lang.confirmOverwrite": "Bestaande vertaling overschrijven?",
     "lang.preview": "Live voorbeeld",
+    "lang.interface": "Interface",
 
     // Settings
     "settings.language": "Taal",
@@ -61,6 +89,33 @@ export const UI_TRANSLATIONS: Record<UILanguageCode, TranslationDict> = {
     "common.next": "Next",
     "common.optional": "optional",
     "common.required": "required",
+    "common.signOut": "Sign out",
+    "common.user": "User",
+
+    // Navigation (dashboard sidebar)
+    "nav.dashboard": "Dashboard",
+    "nav.events": "Events",
+    "nav.templates": "Templates",
+    "nav.distribution": "Share & Post",
+    "nav.widgets": "Widgets",
+    "nav.categories": "Categories",
+    "nav.media": "Media",
+    "nav.team": "Team",
+    "nav.integrations": "Integrations",
+    "nav.settings": "Settings",
+    "nav.billing": "Subscription",
+    "nav.admin": "Admin",
+    "nav.plan": "{plan} plan",
+
+    // Public navigation (landing)
+    "publicNav.home": "Home",
+    "publicNav.benefits": "Benefits",
+    "publicNav.howItWorks": "How it works",
+    "publicNav.pricing": "Pricing",
+    "publicNav.demo": "Demo",
+    "publicNav.events": "Events",
+    "publicNav.login": "Sign in",
+    "publicNav.startFree": "Start free",
 
     // Languages
     "lang.ui": "Interface language",
@@ -78,6 +133,7 @@ export const UI_TRANSLATIONS: Record<UILanguageCode, TranslationDict> = {
     "lang.notTranslatedYet": "Not translated yet",
     "lang.confirmOverwrite": "Overwrite existing translation?",
     "lang.preview": "Live preview",
+    "lang.interface": "Interface",
 
     // Settings
     "settings.language": "Language",

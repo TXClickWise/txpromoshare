@@ -3,27 +3,13 @@ import {
   LayoutDashboard, Calendar, Layers, Share2, Code2, Tags,
   Image, Users, Plug, Settings, CreditCard, Shield, Menu, X, LogOut
 } from "lucide-react";
-import { useState } from "react";
-import { t } from "@/lib/i18n";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { usePlan } from "@/hooks/usePlan";
 import { UILanguageSwitcher } from "@/components/i18n/UILanguageSwitcher";
-
-const navItems = [
-  { to: "/app", icon: LayoutDashboard, label: t.nav.dashboard, end: true },
-  { to: "/app/events", icon: Calendar, label: t.nav.events },
-  { to: "/app/templates", icon: Layers, label: t.nav.templates },
-  { to: "/app/distribution", icon: Share2, label: t.nav.distribution },
-  { to: "/app/widgets", icon: Code2, label: t.nav.widgets },
-  { to: "/app/categories", icon: Tags, label: t.nav.categories },
-  { to: "/app/media", icon: Image, label: t.nav.media },
-  { to: "/app/team", icon: Users, label: t.nav.team },
-  { to: "/app/integrations", icon: Plug, label: t.nav.integrations },
-  { to: "/app/settings", icon: Settings, label: t.nav.settings },
-  { to: "/app/billing", icon: CreditCard, label: t.nav.billing },
-];
+import { useTranslation } from "@/hooks/useUILanguage";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,6 +18,21 @@ export default function AppLayout() {
   const { user, loading, signOut, isPlatformAdmin } = useAuth();
   const { tenant } = useTenant();
   const { effectivePlanId } = usePlan();
+  const { t } = useTranslation();
+
+  const navItems = useMemo(() => [
+    { to: "/app", icon: LayoutDashboard, label: t("nav.dashboard"), end: true },
+    { to: "/app/events", icon: Calendar, label: t("nav.events") },
+    { to: "/app/templates", icon: Layers, label: t("nav.templates") },
+    { to: "/app/distribution", icon: Share2, label: t("nav.distribution") },
+    { to: "/app/widgets", icon: Code2, label: t("nav.widgets") },
+    { to: "/app/categories", icon: Tags, label: t("nav.categories") },
+    { to: "/app/media", icon: Image, label: t("nav.media") },
+    { to: "/app/team", icon: Users, label: t("nav.team") },
+    { to: "/app/integrations", icon: Plug, label: t("nav.integrations") },
+    { to: "/app/settings", icon: Settings, label: t("nav.settings") },
+    { to: "/app/billing", icon: CreditCard, label: t("nav.billing") },
+  ], [t]);
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen bg-background"><div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
