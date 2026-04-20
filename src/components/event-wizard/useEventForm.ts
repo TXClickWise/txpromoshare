@@ -268,8 +268,24 @@ export function useEventForm() {
   // Load existing event
   useEffect(() => {
     if (!id) return;
-    supabase.from("events").select("*").eq("id", id).maybeSingle().then(async ({ data }) => {
-      if (data) {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("events")
+          .select("*")
+          .eq("id", id)
+          .maybeSingle();
+        if (cancelled) return;
+        if (error) {
+          console.error("[useEventForm] failed to load event", error);
+          toast.error("Kon evenement niet laden: " + error.message);
+          return;
+        }
+        if (!data) {
+          toast.error("Evenement niet gevonden");
+          return;
+        }
         const updates: Partial<EventFormState> = {
           title: data.title,
           subtitle: data.subtitle || "",
@@ -297,41 +313,52 @@ export function useEventForm() {
             (data as any).show_on_discovery === false ? "hide" : "inherit",
           featuredImageId: data.featured_image_id,
         };
-        // Load venue info
-        if (data.venue_id) {
-          const { data: v } = await supabase.from("venues").select("*").eq("id", data.venue_id).maybeSingle();
-          if (v) {
-            updates.venue = v.name;
-            updates.address = [v.address, v.city].filter(Boolean).join(", ");
+        // Best-effort related lookups — never block load on these
+        try {
+          if (data.venue_id) {
+            const { data: v } = await supabase.from("venues").select("*").eq("id", data.venue_id).maybeSingle();
+            if (v) {
+              updates.venue = v.name;
+              updates.address = [v.address, v.city].filter(Boolean).join(", ");
+            }
           }
+          if (data.featured_image_id) {
+            const { data: img } = await supabase.from("media").select("original_url").eq("id", data.featured_image_id).maybeSingle();
+            if (img) updates.featuredImageUrl = img.original_url;
+          }
+          const { data: spData } = await supabase.from("event_sponsors").select("*").eq("event_id", data.id).order("sort_order");
+          if (spData) updates.sponsors = spData.map(s => ({ name: s.name, logo_url: s.logo_url || "", website_url: s.website_url || "" }));
+          const { data: galData } = await supabase
+            .from("event_gallery")
+            .select("media_id, media:media_id(original_url)")
+            .eq("event_id", data.id)
+            .order("sort_order");
+          if (galData) {
+            updates.gallery = galData
+              .map((g: any) => ({ mediaId: g.media_id, url: g.media?.original_url || "" }))
+              .filter((g) => g.url);
+          }
+        } catch (relErr) {
+          console.warn("[useEventForm] non-fatal related lookup failed", relErr);
         }
-        if (data.featured_image_id) {
-          const { data: img } = await supabase.from("media").select("original_url").eq("id", data.featured_image_id).maybeSingle();
-          if (img) updates.featuredImageUrl = img.original_url;
-        }
-        const { data: spData } = await supabase.from("event_sponsors").select("*").eq("event_id", data.id).order("sort_order");
-        if (spData) updates.sponsors = spData.map(s => ({ name: s.name, logo_url: s.logo_url || "", website_url: s.website_url || "" }));
-        const { data: galData } = await supabase
-          .from("event_gallery")
-          .select("media_id, media:media_id(original_url)")
-          .eq("event_id", data.id)
-          .order("sort_order");
-        if (galData) {
-          updates.gallery = galData
-            .map((g: any) => ({ mediaId: g.media_id, url: g.media?.original_url || "" }))
-            .filter((g) => g.url);
-        }
+        if (cancelled) return;
         loadedStatusRef.current = data.status;
         setForm(prev => ({ ...prev, ...updates }));
         setTimeout(() => {
+          if (cancelled) return;
           const merged = { ...form, ...updates };
           initialFormRef.current = JSON.stringify(merged);
           initialRecurrenceRef.current = recurrenceSignature(merged);
           setIsDirty(false);
         }, 100);
+      } catch (err) {
+        console.error("[useEventForm] unexpected load error", err);
+        toast.error("Er ging iets mis bij het laden");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
-    });
+    })();
+    return () => { cancelled = true; };
   }, [id]);
 
   // Auto-slug
