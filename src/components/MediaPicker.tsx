@@ -10,6 +10,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
+import { CropHintGuide, RolePresetSwitcher, IMAGE_ROLE_SPECS, type ImageRoleKey } from "@/components/media/CropHintGuide";
 
 interface StockImage {
   id: string;
@@ -23,29 +24,13 @@ interface StockImage {
   downloadUrl: string;
 }
 
-interface ImageRole {
-  label: string;
-  ratio: string;
-  minWidth?: number;
-  minHeight?: number;
-}
-
-const IMAGE_ROLES: Record<string, ImageRole> = {
-  featured: { label: "Uitgelichte afbeelding", ratio: "16:9", minWidth: 1200, minHeight: 675 },
-  gallery: { label: "Galerij", ratio: "4:3", minWidth: 800, minHeight: 600 },
-  card: { label: "Event card", ratio: "16:9", minWidth: 600, minHeight: 338 },
-  widget: { label: "Widget", ratio: "3:2", minWidth: 400, minHeight: 267 },
-  social: { label: "Social media", ratio: "1.91:1", minWidth: 1200, minHeight: 628 },
-  square: { label: "Vierkant", ratio: "1:1", minWidth: 400, minHeight: 400 },
-};
-
 interface MediaPickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (mediaId: string, url: string) => void;
   onSelectMulti?: (items: { id: string; url: string }[]) => void;
   selectedId?: string | null;
-  role?: keyof typeof IMAGE_ROLES;
+  role?: ImageRoleKey;
   mode?: "single" | "multi";
 }
 
@@ -62,8 +47,10 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
   const [saving, setSaving] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [multiSelected, setMultiSelected] = useState<{ id: string; url: string }[]>([]);
+  const [activeRole, setActiveRole] = useState<ImageRoleKey>(role);
+  const [hoveredItem, setHoveredItem] = useState<Tables<"media"> | null>(null);
 
-  const roleInfo = IMAGE_ROLES[role] || IMAGE_ROLES.featured;
+  const roleInfo = IMAGE_ROLE_SPECS[activeRole];
 
   const { data: mediaItems = [], isLoading: mediaLoading } = useQuery({
     queryKey: ["media", tenantId],
@@ -234,6 +221,8 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
           <button
             key={item.id}
             onClick={() => selectExisting(item)}
+            onMouseEnter={() => setHoveredItem(item)}
+            onMouseLeave={() => setHoveredItem(null)}
             className={`group relative rounded-lg border-2 overflow-hidden aspect-square transition-all ${
               isSelected ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
             }`}
@@ -279,15 +268,18 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col gap-0">
-        <DialogHeader className="pb-3">
+        <DialogHeader className="pb-3 space-y-2">
           <DialogTitle className="text-lg font-display">Afbeelding kiezen</DialogTitle>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant="outline" className="text-[10px]">
-              {roleInfo.label}
-            </Badge>
-            <span className="text-[10px] text-muted-foreground">
-              Aanbevolen: {roleInfo.ratio} • min. {roleInfo.minWidth}×{roleInfo.minHeight}px
-            </span>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-[10px]">
+                {roleInfo.label}
+              </Badge>
+              <span className="text-[10px] text-muted-foreground">
+                {roleInfo.ratio} • min. {roleInfo.minWidth}×{roleInfo.minHeight}px
+              </span>
+            </div>
+            <RolePresetSwitcher activeRole={activeRole} onChange={setActiveRole} />
           </div>
         </DialogHeader>
 
@@ -386,6 +378,20 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
                   Alle media ({filteredItems.length})
                 </p>
                 <MediaGrid items={filteredItems} />
+              </div>
+            )}
+
+            {hoveredItem && (
+              <div className="sticky bottom-0 -mx-1 mt-3 p-3 rounded-xl bg-card border border-border shadow-card">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 font-medium">
+                  Crop preview
+                </p>
+                <CropHintGuide
+                  imageUrl={hoveredItem.original_url || ""}
+                  imageWidth={hoveredItem.width}
+                  imageHeight={hoveredItem.height}
+                  role={activeRole}
+                />
               </div>
             )}
           </TabsContent>
