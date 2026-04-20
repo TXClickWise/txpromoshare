@@ -491,12 +491,60 @@ export function useEventForm() {
     }
   }
 
-  async function generateOccurrences(eventId: string) {
+  /**
+   * Inspecteer bestaande occurrences om te bepalen of een scope-keuze
+   * relevant is. Wordt gebruikt voor de RecurringEditScopeDialog.
+   */
+  async function inspectExistingOccurrences(eventId: string): Promise<{
+    total: number;
+    future: number;
+    hasManualEdits: boolean;
+  }> {
+    const { data } = await supabase
+      .from("event_occurrences")
+      .select("occurrence_date, status, overrides, start_time, end_time, label")
+      .eq("event_id", eventId);
+    const today = new Date().toISOString().split("T")[0];
+    const list = data || [];
+    const future = list.filter(o => o.occurrence_date >= today).length;
+    const hasManualEdits = list.some(o =>
+      (o.status && o.status !== "active") ||
+      o.label ||
+      (o.overrides && Object.keys(o.overrides as object).length > 0)
+    );
+    return { total: list.length, future, hasManualEdits };
+  }
+
+  async function generateOccurrences(
+    eventId: string,
+    scope: RecurringEditScope = "future",
+  ) {
     if (!form.isRecurring || !tenantId) return;
     const dates = generatePreviewDates(form);
     if (dates.length === 0) return;
 
-    // Load existing occurrences and merge non-destructively (preserves manual edits/overrides/past)
+    if (scope === "single") return; // master-edit raakt geen reeks aan
+
+    const today = new Date().toISOString().split("T")[0];
+
+    if (scope === "all") {
+      // Volledige rebuild: vervang alles. Manuele aanpassingen gaan verloren.
+      await supabase.from("event_occurrences").delete().eq("event_id", eventId);
+      const rows = dates.map((occurrence_date) => ({
+        event_id: eventId,
+        tenant_id: tenantId,
+        occurrence_date,
+        start_time: form.startTime || null,
+        end_time: form.endTime || null,
+        status: "active" as const,
+      }));
+      for (let i = 0; i < rows.length; i += 50) {
+        await supabase.from("event_occurrences").insert(rows.slice(i, i + 50));
+      }
+      return;
+    }
+
+    // scope === "future" — niet-destructieve merge, alleen toekomst
     const { mergeOccurrences } = await import("@/lib/recurrence");
     const { data: existing } = await supabase
       .from("event_occurrences")
@@ -520,23 +568,28 @@ export function useEventForm() {
       form.endTime || null,
     );
 
-    // Delete obsolete (only those without manual edits / not in past)
-    if (merge.toDelete.length > 0) {
-      await supabase.from("event_occurrences").delete().in("id", merge.toDelete);
+    // Filter delete-set: nooit verleden datums verwijderen.
+    const safeDelete = merge.toDelete.filter(id => {
+      const occ = existingTyped.find(e => e.id === id);
+      return !!occ && occ.occurrence_date >= today;
+    });
+    if (safeDelete.length > 0) {
+      await supabase.from("event_occurrences").delete().in("id", safeDelete);
     }
 
-    // Insert new dates in batches of 50
-    const rows = merge.toInsert.map(({ occurrence_date }) => ({
-      event_id: eventId,
-      tenant_id: tenantId,
-      occurrence_date,
-      start_time: form.startTime || null,
-      end_time: form.endTime || null,
-      status: "active" as const,
-    }));
+    // Insert alleen toekomstige nieuwe datums.
+    const rows = merge.toInsert
+      .filter(({ occurrence_date }) => occurrence_date >= today)
+      .map(({ occurrence_date }) => ({
+        event_id: eventId,
+        tenant_id: tenantId,
+        occurrence_date,
+        start_time: form.startTime || null,
+        end_time: form.endTime || null,
+        status: "active" as const,
+      }));
     for (let i = 0; i < rows.length; i += 50) {
-      const batch = rows.slice(i, i + 50);
-      await supabase.from("event_occurrences").insert(batch);
+      await supabase.from("event_occurrences").insert(rows.slice(i, i + 50));
     }
   }
 
