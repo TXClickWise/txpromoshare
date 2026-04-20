@@ -116,7 +116,7 @@ export default function PublicLayout() {
               link.hash ? (
                 <a key={link.to} href={link.to} onClick={(e) => handleHashClick(e, link.to)} className="block text-sm font-medium text-muted-foreground">{link.label}</a>
               ) : (
-                <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-muted-foreground">{link.label}</Link>
+                <Link key={link.to} to={link.to} onClick={(e) => { if (link.to === "/") handleHomeClick(e); setMenuOpen(false); }} className="block text-sm font-medium text-muted-foreground">{link.label}</Link>
               )
             ))}
             <Link
