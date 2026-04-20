@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useBlocker, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Save, Send, Trash2, FileText, CalendarDays, Image, Megaphone, Send as SendIcon, Repeat, Loader2, CheckCircle2, ExternalLink, Share2, LayoutList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WizardProgress } from "@/components/event-wizard/WizardProgress";
@@ -78,11 +78,16 @@ export default function CreateEventPage() {
   const showOccurrences = ctx.isEditing && ctx.form.isRecurring;
   const STEPS = showOccurrences ? [...BASE_STEPS, OCCURRENCES_STEP] : BASE_STEPS;
 
-  // In-app navigation guard for unsaved changes
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      ctx.isDirty && !ctx.saving && !ctx.autosaving && currentLocation.pathname !== nextLocation.pathname
-  );
+  // Browser-level guard for unsaved changes (refresh/close tab)
+  useEffect(() => {
+    if (!ctx.isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [ctx.isDirty]);
 
   const completedSteps = useMemo(() => {
     const completed: number[] = [];
@@ -280,27 +285,6 @@ export default function CreateEventPage() {
           ) : null}
         </div>
       </div>
-
-      {/* Unsaved-changes guard (in-app navigation) */}
-      <AlertDialog open={blocker.state === "blocked"} onOpenChange={(open) => { if (!open) blocker.reset?.(); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Onopgeslagen wijzigingen</AlertDialogTitle>
-            <AlertDialogDescription>
-              Je hebt nog niet-opgeslagen wijzigingen. Wil je deze pagina verlaten? Je wijzigingen gaan dan verloren.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => blocker.reset?.()}>Op deze pagina blijven</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => blocker.proceed?.()}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Verlaten zonder opslaan
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Recurring edit-scope dialog */}
       <RecurringEditScopeDialog
