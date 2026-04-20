@@ -266,15 +266,18 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col gap-0">
-        <DialogHeader className="pb-3">
+        <DialogHeader className="pb-3 space-y-2">
           <DialogTitle className="text-lg font-display">Afbeelding kiezen</DialogTitle>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant="outline" className="text-[10px]">
-              {roleInfo.label}
-            </Badge>
-            <span className="text-[10px] text-muted-foreground">
-              Aanbevolen: {roleInfo.ratio} • min. {roleInfo.minWidth}×{roleInfo.minHeight}px
-            </span>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-[10px]">
+                {roleInfo.label}
+              </Badge>
+              <span className="text-[10px] text-muted-foreground">
+                {roleInfo.ratio} • min. {roleInfo.minWidth}×{roleInfo.minHeight}px
+              </span>
+            </div>
+            <RolePresetSwitcher activeRole={activeRole} onChange={setActiveRole} />
           </div>
         </DialogHeader>
 
