@@ -15,6 +15,7 @@ interface StepTranslationsProps {
  */
 export function StepTranslations({ eventId, tenantId, form }: StepTranslationsProps) {
   const { effectivePlanId } = usePlan();
+  // AI translation is included in Pro. Basic/Free can still translate manually.
   const aiEnabled = effectivePlanId === "pro";
 
   return (

@@ -24,10 +24,11 @@ export const STRIPE_ADDONS: Record<AddonId, AddonDefinition> = {
     id: "ai_plus",
     productId: "prod_UMve0PMVP1jxdi",
     priceId: "price_1TOBnJL34Z8Db3WQSPHnEmi0",
-    name: "AI Plus",
-    pitch: "Meer AI-generaties, herschrijvingen en kanaalvarianten voor teams die intensief met AI werken.",
+    name: "AI Plus — extra volume",
+    pitch: "Bovenop de AI-functies in je plan: extra AI-generaties, herschrijvingen en kanaalvarianten voor teams die intensief met AI werken.",
     priceLabel: "€15",
     priceSuffix: "/maand · excl. btw",
+    badge: "Extra volume",
   },
   extra_member: {
     id: "extra_member",
