@@ -110,6 +110,14 @@ export default function PublicLayout() {
                 <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-muted-foreground">{link.label}</Link>
               )
             ))}
+            <Link
+              to={featuredLink.to}
+              onClick={() => setMenuOpen(false)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-sm font-semibold text-primary"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" aria-hidden />
+              {featuredLink.label}
+            </Link>
             <Link to="/login" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-muted-foreground">{t.auth.login}</Link>
             <Link to="/register" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold text-center">
               Start gratis
