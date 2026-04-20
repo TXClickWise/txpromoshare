@@ -10,6 +10,7 @@ import { StepPromotion } from "@/components/event-wizard/StepPromotion";
 import { StepPublish } from "@/components/event-wizard/StepPublish";
 import { OccurrencesTab } from "@/components/event-wizard/OccurrencesTab";
 import { useEventForm } from "@/components/event-wizard/useEventForm";
+import { RecurringEditScopeDialog } from "@/components/event-wizard/RecurringEditScopeDialog";
 import { AnimatePresence } from "framer-motion";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -300,6 +301,17 @@ export default function CreateEventPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Recurring edit-scope dialog */}
+      <RecurringEditScopeDialog
+        open={!!ctx.pendingRecurringSave}
+        onOpenChange={(open) => { if (!open) ctx.cancelRecurringScope(); }}
+        onConfirm={(scope) => ctx.confirmRecurringScope(scope)}
+        futureCount={ctx.pendingRecurringSave?.futureCount}
+        totalCount={ctx.pendingRecurringSave?.totalCount}
+        hasManualEdits={ctx.pendingRecurringSave?.hasManualEdits}
+        allowSingle={false}
+      />
 
       {/* Publish success modal */}
       <Dialog open={!!ctx.publishedEventId} onOpenChange={(open) => { if (!open) ctx.dismissPublishSuccess(); }}>

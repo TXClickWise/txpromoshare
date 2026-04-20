@@ -8,6 +8,7 @@ import { logAudit } from "@/lib/audit";
 import { triggerClickWiseSync } from "@/lib/clickwise-sync";
 import type { Tables } from "@/integrations/supabase/types";
 import { generatePreviewDates } from "./StepDateTime";
+import type { RecurringEditScope } from "./RecurringEditScopeDialog";
 
 function generateSlug(title: string) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -23,6 +24,24 @@ function toDatetimeLocal(isoString: string | null): string {
   } catch {
     return "";
   }
+}
+
+/**
+ * Capture only fields that affect occurrence generation.
+ * Used to detect whether the recurrence rule itself changed.
+ */
+function recurrenceSignature(f: Partial<EventFormState>): string {
+  return JSON.stringify({
+    isRecurring: f.isRecurring,
+    startDate: f.startDate,
+    recurringFreq: f.recurringFreq,
+    recurringCustomFreq: f.recurringCustomFreq,
+    recurringInterval: f.recurringInterval,
+    recurringDays: f.recurringDays,
+    recurringEndType: f.recurringEndType,
+    recurringEndDate: f.recurringEndDate,
+    recurringEndCount: f.recurringEndCount,
+  });
 }
 
 export interface EventFormState {
@@ -143,6 +162,15 @@ export function useEventForm() {
   const initialFormRef = useRef<string>("");
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadedStatusRef = useRef<string>("draft");
+  // Original recurrence snapshot to detect actual rule changes
+  const initialRecurrenceRef = useRef<string>("");
+  // Pending recurring save awaiting scope choice
+  const [pendingRecurringSave, setPendingRecurringSave] = useState<null | {
+    intent: "save" | "publish";
+    futureCount: number;
+    totalCount: number;
+    hasManualEdits: boolean;
+  }>(null);
 
   const updateForm = useCallback((updates: Partial<EventFormState>) => {
     setForm(prev => {
@@ -296,7 +324,9 @@ export function useEventForm() {
         loadedStatusRef.current = data.status;
         setForm(prev => ({ ...prev, ...updates }));
         setTimeout(() => {
-          initialFormRef.current = JSON.stringify({ ...form, ...updates });
+          const merged = { ...form, ...updates };
+          initialFormRef.current = JSON.stringify(merged);
+          initialRecurrenceRef.current = recurrenceSignature(merged);
           setIsDirty(false);
         }, 100);
       }
@@ -461,12 +491,60 @@ export function useEventForm() {
     }
   }
 
-  async function generateOccurrences(eventId: string) {
+  /**
+   * Inspecteer bestaande occurrences om te bepalen of een scope-keuze
+   * relevant is. Wordt gebruikt voor de RecurringEditScopeDialog.
+   */
+  async function inspectExistingOccurrences(eventId: string): Promise<{
+    total: number;
+    future: number;
+    hasManualEdits: boolean;
+  }> {
+    const { data } = await supabase
+      .from("event_occurrences")
+      .select("occurrence_date, status, overrides, start_time, end_time, label")
+      .eq("event_id", eventId);
+    const today = new Date().toISOString().split("T")[0];
+    const list = data || [];
+    const future = list.filter(o => o.occurrence_date >= today).length;
+    const hasManualEdits = list.some(o =>
+      (o.status && o.status !== "active") ||
+      o.label ||
+      (o.overrides && Object.keys(o.overrides as object).length > 0)
+    );
+    return { total: list.length, future, hasManualEdits };
+  }
+
+  async function generateOccurrences(
+    eventId: string,
+    scope: RecurringEditScope = "future",
+  ) {
     if (!form.isRecurring || !tenantId) return;
     const dates = generatePreviewDates(form);
     if (dates.length === 0) return;
 
-    // Load existing occurrences and merge non-destructively (preserves manual edits/overrides/past)
+    if (scope === "single") return; // master-edit raakt geen reeks aan
+
+    const today = new Date().toISOString().split("T")[0];
+
+    if (scope === "all") {
+      // Volledige rebuild: vervang alles. Manuele aanpassingen gaan verloren.
+      await supabase.from("event_occurrences").delete().eq("event_id", eventId);
+      const rows = dates.map((occurrence_date) => ({
+        event_id: eventId,
+        tenant_id: tenantId,
+        occurrence_date,
+        start_time: form.startTime || null,
+        end_time: form.endTime || null,
+        status: "active" as const,
+      }));
+      for (let i = 0; i < rows.length; i += 50) {
+        await supabase.from("event_occurrences").insert(rows.slice(i, i + 50));
+      }
+      return;
+    }
+
+    // scope === "future" — niet-destructieve merge, alleen toekomst
     const { mergeOccurrences } = await import("@/lib/recurrence");
     const { data: existing } = await supabase
       .from("event_occurrences")
@@ -490,23 +568,28 @@ export function useEventForm() {
       form.endTime || null,
     );
 
-    // Delete obsolete (only those without manual edits / not in past)
-    if (merge.toDelete.length > 0) {
-      await supabase.from("event_occurrences").delete().in("id", merge.toDelete);
+    // Filter delete-set: nooit verleden datums verwijderen.
+    const safeDelete = merge.toDelete.filter(id => {
+      const occ = existingTyped.find(e => e.id === id);
+      return !!occ && occ.occurrence_date >= today;
+    });
+    if (safeDelete.length > 0) {
+      await supabase.from("event_occurrences").delete().in("id", safeDelete);
     }
 
-    // Insert new dates in batches of 50
-    const rows = merge.toInsert.map(({ occurrence_date }) => ({
-      event_id: eventId,
-      tenant_id: tenantId,
-      occurrence_date,
-      start_time: form.startTime || null,
-      end_time: form.endTime || null,
-      status: "active" as const,
-    }));
+    // Insert alleen toekomstige nieuwe datums.
+    const rows = merge.toInsert
+      .filter(({ occurrence_date }) => occurrence_date >= today)
+      .map(({ occurrence_date }) => ({
+        event_id: eventId,
+        tenant_id: tenantId,
+        occurrence_date,
+        start_time: form.startTime || null,
+        end_time: form.endTime || null,
+        status: "active" as const,
+      }));
     for (let i = 0; i < rows.length; i += 50) {
-      const batch = rows.slice(i, i + 50);
-      await supabase.from("event_occurrences").insert(batch);
+      await supabase.from("event_occurrences").insert(rows.slice(i, i + 50));
     }
   }
 
@@ -526,7 +609,27 @@ export function useEventForm() {
     }
   }
 
-  async function handleSave() {
+  /**
+   * Bepaalt of een gebruiker een scope-keuze moet maken voor recurring saves.
+   * - Alleen bij bestaand event (eventId aanwezig)
+   * - Recurring aan
+   * - Bestaande occurrences > 0
+   * - Recurrence rule daadwerkelijk gewijzigd t.o.v. snapshot bij load
+   */
+  async function shouldPromptRecurringScope(eventId: string | undefined): Promise<
+    | null
+    | { futureCount: number; totalCount: number; hasManualEdits: boolean }
+  > {
+    if (!eventId || !form.isRecurring) return null;
+    if (!initialRecurrenceRef.current) return null;
+    const current = recurrenceSignature(form);
+    if (current === initialRecurrenceRef.current) return null;
+    const info = await inspectExistingOccurrences(eventId);
+    if (info.total === 0) return null;
+    return { futureCount: info.future, totalCount: info.total, hasManualEdits: info.hasManualEdits };
+  }
+
+  async function performSave(scope: RecurringEditScope = "future") {
     if (!tenantId || !form.title.trim()) {
       toast.error("Vul minimaal een titel in om op te slaan");
       return false;
@@ -548,7 +651,7 @@ export function useEventForm() {
     if (!error && eventId) {
       await saveSponsors(eventId);
       await saveGallery(eventId);
-      if (form.isRecurring) await generateOccurrences(eventId);
+      if (form.isRecurring) await generateOccurrences(eventId, scope);
     }
     setSaving(false);
     if (error) {
@@ -558,6 +661,7 @@ export function useEventForm() {
     setIsDirty(false);
     setLastSavedAt(new Date());
     initialFormRef.current = JSON.stringify(form);
+    initialRecurrenceRef.current = recurrenceSignature(form);
     toast.success("Concept opgeslagen ✓");
     logAudit({ tenantId, entityType: "event", action: isEditing ? "updated" : "created", entityId: eventId });
     if (isEditing && eventId && loadedStatusRef.current === "published") {
@@ -569,7 +673,17 @@ export function useEventForm() {
     return true;
   }
 
-  async function handlePublish() {
+  async function handleSave() {
+    const eventId = id || autoSavedEventId;
+    const prompt = await shouldPromptRecurringScope(eventId);
+    if (prompt) {
+      setPendingRecurringSave({ intent: "save", ...prompt });
+      return false;
+    }
+    return performSave("future");
+  }
+
+  async function performPublish(scope: RecurringEditScope = "future") {
     const validation = validateStep(5);
     if (!validation.isValid) {
       validation.errors.forEach(err => toast.error(err));
@@ -593,7 +707,7 @@ export function useEventForm() {
     if (!error && eventId) {
       await saveSponsors(eventId);
       await saveGallery(eventId);
-      if (form.isRecurring) await generateOccurrences(eventId);
+      if (form.isRecurring) await generateOccurrences(eventId, scope);
     }
     setSaving(false);
     if (error) {
@@ -602,6 +716,7 @@ export function useEventForm() {
     }
     setIsDirty(false);
     initialFormRef.current = JSON.stringify(form);
+    initialRecurrenceRef.current = recurrenceSignature(form);
     const syncEventType = isEditing && loadedStatusRef.current === "published"
       ? "event.updated"
       : "event.published";
@@ -609,11 +724,32 @@ export function useEventForm() {
     if (status === "published" && eventId) {
       triggerClickWiseSync(tenantId, syncEventType, eventId, { title: form.title, slug: form.slug });
     }
-    // Surface success modal instead of toast+redirect
     setPublishedEventId(eventId!);
     setPublishedStatus(status as "published" | "scheduled");
     loadedStatusRef.current = status;
     return true;
+  }
+
+  async function handlePublish() {
+    const eventId = id || autoSavedEventId;
+    const prompt = await shouldPromptRecurringScope(eventId);
+    if (prompt) {
+      setPendingRecurringSave({ intent: "publish", ...prompt });
+      return false;
+    }
+    return performPublish("future");
+  }
+
+  async function confirmRecurringScope(scope: RecurringEditScope) {
+    const intent = pendingRecurringSave?.intent;
+    setPendingRecurringSave(null);
+    if (intent === "publish") return performPublish(scope);
+    if (intent === "save") return performSave(scope);
+    return false;
+  }
+
+  function cancelRecurringScope() {
+    setPendingRecurringSave(null);
   }
 
   function dismissPublishSuccess() {
@@ -638,6 +774,7 @@ export function useEventForm() {
     handleSave, handlePublish, handleDelete,
     validateStep, isDirty, lastSavedAt,
     publishedEventId, publishedStatus, dismissPublishSuccess,
+    pendingRecurringSave, confirmRecurringScope, cancelRecurringScope,
     navigate, tenantId,
   };
 }
