@@ -49,7 +49,7 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
       <div className="space-y-1">
         <h2 className="text-xl font-display font-bold text-foreground">Datum & locatie</h2>
-        <p className="text-sm text-muted-foreground">Wanneer en waar vindt je evenement plaats?</p>
+        <p className="text-sm text-muted-foreground">Wanneer en waar vindt je evenement plaats? Tip: kies een opgeslagen locatie voor één-klik invullen.</p>
       </div>
 
       {/* Date & Time */}
@@ -66,7 +66,11 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Einddatum</Label>
             <Input type="date" value={form.endDate} onChange={(e) => updateForm({ endDate: e.target.value })} min={form.startDate || undefined} />
-            <p className="text-[11px] text-muted-foreground">Alleen voor meerdaagse events</p>
+            {form.endDate && form.startDate && form.endDate < form.startDate ? (
+              <p className="text-[11px] text-destructive">Einddatum moet op of na de startdatum liggen</p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">Alleen invullen voor meerdaagse events</p>
+            )}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -77,6 +81,7 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Eindtijd</Label>
             <Input type="time" value={form.endTime} onChange={(e) => updateForm({ endTime: e.target.value })} />
+            <p className="text-[11px] text-muted-foreground">Automatisch gezet op +3u — pas aan indien gewenst</p>
           </div>
         </div>
       </div>
