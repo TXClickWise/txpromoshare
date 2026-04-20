@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { WidgetPreview } from "./WidgetPreview";
 import { WidgetEmbedInstructions } from "./WidgetEmbedInstructions";
+import { WidgetQualityCheck } from "./WidgetQualityCheck";
 import type { Tables } from "@/integrations/supabase/types";
 
 interface WidgetWizardProps {
@@ -287,6 +288,7 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
                 <h3 className="text-sm font-semibold text-foreground mb-1">Embed</h3>
                 <p className="text-xs text-muted-foreground">Plak deze code op je website. De widget update automatisch.</p>
               </div>
+              <WidgetQualityCheck widget={widget} />
               <WidgetEmbedInstructions widgetId={widget.id} />
             </div>
           )}
