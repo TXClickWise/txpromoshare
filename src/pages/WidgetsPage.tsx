@@ -59,7 +59,7 @@ export default function WidgetsPage() {
   async function createWidget() {
     if (!tenantId || !newName.trim()) return;
     if (newType === "single_event" && !newEventId) {
-      toast.error("Selecteer een evenement voor een Enkel Event widget");
+      toast.error(t("widgets.selectEventFirst"));
       return;
     }
     setCreating(true);
@@ -73,9 +73,9 @@ export default function WidgetsPage() {
     }).select("id").single();
     setCreating(false);
     if (error) {
-      toast.error("Aanmaken mislukt: " + error.message);
+      toast.error(t("widgets.createFailed", { msg: error.message }));
     } else {
-      toast.success("Widget aangemaakt");
+      toast.success(t("widgets.created"));
       setNewName("");
       setNewEventId("");
       setDialogOpen(false);
@@ -87,14 +87,14 @@ export default function WidgetsPage() {
   async function toggleActive(id: string, current: boolean) {
     const { error } = await supabase.from("widgets").update({ is_active: !current }).eq("id", id);
     if (error) { toast.error(error.message); return; }
-    toast.success(!current ? "Widget geactiveerd" : "Widget gedeactiveerd");
+    toast.success(!current ? t("widgets.activated") : t("widgets.deactivated"));
     fetchWidgets();
   }
 
   async function deleteWidget(id: string, name: string) {
     const { error } = await supabase.from("widgets").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
-    toast.success(`"${name}" verwijderd`);
+    toast.success(t("widgets.deleted", { name }));
     if (selectedWidgetId === id) setSelectedWidgetId(null);
     fetchWidgets();
   }
@@ -108,7 +108,7 @@ export default function WidgetsPage() {
   const copy = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(id);
-    toast.success("Embed code gekopieerd");
+    toast.success(t("widgets.codeCopied"));
     setTimeout(() => setCopied(null), 2000);
   };
 
@@ -133,20 +133,20 @@ export default function WidgetsPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm" className="gap-2 gradient-hero text-primary-foreground border-0 hover:opacity-90">
-              <Plus className="w-4 h-4" />Nieuwe widget
+              <Plus className="w-4 h-4" />{t("widgets.new")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Nieuwe widget aanmaken</DialogTitle>
+              <DialogTitle>{t("widgets.newDialog")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
-                <Label>Naam</Label>
-                <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Bijv. Homepage agenda" />
+                <Label>{t("widgets.name")}</Label>
+                <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t("widgets.namePlaceholder")} />
               </div>
               <div className="space-y-2">
-                <Label>Type</Label>
+                <Label>{t("widgets.type")}</Label>
                 <Select value={newType} onValueChange={(v) => { setNewType(v as WidgetType); setNewEventId(""); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -157,9 +157,9 @@ export default function WidgetsPage() {
               </div>
               {newType === "single_event" && (
                 <div className="space-y-2">
-                  <Label>Welk evenement?</Label>
+                  <Label>{t("widgets.whichEvent")}</Label>
                   <Select value={newEventId} onValueChange={setNewEventId}>
-                    <SelectTrigger><SelectValue placeholder="Kies een evenement" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t("widgets.chooseEvent")} /></SelectTrigger>
                     <SelectContent>
                       {events.map((ev) => (
                         <SelectItem key={ev.id} value={ev.id}>{ev.title}</SelectItem>
@@ -169,7 +169,7 @@ export default function WidgetsPage() {
                 </div>
               )}
               <Button onClick={createWidget} disabled={creating || !newName.trim()} className="w-full">
-                {creating ? "Aanmaken..." : "Aanmaken"}
+                {creating ? t("widgets.creating") : t("widgets.create")}
               </Button>
             </div>
           </DialogContent>
@@ -181,23 +181,23 @@ export default function WidgetsPage() {
         <div className="flex items-center gap-4 justify-center text-xs text-muted-foreground flex-wrap">
           <div className="flex items-center gap-2">
             <span className="w-6 h-6 rounded-full gradient-hero text-primary-foreground text-[10px] font-bold flex items-center justify-center">1</span>
-            Maak een widget
+            {t("widgets.step1")}
           </div>
           <span className="text-muted-foreground/30">→</span>
           <div className="flex items-center gap-2">
             <span className="w-6 h-6 rounded-full gradient-hero text-primary-foreground text-[10px] font-bold flex items-center justify-center">2</span>
-            Pas instellingen aan
+            {t("widgets.step2")}
           </div>
           <span className="text-muted-foreground/30">→</span>
           <div className="flex items-center gap-2">
             <span className="w-6 h-6 rounded-full gradient-hero text-primary-foreground text-[10px] font-bold flex items-center justify-center">3</span>
-            Kopieer & plak op je website
+            {t("widgets.step3")}
           </div>
         </div>
       </div>
 
       {widgets.length === 0 ? (
-        <EmptyState icon={Code2} title="Nog geen widgets" description="Maak je eerste widget aan om je evenementen op je website te tonen." />
+        <EmptyState icon={Code2} title={t("widgets.empty")} description={t("widgets.emptyDesc")} />
       ) : (
         <div className="flex gap-6 flex-col lg:flex-row">
           {/* Widget list */}
@@ -240,7 +240,7 @@ export default function WidgetsPage() {
             ) : (
               <div className="rounded-xl bg-secondary/20 border border-dashed border-border p-12 text-center">
                 <Code2 className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">Selecteer een widget om de instellingen en preview te bekijken</p>
+                <p className="text-sm text-muted-foreground">{t("widgets.selectToConfigure")}</p>
               </div>
             )}
           </div>
