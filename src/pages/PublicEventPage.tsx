@@ -1,5 +1,5 @@
-import { useParams, Link } from "react-router-dom";
-import { useEffect, useState, useCallback } from "react";
+import { useParams, Link, useSearchParams } from "react-router-dom";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Calendar, Clock, MapPin, User, Share2, ExternalLink, ChevronLeft,
@@ -11,6 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { isContentLanguage, type ContentLanguageCode, DEFAULT_CONTENT_LANGUAGE } from "@/lib/i18n/languages";
+import { PublicLanguageSwitcher } from "@/components/i18n/PublicLanguageSwitcher";
+
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
