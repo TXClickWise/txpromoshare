@@ -512,14 +512,13 @@ export function useEventForm() {
     setIsDirty(false);
     setLastSavedAt(new Date());
     initialFormRef.current = JSON.stringify(form);
-    toast.success("Concept opgeslagen ✓", { description: "Je kunt later verder werken aan dit event." });
+    toast.success("Concept opgeslagen ✓");
     logAudit({ tenantId, entityType: "event", action: isEditing ? "updated" : "created", entityId: eventId });
-    // If event is already published, trigger update sync
     if (isEditing && eventId && loadedStatusRef.current === "published") {
       triggerClickWiseSync(tenantId, "event.updated", eventId, { title: form.title, slug: form.slug });
     }
     if (!isEditing && eventId) {
-      navigate(`/app/events/${eventId}`, { replace: true });
+      window.history.replaceState(null, "", `/app/events/${eventId}`);
     }
     return true;
   }
