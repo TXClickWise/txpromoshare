@@ -172,7 +172,9 @@ function MobileFrame({ children }: { children: React.ReactNode }) {
       >
         {/* Notch */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-5 bg-foreground/90 rounded-b-2xl z-10" />
-        <div className="bg-white rounded-[1.75rem] overflow-hidden" style={{ minHeight: 480 }}>
+        {/* Spacer so iframe content does not slide under the notch */}
+        <div className="h-6 bg-foreground/90" />
+        <div className="bg-white rounded-b-[1.75rem] overflow-hidden" style={{ minHeight: 480 }}>
           {children}
         </div>
       </div>
