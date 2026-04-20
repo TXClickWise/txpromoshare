@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "@/hooks/useUILanguage";
 import { WidgetPreview } from "./WidgetPreview";
 import { WidgetEmbedInstructions } from "./WidgetEmbedInstructions";
 import { WidgetQualityCheck } from "./WidgetQualityCheck";
@@ -21,15 +22,16 @@ interface WidgetWizardProps {
 
 type StepId = "type" | "layout" | "style" | "embed";
 
-const STEPS: { id: StepId; label: string; icon: typeof LayoutGrid }[] = [
-  { id: "type", label: "Type & inhoud", icon: Sparkles },
-  { id: "layout", label: "Layout", icon: LayoutGrid },
-  { id: "style", label: "Stijl", icon: Square },
-  { id: "embed", label: "Embed", icon: Code2 },
-];
-
 export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
+  const { t } = useTranslation();
   const config = (widget.config || {}) as Record<string, any>;
+
+  const STEPS: { id: StepId; labelKey: string; icon: typeof LayoutGrid }[] = [
+    { id: "type", labelKey: "widgetWizard.step.type", icon: Sparkles },
+    { id: "layout", labelKey: "widgetWizard.step.layout", icon: LayoutGrid },
+    { id: "style", labelKey: "widgetWizard.step.style", icon: Square },
+    { id: "embed", labelKey: "widgetWizard.step.embed", icon: Code2 },
+  ];
 
   const [stepIdx, setStepIdx] = useState(0);
   const [name, setName] = useState(widget.name);
@@ -43,7 +45,6 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
-  // Reset on widget switch
   useEffect(() => {
     const c = (widget.config || {}) as Record<string, any>;
     setName(widget.name);
@@ -58,7 +59,6 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
     setDirty(false);
   }, [widget.id]);
 
-  // Mark dirty when fields change (after initial load)
   useEffect(() => {
     setDirty(true);
   }, [name, theme, density, maxEvents, showImage, showDescription, showShareButtons, eventId]);
@@ -81,10 +81,10 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
       .eq("id", widget.id);
     setSaving(false);
     if (error) {
-      toast.error("Opslaan mislukt: " + error.message);
+      toast.error(t("widgets.saveFailed", { msg: error.message }));
       return false;
     }
-    if (!opts?.silent) toast.success("Widget bijgewerkt");
+    if (!opts?.silent) toast.success(t("widgets.updated"));
     setDirty(false);
     onUpdated();
     return true;
@@ -93,7 +93,7 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
   async function quickFinish() {
     const ok = await save({ silent: true });
     if (ok) {
-      toast.success("Widget opgeslagen — klaar om te embedden");
+      toast.success(t("widgetWizard.savedReady"));
       setStepIdx(STEPS.length - 1);
     }
   }
@@ -104,14 +104,12 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6">
-      {/* Left: stepper + step content */}
       <div className="space-y-5 min-w-0">
-        {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 className="text-lg font-display font-bold text-foreground truncate">{widget.name}</h2>
             <p className="text-xs text-muted-foreground">
-              {widget.type === "agenda" ? "Agenda widget" : "Enkel event widget"} · {widget.is_active ? "Actief" : "Inactief"}
+              {widget.type === "agenda" ? t("widgets.typeAgenda") : t("widgets.typeSingle")} · {widget.is_active ? t("common.active") : t("common.inactive")}
             </p>
           </div>
           <Button
@@ -120,13 +118,12 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
             className="gap-1.5 text-xs h-8"
             onClick={quickFinish}
             disabled={saving}
-            title="Sla op met huidige instellingen en spring naar embed"
+            title={t("widgetWizard.quickFinishHint")}
           >
-            <Zap className="w-3.5 h-3.5" />Snel klaar
+            <Zap className="w-3.5 h-3.5" />{t("widgetWizard.quickFinish")}
           </Button>
         </div>
 
-        {/* Stepper */}
         <ol className="flex items-center gap-1 sm:gap-2 text-[11px] font-medium">
           {STEPS.map((s, i) => {
             const active = i === stepIdx;
@@ -150,7 +147,7 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
                   )}>
                     {done ? <Check className="w-3 h-3" /> : <Icon className="w-3 h-3" />}
                   </span>
-                  <span className="hidden sm:inline">{s.label}</span>
+                  <span className="hidden sm:inline">{t(s.labelKey)}</span>
                 </button>
                 {i < STEPS.length - 1 && <span className="text-muted-foreground/30 text-xs">→</span>}
               </li>
@@ -158,21 +155,20 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
           })}
         </ol>
 
-        {/* Step body */}
         <div className="rounded-xl border border-border bg-card/50 p-5 min-h-[280px]">
           {step.id === "type" && (
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-foreground mb-1">Type & inhoud</h3>
-                <p className="text-xs text-muted-foreground">Geef je widget een naam en kies wat er getoond wordt.</p>
+                <h3 className="text-sm font-semibold text-foreground mb-1">{t("widgetWizard.typeTitle")}</h3>
+                <p className="text-xs text-muted-foreground">{t("widgetWizard.typeDesc")}</p>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs">Widget naam</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} className="h-9" placeholder="Bijv. Homepage agenda" />
+                <Label className="text-xs">{t("widgetWizard.nameLabel")}</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} className="h-9" placeholder={t("widgets.namePlaceholder")} />
               </div>
               {widget.type === "agenda" && (
                 <div className="space-y-2">
-                  <Label className="text-xs">Max. aantal evenementen</Label>
+                  <Label className="text-xs">{t("widgetWizard.maxEvents")}</Label>
                   <Input
                     type="number"
                     min={1}
@@ -181,14 +177,14 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
                     onChange={(e) => setMaxEvents(Number(e.target.value))}
                     className="h-9 w-28"
                   />
-                  <p className="text-[11px] text-muted-foreground">Tip: 5–10 werkt het beste op homepages.</p>
+                  <p className="text-[11px] text-muted-foreground">{t("widgetWizard.maxEventsHint")}</p>
                 </div>
               )}
               {widget.type === "single_event" && (
                 <div className="space-y-2">
-                  <Label className="text-xs">Evenement</Label>
+                  <Label className="text-xs">{t("widgetWizard.eventLabel")}</Label>
                   <Select value={eventId} onValueChange={setEventId}>
-                    <SelectTrigger className="h-9"><SelectValue placeholder="Kies een evenement" /></SelectTrigger>
+                    <SelectTrigger className="h-9"><SelectValue placeholder={t("widgets.chooseEvent")} /></SelectTrigger>
                     <SelectContent>
                       {events.map((ev) => (
                         <SelectItem key={ev.id} value={ev.id}>{ev.title}</SelectItem>
@@ -203,25 +199,25 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
           {step.id === "layout" && (
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-foreground mb-1">Layout</h3>
-                <p className="text-xs text-muted-foreground">Bepaal hoe compact je widget eruitziet.</p>
+                <h3 className="text-sm font-semibold text-foreground mb-1">{t("widgetWizard.layoutTitle")}</h3>
+                <p className="text-xs text-muted-foreground">{t("widgetWizard.layoutDesc")}</p>
               </div>
 
               {widget.type === "agenda" && (
                 <div className="space-y-2">
-                  <Label className="text-xs">Dichtheid</Label>
+                  <Label className="text-xs">{t("widgetWizard.density")}</Label>
                   <div className="grid grid-cols-2 gap-2">
                     <OptionCard
                       active={density === "compact"}
                       onClick={() => setDensity("compact")}
-                      title="Compact"
-                      hint="Ideaal voor mobiel & sidebars"
+                      title={t("widgetWizard.densityCompact")}
+                      hint={t("widgetWizard.densityCompactHint")}
                     />
                     <OptionCard
                       active={density === "comfortable"}
                       onClick={() => setDensity("comfortable")}
-                      title="Comfortabel"
-                      hint="Meer ruimte, grotere afbeeldingen"
+                      title={t("widgetWizard.densityComfortable")}
+                      hint={t("widgetWizard.densityComfortableHint")}
                     />
                   </div>
                 </div>
@@ -229,24 +225,24 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
 
               <div className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div>
-                  <p className="text-xs font-medium text-foreground">Afbeelding tonen</p>
-                  <p className="text-[11px] text-muted-foreground">Thumbnail per evenement</p>
+                  <p className="text-xs font-medium text-foreground">{t("widgetWizard.showImage")}</p>
+                  <p className="text-[11px] text-muted-foreground">{t("widgetWizard.showImageHint")}</p>
                 </div>
                 <Switch checked={showImage} onCheckedChange={setShowImage} />
               </div>
 
               <div className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div>
-                  <p className="text-xs font-medium text-foreground">Beschrijvingen tonen</p>
-                  <p className="text-[11px] text-muted-foreground">Korte tekst onder de titel</p>
+                  <p className="text-xs font-medium text-foreground">{t("widgetWizard.showDesc")}</p>
+                  <p className="text-[11px] text-muted-foreground">{t("widgetWizard.showDescHint")}</p>
                 </div>
                 <Switch checked={showDescription} onCheckedChange={setShowDescription} />
               </div>
 
               <div className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div>
-                  <p className="text-xs font-medium text-foreground">Deelknoppen tonen</p>
-                  <p className="text-[11px] text-muted-foreground">WhatsApp, Facebook, X, e-mail</p>
+                  <p className="text-xs font-medium text-foreground">{t("widgetWizard.showShare")}</p>
+                  <p className="text-[11px] text-muted-foreground">{t("widgetWizard.showShareHint")}</p>
                 </div>
                 <Switch checked={showShareButtons} onCheckedChange={setShowShareButtons} />
               </div>
@@ -256,28 +252,28 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
           {step.id === "style" && (
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-foreground mb-1">Stijl</h3>
-                <p className="text-xs text-muted-foreground">Past zich automatisch aan bij je website.</p>
+                <h3 className="text-sm font-semibold text-foreground mb-1">{t("widgetWizard.styleTitle")}</h3>
+                <p className="text-xs text-muted-foreground">{t("widgetWizard.styleDesc")}</p>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs">Thema</Label>
+                <Label className="text-xs">{t("widgetWizard.theme")}</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <OptionCard
                     active={theme === "light"}
                     onClick={() => setTheme("light")}
-                    title="Light"
-                    hint="Witte achtergrond"
+                    title={t("widgetWizard.themeLight")}
+                    hint={t("widgetWizard.themeLightHint")}
                   />
                   <OptionCard
                     active={theme === "dark"}
                     onClick={() => setTheme("dark")}
-                    title="Dark"
-                    hint="Donkere achtergrond"
+                    title={t("widgetWizard.themeDark")}
+                    hint={t("widgetWizard.themeDarkHint")}
                   />
                 </div>
               </div>
               <p className="text-[11px] text-muted-foreground">
-                Tip: Het thema neemt automatisch je accentkleuren over uit je merkinstellingen.
+                {t("widgetWizard.themeTip")}
               </p>
             </div>
           )}
@@ -285,8 +281,8 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
           {step.id === "embed" && (
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-foreground mb-1">Embed</h3>
-                <p className="text-xs text-muted-foreground">Plak deze code op je website. De widget update automatisch.</p>
+                <h3 className="text-sm font-semibold text-foreground mb-1">{t("widgetWizard.embedTitle")}</h3>
+                <p className="text-xs text-muted-foreground">{t("widgetWizard.embedDesc")}</p>
               </div>
               <WidgetQualityCheck widget={widget} />
               <WidgetEmbedInstructions widgetId={widget.id} />
@@ -294,7 +290,6 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
           )}
         </div>
 
-        {/* Footer nav */}
         <div className="flex items-center justify-between gap-2">
           <Button
             variant="ghost"
@@ -303,7 +298,7 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
             disabled={isFirst}
             className="gap-1"
           >
-            <ChevronLeft className="w-4 h-4" />Vorige
+            <ChevronLeft className="w-4 h-4" />{t("widgetWizard.prev")}
           </Button>
 
           <div className="flex items-center gap-2">
@@ -315,7 +310,7 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
                 disabled={saving || !name.trim()}
                 className="gap-1.5"
               >
-                <Save className="w-3.5 h-3.5" />{saving ? "Opslaan..." : "Opslaan"}
+                <Save className="w-3.5 h-3.5" />{saving ? t("widgetWizard.savingBtn") : t("widgetWizard.saveBtn")}
               </Button>
             )}
             {!isLast ? (
@@ -328,7 +323,7 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
                 disabled={saving || !name.trim()}
                 className="gap-1"
               >
-                Volgende<ChevronRight className="w-4 h-4" />
+                {t("widgetWizard.next")}<ChevronRight className="w-4 h-4" />
               </Button>
             ) : (
               <Button
@@ -337,14 +332,13 @@ export function WidgetWizard({ widget, events, onUpdated }: WidgetWizardProps) {
                 disabled={saving || !name.trim() || !dirty}
                 className="gap-1.5"
               >
-                <Check className="w-4 h-4" />{saving ? "Opslaan..." : dirty ? "Opslaan" : "Opgeslagen"}
+                <Check className="w-4 h-4" />{saving ? t("widgetWizard.savingBtn") : dirty ? t("widgetWizard.saveBtn") : t("widgetWizard.savedBtn")}
               </Button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Right: sticky preview */}
       <div className="lg:sticky lg:top-4 self-start">
         <WidgetPreview widget={widget} />
       </div>
