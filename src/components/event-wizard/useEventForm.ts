@@ -8,6 +8,7 @@ import { logAudit } from "@/lib/audit";
 import { triggerClickWiseSync } from "@/lib/clickwise-sync";
 import type { Tables } from "@/integrations/supabase/types";
 import { generatePreviewDates } from "./StepDateTime";
+import type { RecurringEditScope } from "./RecurringEditScopeDialog";
 
 function generateSlug(title: string) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
