@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { logAudit } from "@/lib/audit";
 import { useTenant } from "@/hooks/useTenant";
+import BrandReviewDialog, { type ScrapedBranding as ScrapedBrandingType } from "./BrandReviewDialog";
 
 const FONT_OPTIONS = [
   { value: "system", label: "Systeem (standaard)" },
@@ -102,6 +103,21 @@ export default function BrandingTab() {
   const [scraping, setScraping] = useState(false);
   const [scraped, setScraped] = useState<ScrapedBranding | null>(null);
   const [scrapeError, setScrapeError] = useState<string | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [hasClickWise, setHasClickWise] = useState(false);
+
+  // Detect ClickWise connection (read-only check, doesn't trigger sync)
+  useEffect(() => {
+    if (!tenantId) return;
+    supabase
+      .from("integration_connections")
+      .select("status")
+      .eq("tenant_id", tenantId)
+      .eq("provider", "clickwise")
+      .eq("status", "connected")
+      .maybeSingle()
+      .then(({ data }) => setHasClickWise(!!data));
+  }, [tenantId]);
 
   useEffect(() => {
     if (tenant) {
@@ -257,7 +273,7 @@ export default function BrandingTab() {
       }
 
       setScraped(result);
-      toast.success("Website geanalyseerd! Controleer het voorstel hieronder.");
+      setReviewOpen(true);
     } catch (err: any) {
       console.error("Scrape error:", err);
       setScrapeError(err.message || "Er ging iets mis bij het analyseren");
@@ -267,15 +283,75 @@ export default function BrandingTab() {
     }
   }
 
-  function applyScraped() {
-    if (!scraped) return;
-    if (scraped.primaryColor) update("primaryColor", scraped.primaryColor);
-    if (scraped.secondaryColor) update("secondaryColor", scraped.secondaryColor);
-    if (scraped.tagline) update("tagline", scraped.tagline);
-    const matchedFont = FONT_OPTIONS.find((f) => f.value === scraped.fontFamily);
-    if (matchedFont) update("fontFamily", matchedFont.value);
-    toast.success("Voorstel toegepast — controleer en sla op");
+  async function handleReviewApply(selection: import("./BrandReviewDialog").BrandReviewSelection) {
+    if (!tenant) return;
+
+    // Build update payload from selected fields only
+    const updates: Record<string, any> = {};
+    if (selection.tagline !== undefined) updates.tagline = selection.tagline;
+    if (selection.primaryColor !== undefined) updates.primary_color = selection.primaryColor;
+    if (selection.secondaryColor !== undefined) updates.secondary_color = selection.secondaryColor;
+    if (selection.fontFamily !== undefined) {
+      const matched = FONT_OPTIONS.find((f) => f.value === selection.fontFamily);
+      updates.font_family = matched ? matched.value : "system";
+    }
+
+    // Logo: re-upload to our own storage to avoid hotlinking external URLs
+    if (selection.logoUrl) {
+      try {
+        const resp = await fetch(selection.logoUrl);
+        if (resp.ok) {
+          const blob = await resp.blob();
+          const ext = (blob.type.split("/")[1] || "png").replace("svg+xml", "svg");
+          const path = `${tenant.id}/logo_imported_${Date.now()}.${ext}`;
+          const { error: upErr } = await supabase.storage.from("media").upload(path, blob, { upsert: true, contentType: blob.type });
+          if (!upErr) {
+            const { data: urlData } = supabase.storage.from("media").getPublicUrl(path);
+            updates.logo_url = `${urlData.publicUrl}?t=${Date.now()}`;
+          }
+        }
+      } catch (e) {
+        console.warn("Logo import failed, falling back to direct URL", e);
+        updates.logo_url = selection.logoUrl;
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      setReviewOpen(false);
+      return;
+    }
+
+    const { error } = await supabase.from("tenants").update(updates as any).eq("id", tenant.id);
+    if (error) {
+      toast.error("Toepassen mislukt: " + error.message);
+      return;
+    }
+
+    // Update local state
+    if (updates.tagline !== undefined) update("tagline", updates.tagline);
+    if (updates.primary_color) update("primaryColor", updates.primary_color);
+    if (updates.secondary_color) update("secondaryColor", updates.secondary_color);
+    if (updates.font_family) update("fontFamily", updates.font_family);
+    if (updates.logo_url) update("logoUrl", updates.logo_url);
+
+    logAudit({ tenantId: tenant.id, entityType: "tenant", action: "branding_imported", entityId: tenant.id, metadata: { fields: Object.keys(updates) } });
+
+    // Optional ClickWise logo sync — only if user explicitly opted in
+    if (selection.syncLogoToClickWise && updates.logo_url && hasClickWise) {
+      try {
+        await supabase.functions.invoke("clickwise-tenant-sync", { body: { tenantId: tenant.id } });
+        toast.success("Branding toegepast en gesynced naar ClickWise");
+      } catch (e) {
+        console.warn("ClickWise sync failed", e);
+        toast.success("Branding toegepast (ClickWise sync mislukt)");
+      }
+    } else {
+      toast.success("Branding toegepast");
+    }
+
+    setReviewOpen(false);
     setScraped(null);
+    refetch();
   }
 
   const btnRadius = state.buttonStyle === "pill" ? "9999px" : state.buttonStyle === "square" ? "4px" : "8px";
@@ -325,91 +401,17 @@ export default function BrandingTab() {
           </div>
         )}
 
-        <AnimatePresence>
-          {scraped && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="rounded-lg border border-primary/30 bg-card p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-primary" />
-                  <p className="text-sm font-semibold text-foreground">Gevonden branding</p>
-                </div>
-
-                <div className="grid gap-2 text-xs">
-                  {scraped.companyName && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Bedrijfsnaam</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{scraped.companyName}</span>
-                        <ConfidenceBadge level={scraped.confidence.companyName} />
-                      </div>
-                    </div>
-                  )}
-                  {scraped.tagline && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Tagline</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium truncate max-w-[200px]">{scraped.tagline}</span>
-                        <ConfidenceBadge level={scraped.confidence.tagline} />
-                      </div>
-                    </div>
-                  )}
-                  {scraped.primaryColor && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Primaire kleur</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded border border-border" style={{ backgroundColor: scraped.primaryColor }} />
-                        <span className="font-mono">{scraped.primaryColor}</span>
-                        <ConfidenceBadge level={scraped.confidence.primaryColor} />
-                      </div>
-                    </div>
-                  )}
-                  {scraped.secondaryColor && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Secundaire kleur</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded border border-border" style={{ backgroundColor: scraped.secondaryColor }} />
-                        <span className="font-mono">{scraped.secondaryColor}</span>
-                        <ConfidenceBadge level={scraped.confidence.secondaryColor} />
-                      </div>
-                    </div>
-                  )}
-                  {scraped.logo && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Logo</span>
-                      <div className="flex items-center gap-2">
-                        <img src={scraped.logo} alt="" className="h-6 w-auto object-contain" onError={(e) => (e.currentTarget.style.display = "none")} />
-                        <ConfidenceBadge level={scraped.confidence.logo} />
-                      </div>
-                    </div>
-                  )}
-                  {scraped.fontFamily && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Lettertype</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium capitalize">{scraped.fontFamily}</span>
-                        <ConfidenceBadge level={scraped.confidence.fontFamily} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-2 pt-1">
-                  <Button size="sm" onClick={applyScraped} className="gap-2 text-xs">
-                    <CheckCircle2 className="w-3.5 h-3.5" />Toepassen
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setScraped(null)} className="text-xs">
-                    Negeren
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {scraped && !reviewOpen && (
+          <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+            <div className="flex items-center gap-2 text-xs">
+              <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+              <span className="text-foreground">Voorstel klaar — open om te bekijken</span>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setReviewOpen(true)} className="text-xs">
+              Bekijk voorstel
+            </Button>
+          </div>
+        )}
       </motion.div>
 
       {/* 2-koloms layout: links form, rechts sticky preview */}
@@ -720,6 +722,21 @@ export default function BrandingTab() {
           </Tabs>
         </motion.div>
       </div>
+
+      <BrandReviewDialog
+        open={reviewOpen}
+        onClose={() => setReviewOpen(false)}
+        scraped={scraped as ScrapedBrandingType | null}
+        current={{
+          tagline: state.tagline,
+          logoUrl: state.logoUrl,
+          primaryColor: state.primaryColor,
+          secondaryColor: state.secondaryColor,
+          fontFamily: state.fontFamily,
+        }}
+        hasClickWise={hasClickWise}
+        onApply={handleReviewApply}
+      />
     </div>
   );
 }
