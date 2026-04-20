@@ -11,20 +11,20 @@ export interface UpgradeCopy {
 
 export const upgradeCopy: Record<UpgradeVariant, UpgradeCopy> = {
   "free-to-basic": {
-    title: "Meer events. Meer widgets. Meer grip op je promotie.",
-    subtitle: "Upgrade naar Basic vanaf €24/mnd (excl. btw) en haal écht meer uit TX EventShare.",
-    cta: "Start met Basic",
+    title: "Klaar voor meer events en eigen branding?",
+    subtitle: "Basic geeft je 15 evenementen, 3 widgets en je eigen merkstijl — vanaf €24/mnd (excl. btw).",
+    cta: "Bekijk Basic",
     targetPlan: "Basic",
   },
   "basic-to-pro": {
-    title: "Klaar om TX EventShare als centraal systeem te gebruiken?",
-    subtitle: "Pro geeft je onbeperkt evenementen, geavanceerde branding en multi-location voor €69/mnd (excl. btw).",
-    cta: "Kies Pro",
+    title: "Schaal zonder limieten",
+    subtitle: "Pro biedt onbeperkt events, multi-location en de ClickWise-integratie — €69/mnd (excl. btw).",
+    cta: "Bekijk Pro",
     targetPlan: "Pro",
   },
   addon: {
-    title: "Haal meer uit TX EventShare",
-    subtitle: "Breid je plan uit met add-ons zoals AI Plus, extra teamleden of white label.",
+    title: "Uitbreiden zonder van plan te wisselen",
+    subtitle: "Voeg losse modules toe zoals AI Plus, white label of extra teamleden.",
     cta: "Bekijk add-ons",
     targetPlan: "Add-on",
   },

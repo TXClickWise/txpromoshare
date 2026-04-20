@@ -198,21 +198,33 @@ export default function DashboardPage() {
             <UsageMeter metric="team" current={stats.team} label="Teamleden" />
           </div>
 
-          {/* Upgrade prompt */}
-          {upgradePlan && (
-            <Link to="/app/billing" className="block rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/15 p-4 hover:border-primary/30 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg gradient-hero flex items-center justify-center shrink-0">
-                  <Zap className="w-4 h-4 text-primary-foreground" />
+          {/* Smart upgrade prompt — alleen tonen als upgrade mogelijk én zinvol (limiet bijna bereikt) */}
+          {upgradePlan && (() => {
+            const limits = (effectivePlanId === "free")
+              ? { events: 3, widgets: 1 }
+              : { events: 15, widgets: 3 };
+            const eventsPercent = limits.events === Infinity ? 0 : Math.round((stats.active / limits.events) * 100);
+            const widgetsPercent = limits.widgets === Infinity ? 0 : Math.round((stats.widgets / limits.widgets) * 100);
+            const showSmart = eventsPercent >= 70 || widgetsPercent >= 70 || effectivePlanId === "free";
+            if (!showSmart) return null;
+            const variantCopy = effectivePlanId === "free"
+              ? "Eigen branding, 15 evenementen en de distributie hub"
+              : "Onbeperkt evenementen, ClickWise-integratie en multi-location";
+            return (
+              <Link to="/app/billing" className="block rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 p-4 hover:border-primary/30 transition-colors">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-lg gradient-hero flex items-center justify-center shrink-0">
+                    <Zap className="w-4 h-4 text-primary-foreground" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground">Klaar voor {upgradePlan.charAt(0).toUpperCase() + upgradePlan.slice(1)}?</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{variantCopy}</p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-primary shrink-0 mt-2" />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Upgrade naar {upgradePlan.charAt(0).toUpperCase() + upgradePlan.slice(1)}</p>
-                  <p className="text-xs text-muted-foreground">Ontgrendel meer evenementen, widgets en features</p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-primary ml-auto shrink-0" />
-              </div>
-            </Link>
-          )}
+              </Link>
+            );
+          })()}
 
           {/* Quick tip */}
           <div className="rounded-xl bg-secondary/50 border border-border p-4">
