@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { logAudit } from "@/lib/audit";
-import { Users, Plus, Shield, Mail, Crown, Pencil, UserMinus, Clock, CheckCircle2, XCircle, MoreHorizontal } from "lucide-react";
+import { Plus, Shield, Mail, Crown, Pencil, UserMinus, Clock, MoreHorizontal } from "lucide-react";
 import { motion } from "framer-motion";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useUILanguage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
@@ -38,13 +37,7 @@ interface PendingInvite {
   accepted_at: string | null;
 }
 
-const roleDescriptions: Record<string, string> = {
-  owner: "Volledige toegang, facturatie, teamleden",
-  admin: "Alles behalve facturatie",
-  editor: "Events, media, categorieën beheren",
-  marketer: "Events bekijken en verspreiden",
-  viewer: "Alleen inzien",
-};
+const ROLE_KEYS = ["owner", "admin", "editor", "marketer", "viewer"] as const;
 
 const roleColors: Record<string, string> = {
   owner: "bg-amber-500/10 text-amber-700 border-amber-200",
@@ -55,6 +48,7 @@ const roleColors: Record<string, string> = {
 };
 
 export default function TeamPage() {
+  const { t, language } = useTranslation();
   const { tenantId } = useTenant();
   const { user } = useAuth();
   const { limits } = usePlan();
@@ -66,9 +60,12 @@ export default function TeamPage() {
   const [inviteRole, setInviteRole] = useState("editor");
   const [editingRole, setEditingRole] = useState<{ userId: string; role: string } | null>(null);
 
+  const dateLocale = language === "en" ? "en-US" : "nl-NL";
+  const roleLabel = (role: string) => t(`team.role.${role}`);
+  const roleDesc = (role: string) => t(`team.roleDesc.${role}`);
+
   async function fetchTeam() {
     if (!tenantId) return;
-    // Fetch roles
     const { data: roles } = await supabase.from("user_roles").select("user_id, role, accepted_at").eq("tenant_id", tenantId);
     if (!roles || roles.length === 0) { setLoading(false); return; }
 
@@ -79,13 +76,12 @@ export default function TeamPage() {
     (profiles || []).forEach(p => { profileMap[p.id] = p.full_name; });
 
     setMembers(roles.map(r => {
-      const name = profileMap[r.user_id] || "Onbekend";
+      const name = profileMap[r.user_id] || "—";
       const parts = (name || "").split(" ");
       const initials = parts.map(p => p[0]).join("").toUpperCase().slice(0, 2);
       return { user_id: r.user_id, role: r.role, full_name: name, initials, accepted_at: r.accepted_at };
     }));
 
-    // Fetch pending invitations
     const { data: invites } = await supabase
       .from("team_invitations")
       .select("id, email, role, created_at, expires_at, accepted_at")
@@ -101,7 +97,7 @@ export default function TeamPage() {
   async function handleInvite() {
     if (!inviteEmail || !tenantId || !user) return;
     if (limits && members.length >= limits.maxTeamMembers) {
-      toast.error(`Je hebt het maximum van ${limits.maxTeamMembers} teamleden bereikt. Upgrade je plan.`);
+      toast.error(t("team.maxReached", { count: String(limits.maxTeamMembers) }));
       return;
     }
     const { data: tenant } = await supabase.from("tenants").select("name").eq("id", tenantId).single();
@@ -113,9 +109,8 @@ export default function TeamPage() {
       invited_by: user.id,
     });
     if (error) {
-      toast.error("Uitnodiging mislukt: " + error.message);
+      toast.error(`${t("team.inviteFailed")}: ${error.message}`);
     } else {
-      const roleName = t.team.roles[inviteRole as keyof typeof t.team.roles] || inviteRole;
       supabase.functions.invoke("send-transactional-email", {
         body: {
           templateName: "team-invitation",
@@ -124,11 +119,11 @@ export default function TeamPage() {
           templateData: {
             inviterName: profile?.full_name || "Iemand",
             teamName: tenant?.name || "TX EventShare",
-            role: roleName,
+            role: roleLabel(inviteRole),
           },
         },
       }).catch(() => {});
-      toast.success(`Uitnodiging verstuurd naar ${inviteEmail}`);
+      toast.success(t("team.inviteSent", { email: inviteEmail }));
       logAudit({ tenantId, entityType: "team", action: "invited", metadata: { email: inviteEmail, role: inviteRole } });
       setInviteEmail("");
       setInviteOpen(false);
@@ -144,9 +139,9 @@ export default function TeamPage() {
       .eq("user_id", userId)
       .eq("tenant_id", tenantId);
     if (error) {
-      toast.error("Rol wijzigen mislukt: " + error.message);
+      toast.error(`${t("team.roleUpdateFailed")}: ${error.message}`);
     } else {
-      toast.success("Rol bijgewerkt");
+      toast.success(t("team.roleUpdated"));
       logAudit({ tenantId, entityType: "team", action: "role_changed", metadata: { userId, newRole } });
       setEditingRole(null);
       fetchTeam();
@@ -161,17 +156,12 @@ export default function TeamPage() {
       .eq("user_id", userId)
       .eq("tenant_id", tenantId);
     if (error) {
-      toast.error("Verwijderen mislukt: " + error.message);
+      toast.error(`${t("team.removeFailed")}: ${error.message}`);
     } else {
-      toast.success("Teamlid verwijderd");
+      toast.success(t("team.memberRemoved"));
       logAudit({ tenantId, entityType: "team", action: "member_removed", metadata: { userId } });
       fetchTeam();
     }
-  }
-
-  async function cancelInvite(inviteId: string) {
-    // We can't delete team_invitations due to RLS, but we can note it
-    toast.info("Uitnodiging geannuleerd");
   }
 
   const isOwner = members.find(m => m.user_id === user?.id)?.role === "owner";
@@ -184,46 +174,45 @@ export default function TeamPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">{t.team.title}</h1>
+          <h1 className="text-2xl font-display font-bold text-foreground">{t("team.title")}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {members.length} {members.length === 1 ? "lid" : "leden"}
-            {limits && <span className="text-muted-foreground"> · max {limits.maxTeamMembers}</span>}
-            {pendingInvites.length > 0 && <span className="text-amber-600"> · {pendingInvites.length} openstaand</span>}
+            {members.length} {members.length === 1 ? t("team.memberSingular") : t("team.memberPlural")}
+            {limits && <span className="text-muted-foreground"> · {t("team.maxMembers", { count: String(limits.maxTeamMembers) })}</span>}
+            {pendingInvites.length > 0 && <span className="text-amber-600"> · {t("team.pendingCount", { count: String(pendingInvites.length) })}</span>}
           </p>
         </div>
         {isAdmin && (
           <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-2 gradient-hero text-primary-foreground border-0 hover:opacity-90">
-                <Plus className="w-4 h-4" />{t.team.invite}
+                <Plus className="w-4 h-4" />{t("team.invite")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Teamlid uitnodigen</DialogTitle>
+                <DialogTitle>{t("team.inviteDialogTitle")}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-2">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">E-mailadres</label>
-                  <Input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="naam@voorbeeld.nl" />
+                  <label className="text-sm font-medium">{t("team.emailLabel")}</label>
+                  <Input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder={t("team.emailPlaceholder")} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Rol</label>
+                  <label className="text-sm font-medium">{t("team.roleLabel")}</label>
                   <Select value={inviteRole} onValueChange={setInviteRole}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {Object.entries(t.team.roles).filter(([k]) => k !== "owner").map(([key, label]) => (
-                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                      {ROLE_KEYS.filter((k) => k !== "owner").map((key) => (
+                        <SelectItem key={key} value={key}>{roleLabel(key)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">{roleDescriptions[inviteRole]}</p>
+                  <p className="text-xs text-muted-foreground">{roleDesc(inviteRole)}</p>
                 </div>
                 <Button onClick={handleInvite} className="w-full gap-2">
-                  <Mail className="w-4 h-4" />Uitnodiging versturen
+                  <Mail className="w-4 h-4" />{t("team.sendInvite")}
                 </Button>
               </div>
             </DialogContent>
@@ -231,24 +220,22 @@ export default function TeamPage() {
         )}
       </div>
 
-      {/* Role overview */}
       <div className="rounded-xl bg-secondary/30 border border-border p-4">
-        <p className="text-xs font-medium text-foreground mb-3 flex items-center gap-2"><Shield className="w-3.5 h-3.5 text-primary" />Rolbeschrijvingen</p>
+        <p className="text-xs font-medium text-foreground mb-3 flex items-center gap-2"><Shield className="w-3.5 h-3.5 text-primary" />{t("team.roleDescriptions")}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {Object.entries(t.team.roles).map(([key, label]) => (
+          {ROLE_KEYS.map((key) => (
             <div key={key} className="flex items-start gap-2 p-2 rounded-lg hover:bg-secondary/50 transition-colors">
-              <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium mt-0.5 ${roleColors[key] || ""}`}>{label}</span>
-              <p className="text-xs text-muted-foreground flex-1">{roleDescriptions[key]}</p>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium mt-0.5 ${roleColors[key] || ""}`}>{roleLabel(key)}</span>
+              <p className="text-xs text-muted-foreground flex-1">{roleDesc(key)}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Pending invitations */}
       {pendingInvites.length > 0 && (
         <div>
           <h2 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5" />Openstaande uitnodigingen
+            <Clock className="w-3.5 h-3.5" />{t("team.pendingInvites")}
           </h2>
           <div className="space-y-2">
             {pendingInvites.map((invite) => (
@@ -259,11 +246,11 @@ export default function TeamPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{invite.email}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    Uitgenodigd {new Date(invite.created_at).toLocaleDateString("nl-NL")} · Verloopt {new Date(invite.expires_at).toLocaleDateString("nl-NL")}
+                    {t("team.invitedAt", { date: new Date(invite.created_at).toLocaleDateString(dateLocale) })} · {t("team.expiresAt", { date: new Date(invite.expires_at).toLocaleDateString(dateLocale) })}
                   </p>
                 </div>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${roleColors[invite.role] || ""}`}>
-                  {t.team.roles[invite.role as keyof typeof t.team.roles] || invite.role}
+                  {roleLabel(invite.role)}
                 </span>
               </div>
             ))}
@@ -271,9 +258,8 @@ export default function TeamPage() {
         </div>
       )}
 
-      {/* Active members */}
       <div>
-        <h2 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider mb-3">Actieve leden</h2>
+        <h2 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("team.activeMembers")}</h2>
         <div className="space-y-2">
           {members.map((m, i) => (
             <motion.div
@@ -289,30 +275,28 @@ export default function TeamPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="font-medium text-foreground text-sm">{m.full_name}</p>
-                  {m.user_id === user?.id && <span className="text-[10px] font-medium text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-full">Jij</span>}
+                  {m.user_id === user?.id && <span className="text-[10px] font-medium text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-full">{t("team.you")}</span>}
                 </div>
               </div>
 
-              {/* Role badge with inline edit */}
               {editingRole?.userId === m.user_id ? (
                 <Select value={editingRole.role} onValueChange={(v) => changeRole(m.user_id, v)}>
                   <SelectTrigger className="w-28 h-7 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(t.team.roles).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                    {ROLE_KEYS.map((key) => (
+                      <SelectItem key={key} value={key}>{roleLabel(key)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               ) : (
                 <span className={`px-2.5 py-1 rounded-full text-xs font-medium border flex items-center gap-1 ${roleColors[m.role] || ""}`}>
                   {m.role === "owner" && <Crown className="w-3 h-3" />}
-                  {t.team.roles[m.role as keyof typeof t.team.roles] || m.role}
+                  {roleLabel(m.role)}
                 </span>
               )}
 
-              {/* Actions */}
               {isAdmin && m.user_id !== user?.id && m.role !== "owner" && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -322,11 +306,11 @@ export default function TeamPage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => setEditingRole({ userId: m.user_id, role: m.role })}>
-                      <Pencil className="w-3.5 h-3.5 mr-2" />Rol wijzigen
+                      <Pencil className="w-3.5 h-3.5 mr-2" />{t("team.changeRole")}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="text-destructive" onClick={() => removeMember(m.user_id)}>
-                      <UserMinus className="w-3.5 h-3.5 mr-2" />Verwijderen
+                      <UserMinus className="w-3.5 h-3.5 mr-2" />{t("team.removeMember")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -336,7 +320,7 @@ export default function TeamPage() {
         </div>
       </div>
 
-      <UpgradeBanner feature="Meer teamleden (tot 10) & geavanceerde rollen" plan="Pro" compact />
+      <UpgradeBanner feature={t("team.upgradeFeature")} plan="Pro" compact />
     </div>
   );
 }

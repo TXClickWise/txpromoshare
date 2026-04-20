@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
-import { Tags, Plus, Pencil, Trash2, GripVertical, Check, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Trash2, GripVertical, Check, X } from "lucide-react";
 import { logAudit } from "@/lib/audit";
 import { motion } from "framer-motion";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useUILanguage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
 export default function CategoriesPage() {
+  const { t } = useTranslation();
   const { tenantId } = useTenant();
   const [categories, setCategories] = useState<Tables<"categories">[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,37 +33,23 @@ export default function CategoriesPage() {
       });
   }, []);
 
-  // Split into sortable (non-"overig") and pinned ("overig" at bottom)
   const overigCat = categories.find(c => c.slug === "overig");
   const sortable = categories.filter(c => c.slug !== "overig");
 
-  function handleDragStart(idx: number) {
-    setDragIdx(idx);
-  }
-
-  function handleDragOver(e: React.DragEvent, idx: number) {
-    e.preventDefault();
-    setOverIdx(idx);
-  }
+  function handleDragStart(idx: number) { setDragIdx(idx); }
+  function handleDragOver(e: React.DragEvent, idx: number) { e.preventDefault(); setOverIdx(idx); }
 
   function handleDragEnd() {
     if (dragIdx === null || overIdx === null || dragIdx === overIdx) {
-      setDragIdx(null);
-      setOverIdx(null);
-      return;
+      setDragIdx(null); setOverIdx(null); return;
     }
     const updated = [...sortable];
     const [moved] = updated.splice(dragIdx, 1);
     updated.splice(overIdx, 0, moved);
-
-    // Rebuild full list with new sort_order
     const reordered = updated.map((c, i) => ({ ...c, sort_order: i }));
     const full = overigCat ? [...reordered, { ...overigCat, sort_order: reordered.length }] : reordered;
     setCategories(full);
-    setDragIdx(null);
-    setOverIdx(null);
-
-    // Persist sort_order changes
+    setDragIdx(null); setOverIdx(null);
     persistOrder(full);
   }
 
@@ -76,36 +63,34 @@ export default function CategoriesPage() {
   async function addCategory() {
     if (!newName.trim() || !tenantId) return;
     const slug = newName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    // Place before "overig"
     const insertOrder = sortable.length;
     const { data, error } = await supabase.from("categories").insert({
       name: newName, slug, color: newColor, tenant_id: tenantId, sort_order: insertOrder,
     }).select().single();
     if (error) {
-      toast.error("Toevoegen mislukt: " + error.message);
+      toast.error(`${t("categories.addFailed")}: ${error.message}`);
     } else {
-      // Re-number: new cat before overig
       const newList = [...sortable, data].map((c, i) => ({ ...c, sort_order: i }));
       const full = overigCat ? [...newList, { ...overigCat, sort_order: newList.length }] : newList;
       setCategories(full);
       setNewName("");
       setAdding(false);
-      toast.success("Categorie toegevoegd");
+      toast.success(t("categories.added"));
       persistOrder(full);
       if (tenantId) logAudit({ tenantId, entityType: "category", action: "created", entityId: data.id, metadata: { name: newName } });
     }
   }
 
   async function deleteCategory(id: string) {
-    if (!confirm("Categorie verwijderen?")) return;
+    if (!confirm(t("categories.confirmDelete"))) return;
     const { error } = await supabase.from("categories").delete().eq("id", id);
     if (error) {
-      toast.error("Verwijderen mislukt: " + error.message);
+      toast.error(`${t("categories.deleteFailed")}: ${error.message}`);
     } else {
       const cat = categories.find(c => c.id === id);
       const remaining = categories.filter(c => c.id !== id);
       setCategories(remaining);
-      toast.success("Categorie verwijderd");
+      toast.success(t("categories.deleted"));
       if (tenantId) logAudit({ tenantId, entityType: "category", action: "deleted", entityId: id, metadata: { name: cat?.name } });
     }
   }
@@ -118,24 +103,22 @@ export default function CategoriesPage() {
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">{t.nav.categories}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Organiseer je evenementen met categorieën</p>
+          <h1 className="text-2xl font-display font-bold text-foreground">{t("categories.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t("categories.subtitle")}</p>
         </div>
         <Button size="sm" onClick={() => setAdding(true)} className="gap-2 gradient-hero text-primary-foreground border-0 hover:opacity-90">
-          <Plus className="w-4 h-4" />Categorie toevoegen
+          <Plus className="w-4 h-4" />{t("categories.add")}
         </Button>
       </div>
 
       <div className="rounded-xl bg-secondary/30 border border-border p-3">
-        <p className="text-xs text-muted-foreground">
-          💡 Standaard categorieën zijn beschikbaar voor alle organisatoren. Je kunt aangepaste categorieën toevoegen die alleen zichtbaar zijn in jouw workspace. Sleep categorieën om de volgorde te wijzigen.
-        </p>
+        <p className="text-xs text-muted-foreground">{t("categories.helpTip")}</p>
       </div>
 
       {adding && (
         <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-primary/20 shadow-card">
           <Input type="color" value={newColor} onChange={(e) => setNewColor(e.target.value)} className="w-10 h-10 p-1 cursor-pointer shrink-0" />
-          <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Categorienaam" className="flex-1" autoFocus onKeyDown={(e) => e.key === "Enter" && addCategory()} />
+          <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t("categories.namePlaceholder")} className="flex-1" autoFocus onKeyDown={(e) => e.key === "Enter" && addCategory()} />
           <Button size="sm" onClick={addCategory} className="gap-1"><Check className="w-4 h-4" /></Button>
           <Button size="sm" variant="ghost" onClick={() => setAdding(false)}><X className="w-4 h-4" /></Button>
         </div>
@@ -162,7 +145,7 @@ export default function CategoriesPage() {
             </div>
             <div className="flex-1">
               <p className="font-medium text-foreground text-sm">{cat.name}</p>
-              <p className="text-xs text-muted-foreground">{cat.is_default ? "Standaard categorie" : "Aangepaste categorie"}</p>
+              <p className="text-xs text-muted-foreground">{cat.is_default ? t("categories.isDefault") : t("categories.isCustom")}</p>
             </div>
             <div className="flex gap-1">
               {!cat.is_default && (
@@ -174,7 +157,6 @@ export default function CategoriesPage() {
           </motion.div>
         ))}
 
-        {/* "Overig" pinned at bottom */}
         {overigCat && (
           <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border/50 shadow-card opacity-70">
             <div className="w-4 h-4 shrink-0" />
@@ -183,13 +165,13 @@ export default function CategoriesPage() {
             </div>
             <div className="flex-1">
               <p className="font-medium text-foreground text-sm">{overigCat.name}</p>
-              <p className="text-xs text-muted-foreground">Standaard categorie · altijd onderaan</p>
+              <p className="text-xs text-muted-foreground">{t("categories.defaultPinned")}</p>
             </div>
           </div>
         )}
       </div>
 
-      <UpgradeBanner feature="Eigen categorieën aanmaken" plan="Basic" compact />
+      <UpgradeBanner feature={t("categories.upgradeFeature")} plan="Basic" compact />
     </div>
   );
 }
