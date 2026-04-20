@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { ChannelBar } from "@/components/distribution/ChannelBar";
 import { ShareLinkCard } from "@/components/distribution/ShareLinkCard";
 import { ShareTextCard } from "@/components/distribution/ShareTextCard";
+import { ChannelCopyGroup, type CopyVariant } from "@/components/distribution/ChannelCopyGroup";
 import { DistributionStats } from "@/components/distribution/DistributionStats";
 import { QRCodeDialog } from "@/components/distribution/QRCodeDialog";
 import { QualityCheck } from "@/components/distribution/QualityCheck";
@@ -15,6 +16,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
+import { useEventCopyAutosave } from "@/hooks/useEventCopyAutosave";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
@@ -27,6 +29,18 @@ function buildGoogleCalendarUrl(event: Tables<"events">, venueName: string) {
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${start}/${end}&location=${encodeURIComponent(venueName)}&details=${encodeURIComponent(event.short_description || "")}`;
 }
 
+/** Map internal channel/variant id -> events table column for autosave */
+const CHANNEL_DB_MAP: Record<string, string> = {
+  whatsapp: "whatsapp_share_text",
+  whatsapp_short: "whatsapp_share_text_short",
+  instagram: "instagram_share_text",
+  social: "social_share_text",
+  teaser: "teaser_text",
+  promo: "long_promo_text",
+  newsletter: "newsletter_intro",
+  website: "website_snippet",
+};
+
 export default function DistributionPage() {
   const { tenantId, tenant } = useTenant();
   const { user } = useAuth();
@@ -36,8 +50,9 @@ export default function DistributionPage() {
   const [generating, setGenerating] = useState(false);
   const [rewriting, setRewriting] = useState<string | null>(null);
 
-  // Channel-specific texts state
+  // Channel-specific texts state (in-memory, hydrated from DB on event change)
   const [channelTexts, setChannelTexts] = useState<Record<string, string>>({});
+  const { schedule: scheduleSave, saving, saved } = useEventCopyAutosave(selectedEvent);
 
   const { data: publishedEvents = [], isLoading } = useQuery({
     queryKey: ["events-published", tenantId],
@@ -61,6 +76,18 @@ export default function DistributionPage() {
       setSelectedEvent(eventParam);
     }
   }, [searchParams, publishedEvents, selectedEvent]);
+
+  // Hydrate channel texts from saved DB columns when the selected event changes
+  useEffect(() => {
+    const ev = publishedEvents.find((e) => e.id === selectedEvent);
+    if (!ev) return;
+    const next: Record<string, string> = {};
+    for (const [channelId, column] of Object.entries(CHANNEL_DB_MAP)) {
+      const saved = (ev as unknown as Record<string, string | null>)[column];
+      if (saved && saved.trim()) next[channelId] = saved;
+    }
+    setChannelTexts(next);
+  }, [selectedEvent, publishedEvents]);
 
   // Fetch venue for selected event
   const { data: venue } = useQuery({
@@ -139,6 +166,7 @@ export default function DistributionPage() {
   // Default texts per channel — organisator-perspectief
   const defaultTexts = {
     whatsapp: `${event.title}\n\n📅 ${dateStr}${timeStr ? ` om ${timeStr}` : ""}\n📍 ${venueName}\n\nBekijk alle details van dit evenement in de previewkaart van WhatsApp.`,
+    whatsapp_short: `${event.title} — ${dateStr}${timeStr ? ` ${timeStr}` : ""} bij ${venueName}. Kom je ook?`,
     instagram: event.social_share_text ||
       `${event.title}\n\n${dateStr} | ${timeStr}\n${event.short_description || ""}\n\nLink in bio\n\n#event #horeca #uitagenda`,
     tiktok: `${event.title}\n\n${dateStr} om ${timeStr}\n${event.short_description || ""}\n\n#event #uitagenda #horeca`,
@@ -149,8 +177,13 @@ export default function DistributionPage() {
     gbp: `${event.title} — ${dateStr} om ${timeStr}. ${event.short_description || "Bekijk de details op onze pagina."} ${venueName}. Meer informatie: ${publicShareUrl}`,
   };
 
-  const getText = (channel: string) => channelTexts[channel] || defaultTexts[channel as keyof typeof defaultTexts] || "";
-  const setText = (channel: string, text: string) => setChannelTexts((prev) => ({ ...prev, [channel]: text }));
+  const getText = (channel: string) => channelTexts[channel] ?? defaultTexts[channel as keyof typeof defaultTexts] ?? "";
+  const setText = (channel: string, text: string) => {
+    setChannelTexts((prev) => ({ ...prev, [channel]: text }));
+    // Persist to event DB column when one is mapped
+    const dbColumn = CHANNEL_DB_MAP[channel];
+    if (dbColumn) scheduleSave({ [dbColumn]: text });
+  };
 
   const trackAction = async (channel: string) => {
     if (!tenantId || !user) return;
@@ -306,69 +339,89 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         <ShareLinkCard url={publicShareUrl} eventId={event.id} />
       </motion.div>
 
-      {/* Channel-specific content sections */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
-          <img src="/images/whatsapp-icon.png" alt="WhatsApp" className="w-4 h-4 rounded-sm" />
-          WhatsApp
-        </h2>
-        <ShareTextCard
-          icon={<img src="/images/whatsapp-icon.png" alt="WhatsApp" className="w-4 h-4 rounded-sm" />}
-          title="WhatsApp bericht"
-          description="Vanuit jou als organisator aan je relaties"
-          text={getText("whatsapp")}
-          onTextChange={(t) => setText("whatsapp", t)}
-          charLimit={500}
-          onAiRewrite={handleRewrite}
-          aiLoading={!!rewriting}
-          actions={
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-              <Button size="sm" className="gap-2 bg-green-600 text-white hover:bg-green-700 border-0 text-xs">
-                <Smartphone className="w-3.5 h-3.5" />WhatsApp
-              </Button>
-            </a>
-          }
-        />
-      </div>
+      {/* WhatsApp — kort & medium variants */}
+      <ChannelCopyGroup
+        icon={<img src="/images/whatsapp-icon.png" alt="WhatsApp" className="w-4 h-4 rounded-sm" />}
+        title="WhatsApp"
+        subtitle="Vanuit jou als organisator aan je relaties"
+        saving={saving}
+        saved={saved}
+        onAiRewrite={handleRewrite}
+        aiLoading={!!rewriting}
+        onVariantChange={(id, t) => setText(id, t)}
+        variants={[
+          {
+            id: "whatsapp_short",
+            label: "Kort",
+            description: "Eén zin, perfect voor een snelle 1-op-1 chat",
+            text: getText("whatsapp_short"),
+            charLimit: 160,
+          },
+          {
+            id: "whatsapp",
+            label: "Medium",
+            description: "Met datum, tijd en locatie — ideaal voor groepschats",
+            text: getText("whatsapp"),
+            charLimit: 500,
+            recommended: true,
+          },
+        ]}
+        actions={
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+            <Button size="sm" className="gap-2 bg-green-600 text-white hover:bg-green-700 border-0 text-xs">
+              <Smartphone className="w-3.5 h-3.5" />WhatsApp
+            </Button>
+          </a>
+        }
+      />
 
-      <div className="space-y-3">
-        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
-          <img src="/images/instagram-icon.png" alt="Instagram" className="w-4 h-4 rounded-sm" />
-          Social media
-        </h2>
-        <div className="grid md:grid-cols-2 gap-3">
-          <ShareTextCard
-            icon={<img src="/images/instagram-icon.png" alt="Instagram" className="w-4 h-4 rounded-sm" />}
-            title="Instagram / Facebook post"
-            description="Met hashtags, visueel gericht"
-            text={getText("instagram")}
-            onTextChange={(t) => setText("instagram", t)}
-            charLimit={2200}
-            onAiRewrite={handleRewrite}
-            aiLoading={!!rewriting}
-          />
-          <ShareTextCard
-            icon={<img src="/images/tiktok-icon.png" alt="TikTok" className="w-4 h-4 rounded-sm" />}
-            title="TikTok caption"
-            description="Korte, pakkende tekst voor TikTok"
-            text={getText("tiktok")}
-            onTextChange={(t) => setText("tiktok", t)}
-            charLimit={2200}
-            onAiRewrite={handleRewrite}
-            aiLoading={!!rewriting}
-          />
-        </div>
-        <ShareTextCard
-          icon={<Share2 className="w-4 h-4 text-primary" />}
-          title="Korte teaser"
-          description="Voor stories of advertenties"
-          text={getText("teaser")}
-          onTextChange={(t) => setText("teaser", t)}
-          charLimit={160}
-          onAiRewrite={handleRewrite}
-          aiLoading={!!rewriting}
-        />
-      </div>
+      {/* Social — teaser / Instagram-Facebook / lange promo */}
+      <ChannelCopyGroup
+        icon={<img src="/images/instagram-icon.png" alt="Instagram" className="w-4 h-4 rounded-sm" />}
+        title="Instagram & Facebook"
+        subtitle="Eén copy, drie lengtes voor verschillende plaatsingen"
+        saving={saving}
+        saved={saved}
+        onAiRewrite={handleRewrite}
+        aiLoading={!!rewriting}
+        onVariantChange={(id, t) => setText(id, t)}
+        variants={[
+          {
+            id: "teaser",
+            label: "Teaser",
+            description: "Voor stories, ads of een korte aankondiging",
+            text: getText("teaser"),
+            charLimit: 160,
+          },
+          {
+            id: "instagram",
+            label: "Post",
+            description: "Volledige feedpost met hashtags",
+            text: getText("instagram"),
+            charLimit: 2200,
+            recommended: true,
+          },
+          {
+            id: "promo",
+            label: "Lang",
+            description: "Uitgebreide promo voor persbericht of uitnodiging",
+            text: getText("promo"),
+          },
+        ]}
+      />
+
+      {/* TikTok blijft losstaand */}
+      <ShareTextCard
+        icon={<img src="/images/tiktok-icon.png" alt="TikTok" className="w-4 h-4 rounded-sm" />}
+        title="TikTok caption"
+        description="Korte, pakkende tekst voor TikTok"
+        text={getText("tiktok")}
+        onTextChange={(t) => setText("tiktok", t)}
+        charLimit={2200}
+        onAiRewrite={handleRewrite}
+        aiLoading={!!rewriting}
+      />
+
 
       <div className="space-y-3">
         <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
@@ -414,21 +467,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         </div>
       </div>
 
-      <div className="space-y-3">
-        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
-          <Share2 className="w-4 h-4 text-primary" />
-          Uitgebreide promotietekst
-        </h2>
-        <ShareTextCard
-          icon={<Share2 className="w-4 h-4 text-primary" />}
-          title="Langere promotietekst"
-          description="Voor persberichten, uitnodigingen of uitgebreide promotie"
-          text={getText("promo")}
-          onTextChange={(t) => setText("promo", t)}
-          onAiRewrite={handleRewrite}
-          aiLoading={!!rewriting}
-        />
-      </div>
+
 
       {/* Widgets section */}
       <div className="space-y-3">
