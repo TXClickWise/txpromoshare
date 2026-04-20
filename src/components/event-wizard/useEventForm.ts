@@ -306,7 +306,9 @@ export function useEventForm() {
         loadedStatusRef.current = data.status;
         setForm(prev => ({ ...prev, ...updates }));
         setTimeout(() => {
-          initialFormRef.current = JSON.stringify({ ...form, ...updates });
+          const merged = { ...form, ...updates };
+          initialFormRef.current = JSON.stringify(merged);
+          initialRecurrenceRef.current = recurrenceSignature(merged);
           setIsDirty(false);
         }, 100);
       }
