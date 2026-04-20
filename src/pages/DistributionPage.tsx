@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 
 function buildGoogleCalendarUrl(event: Tables<"events">, venueName: string) {
