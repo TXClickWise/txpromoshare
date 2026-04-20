@@ -75,6 +75,7 @@ export default function PublicEventPage() {
   const [gallery, setGallery] = useState<string[]>([]);
   const [upcomingOccurrences, setUpcomingOccurrences] = useState<Array<{ date: string; start_time: string | null; end_time: string | null; label: string | null }>>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
 
   useEffect(() => {
