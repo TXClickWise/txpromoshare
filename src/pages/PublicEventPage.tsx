@@ -147,17 +147,53 @@ export default function PublicEventPage() {
     load();
   }, [slug]);
 
-  const publicEventUrl = `https://txeventshare.nl/e/${slug}`;
+  // Build localized view of the event with NL fallback per field
+  const localized = useMemo(() => {
+    const t = translations.find((x) => x.language_code === activeLang);
+    const pick = (field: keyof Tables<"event_translations">) => {
+      const tv = t?.[field];
+      if (typeof tv === "string" && tv.trim().length > 0) return tv;
+      const ev = event ? (event as any)[field] : null;
+      return typeof ev === "string" ? ev : null;
+    };
+    return {
+      title: pick("title") || event?.title || "",
+      subtitle: pick("subtitle") || event?.subtitle || null,
+      short_description: pick("short_description") || event?.short_description || null,
+      full_description: pick("full_description") || event?.full_description || null,
+      cta_button_text: pick("cta_button_text") || event?.cta_button_text || null,
+      whatsapp_share_text: pick("whatsapp_share_text") || event?.whatsapp_share_text || null,
+      social_share_text: pick("social_share_text") || event?.social_share_text || null,
+      seo_title: pick("seo_title") || event?.seo_title || null,
+      seo_description: pick("seo_description") || event?.seo_description || null,
+      isFallback: !t && activeLang !== "nl",
+    };
+  }, [translations, activeLang, event]);
+
+  const availableLanguages = useMemo<ContentLanguageCode[]>(
+    () => translations.map((t) => t.language_code).filter(isContentLanguage),
+    [translations],
+  );
+
+  const handleLanguageChange = (lang: ContentLanguageCode) => {
+    const next = new URLSearchParams(searchParams);
+    if (lang === "nl") next.delete("lang");
+    else next.set("lang", lang);
+    setSearchParams(next, { replace: true });
+  };
+
+  const publicEventUrl = `https://txeventshare.nl/e/${slug}${activeLang !== "nl" ? `?lang=${activeLang}` : ""}`;
  const cacheBuster = Math.floor(Date.now() / 60000); // refreshes every minute
- const previewShareUrl = `https://txeventshare.nl/e/${slug}/index.html?v=${cacheBuster}`;
+ const previewShareUrl = `https://txeventshare.nl/e/${slug}/index.html?v=${cacheBuster}${activeLang !== "nl" ? `&lang=${activeLang}` : ""}`;
   const heroImg = featuredImageUrl || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop";
 
   useSEO(
-    event?.seo_title || event?.title || "Evenement",
-    event?.seo_description || event?.short_description || "",
+    localized.seo_title || localized.title || "Evenement",
+    localized.seo_description || localized.short_description || "",
     heroImg,
     publicEventUrl,
   );
+
 
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
   const prevLightbox = useCallback(() => {
