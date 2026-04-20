@@ -188,12 +188,14 @@ export default function EventsPage() {
     })
     .filter((e) => categoryFilter === "all" || e.category_id === categoryFilter)
     .sort((a, b) => {
+      const aDate = a._nextDate || a.start_date;
+      const bDate = b._nextDate || b.start_date;
       switch (sortBy) {
-        case "date_asc": return a.start_date.localeCompare(b.start_date);
+        case "date_asc": return aDate.localeCompare(bDate);
         case "title_asc": return a.title.localeCompare(b.title);
         case "title_desc": return b.title.localeCompare(a.title);
         case "updated": return b.updated_at.localeCompare(a.updated_at);
-        default: return b.start_date.localeCompare(a.start_date);
+        default: return bDate.localeCompare(aDate);
       }
     });
 
