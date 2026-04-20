@@ -10,11 +10,12 @@ import { useTenant } from "@/hooks/useTenant";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
+import { STRIPE_PLAN_PRICES } from "@/lib/stripePrices";
 
-// Stripe price IDs
+// Stripe price IDs (excl. 21% btw)
 const STRIPE_PRICES: Record<string, string> = {
-  basic: "price_1TJHeSL34Z8Db3WQsjW9RWzZ",
-  pro: "price_1TJHeTL34Z8Db3WQN5z3zG6m",
+  basic: STRIPE_PLAN_PRICES.basic,
+  pro: STRIPE_PLAN_PRICES.pro,
 };
 
 const plans = [
@@ -118,8 +119,8 @@ export default function BillingPage() {
                   : displayPlanId === "free"
                     ? "Gratis · Geen factuurperiode"
                     : displayPlanId === "basic"
-                      ? "€29/maand"
-                      : "€79/maand"}
+                      ? "€24/maand · excl. btw"
+                      : "€69/maand · excl. btw"}
               </p>
             </div>
           </div>
