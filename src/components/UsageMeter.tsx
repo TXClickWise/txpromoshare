@@ -44,7 +44,7 @@ export function UsageMeter({ metric, current, label }: UsageMeterProps) {
           "h-1.5",
           isUnlimited && "[&>div]:bg-accent/60",
           atLimit && "[&>div]:bg-primary",
-          !atLimit && nearLimit && "[&>div]:bg-amber-500",
+          !atLimit && nearLimit && "[&>div]:bg-accent",
         )}
       />
       {atLimit && !isUnlimited && (
