@@ -302,7 +302,7 @@ export default function PublicEventPage() {
       </section>
 
       {/* MAIN CONTENT */}
-      <main className="max-w-5xl mx-auto px-4 -mt-6 relative z-20 pb-16">
+      <main className="max-w-5xl mx-auto px-4 -mt-6 relative z-20 pb-24 md:pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {/* Quick info cards */}
