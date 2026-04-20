@@ -1,47 +1,33 @@
 
-User wil een nieuwe publieke Read API toevoegen, naast de bestaande `widget-embed` JSON-functionaliteit (die blijft ongemoeid).
+## Plan: Galerij voor evenementen (beheer + lightbox + API)
 
-## Plan: Publieke Events Read API
+### 1. Database
+- **Migratie**: RLS-policies op `event_gallery` toevoegen voor INSERT/UPDATE/DELETE door `editor+`. Nu bestaan alleen SELECT-policies, terwijl ik in de wizard gallery-rijen wil aanmaken/verwijderen.
+  - INSERT/UPDATE/DELETE: WHERE event behoort tot tenant en gebruiker is owner/admin/editor.
 
-### 1. Database wijziging
-Nieuwe migratie:
-- Kolom `public_api_enabled boolean NOT NULL DEFAULT true` op `tenants`
-- Geen RLS-wijzigingen nodig — Edge Function gebruikt service role key
+### 2. Form state (`useEventForm.ts`)
+- Nieuw veld `gallery: { mediaId: string; url: string }[]` in `EventFormState`.
+- **Laden** (bij edit): `event_gallery` joinen met `media` op sort_order, zetten in form.
+- **Opslaan**: nieuwe helper `saveGallery(eventId)` die alle bestaande rijen verwijdert en in volgorde herinvoegt — analoog aan `saveSponsors`. Aanroepen vanuit `handleSave` en `handlePublish` (waar `saveSponsors` ook wordt aangeroepen).
 
-### 2. Nieuwe Edge Function: `public-events-api`
-Locatie: `supabase/functions/public-events-api/index.ts`
-- `verify_jwt = false` (publiek)
-- CORS open (`Access-Control-Allow-Origin: *`)
-- Cache-Control: `public, max-age=300`
-- Service role client voor data-toegang
-- Routes via URL parsing:
-  - `GET /public-events-api/v1/tenants/{slug}/events`
-  - `GET /public-events-api/v1/tenants/{slug}/events/{event_slug}`
-- Query params: `from`, `to`, `category`, `limit` (default 20, max 100), `offset`
-- Filters: alleen `status='published'`, alleen tenants met `public_api_enabled=true`
-- Response includeert: tenant (slug, name, logo_url, primary_color), events met venue + category + featured image (via storage public URL) + `public_url`, en `pagination` object
-- Input validatie met Zod
+### 3. Wizard UI (`StepMedia.tsx`)
+Nieuw blok "Galerij (extra foto's)" onder de Featured Image, boven Sponsors:
+- Grid met thumbnails + verwijder-knop per foto.
+- "Foto toevoegen" knop opent `MediaPicker` in een **multi-select** mode (of per foto één).
+- Eenvoudige "verplaats omhoog/omlaag" pijltjes voor sort_order (geen drag-drop voor scope).
+- Limit: max 12 foto's (UI-validatie).
 
-### 3. UI uitbreiding op `IntegrationsPage`
-Nieuw card-blok "Publieke Events API" boven het Ticketing-blok:
-- Toggle om API aan/uit te zetten (update `tenants.public_api_enabled` — owners/admins)
-- Read-only veld met de exacte endpoint-URL voor de huidige tenant
-- Copy-buttons voor curl + JS fetch voorbeeld
-- Link naar de docs
+**MediaPicker uitbreiding**: optionele `mode="multi"` prop. Bij multi: selecties verzamelen en met "Toevoegen" callback geven `(items: {id, url}[]) => void`. Eenvoudige toevoeging — bestaande single-select gedrag blijft default.
 
-### 4. Documentatie
-Nieuw bestand `docs/public-events-api.md` met:
-- Endpoints, query params, response schema
-- Voorbeelden (curl, fetch, React)
-- CORS/caching info, rate limit notitie
-- Verschil met legacy widget-embed JSON (blijft bestaan, niet deprecated)
+### 4. Lightbox op publieke pagina (`PublicEventPage.tsx`)
+- Vervang de huidige `<a target="_blank">` door klikbare thumbnails die een **lightbox dialog** openen (shadcn `Dialog`).
+- Lightbox features: grote weergave, links/rechts navigatie (knoppen + pijltjestoetsen), Esc om te sluiten, foto-counter (3/8), backdrop-click sluit.
+- Behoud het huidige aspect-square grid; voeg subtle hover-zoom + "vergroot" icoon toe.
 
-### Geen wijzigingen aan
-- `widget-embed` Edge Function (blijft 1-op-1 werken)
-- Bestaande RLS policies
-- Auth flow
+### 5. Public Events API
+- Voeg `gallery: [{ url, alt }]` toe aan de event-detail response (en optioneel ook aan list response — beter alleen detail om payload klein te houden). Update `docs/public-events-api.md`.
 
-### Technisch
-- Edge Function is read-only, gebruikt service role enkel om publieke data op te halen (geen geheime data wordt geretourneerd)
-- Featured image URL wordt opgebouwd via Supabase storage public URL voor `media` bucket
-- Pagination: `total` via `count: 'exact'` op de query
+### Niet in scope
+- Drag-and-drop sorteren (pijltjes volstaan).
+- Bulk upload direct vanuit de wizard (gaat via bestaande MediaPicker upload-tab).
+- Captions per foto (kan later via `event_gallery.alt` of `media.alt_text`).
