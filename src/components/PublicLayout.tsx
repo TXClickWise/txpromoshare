@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 const navLinks = [
   { to: "/", label: "Home", hash: false },
-  { to: "/event-agenda-software", label: "Features", hash: false },
+  { to: "/event-agenda-software", label: "Voordelen", hash: false },
   { to: "/#hoe-het-werkt", label: "Hoe het werkt", hash: true },
   { to: "/#prijzen", label: "Prijzen", hash: true },
   { to: "/demo", label: "Demo", hash: false },
