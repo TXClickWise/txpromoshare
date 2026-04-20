@@ -120,6 +120,25 @@ export default function PublicEventPage() {
     publicEventUrl,
   );
 
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+  const prevLightbox = useCallback(() => {
+    setLightboxIndex((i) => (i === null ? null : (i - 1 + gallery.length) % gallery.length));
+  }, [gallery.length]);
+  const nextLightbox = useCallback(() => {
+    setLightboxIndex((i) => (i === null ? null : (i + 1) % gallery.length));
+  }, [gallery.length]);
+
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeLightbox();
+      else if (e.key === "ArrowLeft") prevLightbox();
+      else if (e.key === "ArrowRight") nextLightbox();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [lightboxIndex, closeLightbox, prevLightbox, nextLightbox]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -155,25 +174,6 @@ export default function PublicEventPage() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
-  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
-  const prevLightbox = useCallback(() => {
-    setLightboxIndex((i) => (i === null ? null : (i - 1 + gallery.length) % gallery.length));
-  }, [gallery.length]);
-  const nextLightbox = useCallback(() => {
-    setLightboxIndex((i) => (i === null ? null : (i + 1) % gallery.length));
-  }, [gallery.length]);
-
-  useEffect(() => {
-    if (lightboxIndex === null) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeLightbox();
-      else if (e.key === "ArrowLeft") prevLightbox();
-      else if (e.key === "ArrowRight") nextLightbox();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [lightboxIndex, closeLightbox, prevLightbox, nextLightbox]);
 
   return (
     <div className="min-h-screen bg-background">
