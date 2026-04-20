@@ -1,4 +1,5 @@
-import { Image, Plus, Trash2 } from "lucide-react";
+import { Image, Plus, Trash2, ArrowUp, ArrowDown, X } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,8 @@ import { AiFieldActions } from "./AiFieldActions";
 import MediaPicker from "@/components/MediaPicker";
 import type { EventFormState } from "./useEventForm";
 import type { Tables } from "@/integrations/supabase/types";
+
+const MAX_GALLERY = 12;
 
 interface StepMediaProps {
   form: EventFormState;
@@ -32,9 +35,31 @@ export function StepMedia({
 }: StepMediaProps) {
   const categoryName = categories.find((c) => c.id === form.category)?.name || "";
   const eventContext = { title: form.title, category: categoryName, description: form.shortDescription };
+  const [galleryPickerOpen, setGalleryPickerOpen] = useState(false);
 
   const handleImageSelect = (mediaId: string, url: string) => {
     updateForm({ featuredImageId: mediaId, featuredImageUrl: url });
+  };
+
+  const handleGalleryAdd = (items: { id: string; url: string }[]) => {
+    const existing = new Set(form.gallery.map((g) => g.mediaId));
+    const fresh = items
+      .filter((i) => !existing.has(i.id))
+      .map((i) => ({ mediaId: i.id, url: i.url }));
+    const combined = [...form.gallery, ...fresh].slice(0, MAX_GALLERY);
+    updateForm({ gallery: combined });
+  };
+
+  const moveGallery = (i: number, dir: -1 | 1) => {
+    const next = [...form.gallery];
+    const j = i + dir;
+    if (j < 0 || j >= next.length) return;
+    [next[i], next[j]] = [next[j], next[i]];
+    updateForm({ gallery: next });
+  };
+
+  const removeGallery = (i: number) => {
+    updateForm({ gallery: form.gallery.filter((_, j) => j !== i) });
   };
 
   return (
@@ -93,6 +118,85 @@ export function StepMedia({
         )}
       </div>
 
+      {/* Gallery */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <Label className="text-sm font-medium">Galerij (extra foto's)</Label>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Worden onder de beschrijving getoond. Klikbaar om te vergroten. Max {MAX_GALLERY} foto's.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setGalleryPickerOpen(true)}
+            disabled={form.gallery.length >= MAX_GALLERY}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Foto toevoegen
+          </Button>
+        </div>
+
+        {form.gallery.length === 0 ? (
+          <div
+            className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/50 transition-all bg-secondary/5"
+            onClick={() => setGalleryPickerOpen(true)}
+          >
+            <Image className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
+            <p className="text-xs text-muted-foreground">Nog geen galerij-foto's. Klik om toe te voegen.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {form.gallery.map((g, i) => (
+              <div
+                key={g.mediaId}
+                className="group relative rounded-lg border border-border overflow-hidden aspect-square bg-secondary/20"
+              >
+                <img src={g.url} alt={`Galerij ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors" />
+                <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    onClick={() => removeGallery(i)}
+                    className="w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:scale-110 transition-transform"
+                    aria-label="Verwijderen"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="absolute bottom-1 left-1 right-1 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    onClick={() => moveGallery(i, -1)}
+                    disabled={i === 0}
+                    className="w-6 h-6 rounded bg-background/80 backdrop-blur text-foreground flex items-center justify-center disabled:opacity-30 hover:bg-background"
+                    aria-label="Naar links"
+                  >
+                    <ArrowUp className="w-3 h-3 -rotate-90" />
+                  </button>
+                  <span className="text-[10px] font-medium text-white drop-shadow">{i + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => moveGallery(i, 1)}
+                    disabled={i === form.gallery.length - 1}
+                    className="w-6 h-6 rounded bg-background/80 backdrop-blur text-foreground flex items-center justify-center disabled:opacity-30 hover:bg-background"
+                    aria-label="Naar rechts"
+                  >
+                    <ArrowDown className="w-3 h-3 -rotate-90" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {form.gallery.length >= MAX_GALLERY && (
+          <p className="text-[11px] text-muted-foreground">Maximum van {MAX_GALLERY} foto's bereikt.</p>
+        )}
+      </div>
+
       {/* Sponsors */}
       <div className="space-y-4">
         <div>
@@ -119,13 +223,23 @@ export function StepMedia({
         </Button>
       </div>
 
-      {/* Unified Media Picker */}
+      {/* Featured Media Picker */}
       <MediaPicker
         open={mediaPickerOpen}
         onOpenChange={setMediaPickerOpen}
         onSelect={handleImageSelect}
         selectedId={form.featuredImageId}
         role="featured"
+      />
+
+      {/* Gallery Multi Picker */}
+      <MediaPicker
+        open={galleryPickerOpen}
+        onOpenChange={setGalleryPickerOpen}
+        onSelect={() => {}}
+        onSelectMulti={handleGalleryAdd}
+        role="gallery"
+        mode="multi"
       />
     </motion.div>
   );

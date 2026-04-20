@@ -408,6 +408,22 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
             </div>
           </TabsContent>
         </Tabs>
+
+        {mode === "multi" && (
+          <div className="flex items-center justify-between border-t border-border pt-3 mt-2">
+            <p className="text-xs text-muted-foreground">
+              {multiSelected.length} foto{multiSelected.length === 1 ? "" : "'s"} geselecteerd
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => { setMultiSelected([]); onOpenChange(false); }}>
+                Annuleren
+              </Button>
+              <Button size="sm" onClick={confirmMulti} disabled={multiSelected.length === 0}>
+                Toevoegen ({multiSelected.length})
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

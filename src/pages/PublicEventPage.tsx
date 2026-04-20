@@ -1,13 +1,14 @@
 import { useParams, Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Calendar, Clock, MapPin, User, Share2, ExternalLink, ChevronLeft,
   Tag, CalendarPlus, MessageCircle, Facebook, Copy, Check, Mail,
-  Instagram, Music, Building2
+  Instagram, Music, Building2, ZoomIn, ChevronRight, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -61,6 +62,7 @@ export default function PublicEventPage() {
   const [sponsors, setSponsors] = useState<Tables<"event_sponsors">[]>([]);
   const [featuredImageUrl, setFeaturedImageUrl] = useState<string | null>(null);
   const [gallery, setGallery] = useState<string[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -260,10 +262,23 @@ export default function PublicEventPage() {
                 <h2 className="font-display text-lg font-bold text-foreground mb-3">Foto's</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {gallery.map((url, i) => (
-                    <a key={i} href={url} target="_blank" rel="noopener noreferrer"
-                      className="rounded-lg overflow-hidden border border-border hover:border-primary/30 transition-colors aspect-square">
-                      <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
-                    </a>
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setLightboxIndex(i)}
+                      className="group relative rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-all aspect-square bg-secondary/20"
+                      aria-label={`Foto ${i + 1} vergroten`}
+                    >
+                      <img
+                        src={url}
+                        alt={`Foto ${i + 1}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                        <ZoomIn className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+                      </div>
+                    </button>
                   ))}
                 </div>
               </motion.div>
