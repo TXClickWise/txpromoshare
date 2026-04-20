@@ -54,10 +54,18 @@ function useSEO(title: string, description: string, image?: string, url?: string
 
 export default function PublicEventPage() {
   const params = useParams<{ slug: string; "*": string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   // Support /e/:slug and /s/*.html (wildcard route)
   const slug = params.slug || (params["*"] ? params["*"].replace(/\.html$/, "") : "");
+
+  // Read language from ?lang=xx (defaults to NL)
+  const langParam = searchParams.get("lang");
+  const activeLang: ContentLanguageCode =
+    langParam && isContentLanguage(langParam) ? langParam : DEFAULT_CONTENT_LANGUAGE;
+
   const [copied, setCopied] = useState(false);
   const [event, setEvent] = useState<Tables<"events"> | null>(null);
+  const [translations, setTranslations] = useState<Tables<"event_translations">[]>([]);
   const [venue, setVenue] = useState<Tables<"venues"> | null>(null);
   const [category, setCategory] = useState<{ name: string; color: string | null } | null>(null);
   const [relatedEvents, setRelatedEvents] = useState<(Tables<"events"> & { _imageUrl?: string })[]>([]);
@@ -67,6 +75,7 @@ export default function PublicEventPage() {
   const [gallery, setGallery] = useState<string[]>([]);
   const [upcomingOccurrences, setUpcomingOccurrences] = useState<Array<{ date: string; start_time: string | null; end_time: string | null; label: string | null }>>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
 
   useEffect(() => {
     async function load() {
