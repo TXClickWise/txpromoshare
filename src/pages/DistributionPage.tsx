@@ -42,6 +42,7 @@ const CHANNEL_DB_MAP: Record<string, string> = {
 };
 
 export default function DistributionPage() {
+  const { t } = useTranslation();
   const { tenantId, tenant } = useTenant();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
