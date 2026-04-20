@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { usePlan } from "@/hooks/usePlan";
+import { UILanguageSwitcher } from "@/components/i18n/UILanguageSwitcher";
 
 const navItems = [
   { to: "/app", icon: LayoutDashboard, label: t.nav.dashboard, end: true },
@@ -127,6 +128,7 @@ export default function AppLayout() {
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex-1" />
+          <UILanguageSwitcher variant="compact" />
         </header>
         <main className="flex-1 p-4 lg:p-6">
           <Outlet />
