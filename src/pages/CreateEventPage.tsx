@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Save, Send, Trash2, FileText, CalendarDays, Image, Megaphone, Send as SendIcon, Repeat, Loader2, CheckCircle2, ExternalLink, Share2, LayoutList } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Send, Trash2, FileText, CalendarDays, Image, Megaphone, Send as SendIcon, Repeat, Loader2, CheckCircle2, ExternalLink, Share2, LayoutList, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WizardProgress } from "@/components/event-wizard/WizardProgress";
 import { StepBasics } from "@/components/event-wizard/StepBasics";
@@ -8,6 +8,7 @@ import { StepDateTime } from "@/components/event-wizard/StepDateTime";
 import { StepMedia } from "@/components/event-wizard/StepMedia";
 import { StepPromotion } from "@/components/event-wizard/StepPromotion";
 import { StepPublish } from "@/components/event-wizard/StepPublish";
+import { StepTranslations } from "@/components/event-wizard/StepTranslations";
 import { OccurrencesTab } from "@/components/event-wizard/OccurrencesTab";
 import { useEventForm } from "@/components/event-wizard/useEventForm";
 import { RecurringEditScopeDialog } from "@/components/event-wizard/RecurringEditScopeDialog";
@@ -28,6 +29,7 @@ const BASE_STEPS = [
 ];
 
 const OCCURRENCES_STEP = { id: 6, label: "Datums", icon: Repeat };
+const TRANSLATIONS_STEP = { id: 7, label: "Vertalingen", icon: Languages };
 
 function formatRelativeTime(date: Date): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -76,7 +78,12 @@ export default function CreateEventPage() {
   const [currentStep, setCurrentStep] = useState(1);
 
   const showOccurrences = ctx.isEditing && ctx.form.isRecurring;
-  const STEPS = showOccurrences ? [...BASE_STEPS, OCCURRENCES_STEP] : BASE_STEPS;
+  const showTranslations = ctx.isEditing && !!ctx.id && !!ctx.tenantId;
+  const STEPS = [
+    ...BASE_STEPS,
+    ...(showOccurrences ? [OCCURRENCES_STEP] : []),
+    ...(showTranslations ? [TRANSLATIONS_STEP] : []),
+  ];
 
   // Browser-level guard for unsaved changes (refresh/close tab)
   useEffect(() => {
@@ -243,6 +250,14 @@ export default function CreateEventPage() {
             defaultEndTime={ctx.form.endTime}
           />
         )}
+        {currentStep === 7 && showTranslations && ctx.id && ctx.tenantId && (
+          <StepTranslations
+            key="translations"
+            eventId={ctx.id}
+            tenantId={ctx.tenantId}
+            form={ctx.form}
+          />
+        )}
       </AnimatePresence>
 
       {/* Navigation buttons */}
@@ -266,7 +281,7 @@ export default function CreateEventPage() {
               Volgende
               <ArrowRight className="w-4 h-4" />
             </Button>
-          ) : currentStep !== 6 ? (
+          ) : currentStep === 5 ? (
             <div className="flex gap-2">
               <Button
                 variant="outline"
