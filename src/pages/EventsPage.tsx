@@ -19,22 +19,10 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type StatusTab = "all" | "draft" | "scheduled" | "published" | "ended_archived" | "recurring";
 
-const statusTabs: { value: StatusTab; label: string; hint?: string }[] = [
-  { value: "all", label: "Alle" },
-  { value: "draft", label: "Concepten" },
-  { value: "scheduled", label: "Gepland" },
-  { value: "published", label: "Live" },
-  { value: "ended_archived", label: "Afgelopen" },
-  { value: "recurring", label: "Terugkerend" },
-];
+function formatDateLong(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
+}
 
-const sortOptions = [
-  { value: "date_desc", label: "Datum (nieuwst)" },
-  { value: "date_asc", label: "Datum (oudst)" },
-  { value: "title_asc", label: "Naam (A-Z)" },
-  { value: "title_desc", label: "Naam (Z-A)" },
-  { value: "updated", label: "Laatst bewerkt" },
-];
 
 export default function EventsPage() {
   const { t } = useTranslation();
