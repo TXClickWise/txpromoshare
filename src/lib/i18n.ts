@@ -173,7 +173,7 @@ export const nl = {
       name: "Pro",
       price: "€69",
       period: "/maand",
-      description: "De complete event operating system-laag voor organisaties die professioneel publiceren, distribueren en opschalen.",
+      description: "De complete event operating system-laag voor organisaties die professioneel willen publiceren, distribueren en opschalen.",
       features: [
         "Onbeperkt actieve evenementen",
         "Onbeperkt widgets",
