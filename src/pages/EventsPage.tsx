@@ -3,7 +3,7 @@ import { Copy, Check, Trash2, Archive } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Plus, Search, LayoutGrid, List, Calendar, Filter, Clock, MapPin, ArrowUpDown, RefreshCw, X } from "lucide-react";
 import { motion } from "framer-motion";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useUILanguage";
 import { EventStatusBadge } from "@/components/EventStatusBadge";
 import { EventActionMenu } from "@/components/EventActionMenu";
 import { EmptyState } from "@/components/EmptyState";
@@ -36,16 +36,30 @@ const sortOptions = [
   { value: "updated", label: "Laatst bewerkt" },
 ];
 
-function formatDateLong(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
-}
-
 export default function EventsPage() {
+  const { t } = useTranslation();
   const [view, setView] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<StatusTab>("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date_desc");
+
+  const statusTabs: { value: StatusTab; label: string }[] = [
+    { value: "all", label: t("events.tab.all") },
+    { value: "draft", label: t("events.tab.draft") },
+    { value: "scheduled", label: t("events.tab.scheduled") },
+    { value: "published", label: t("events.tab.published") },
+    { value: "ended_archived", label: t("events.tab.archived") },
+    { value: "recurring", label: t("events.tab.recurring") },
+  ];
+
+  const sortOptions = [
+    { value: "date_desc", label: t("events.sort.dateDesc") },
+    { value: "date_asc", label: t("events.sort.dateAsc") },
+    { value: "title_asc", label: t("events.sort.titleAsc") },
+    { value: "title_desc", label: t("events.sort.titleDesc") },
+    { value: "updated", label: t("events.sort.updated") },
+  ];
   const [events, setEvents] = useState<any[]>([]);
   const [categories, setCategories] = useState<Tables<"categories">[]>([]);
   const [loading, setLoading] = useState(true);
