@@ -2,7 +2,7 @@ import { Building2, Palette, MapPin, Phone, Mail, Save, Plus, Trash2, Upload, X,
 import { logAudit } from "@/lib/audit";
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useUILanguage";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ function SettingsCard({ title, description, children }: { title: string; descrip
 }
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const { tenant, tenantId, refetch } = useTenant();
   const { effectivePlanId } = usePlan();
 
@@ -165,8 +166,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-display font-bold text-foreground">{t.nav.settings}</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Beheer je organisatie, branding en voorkeuren</p>
+        <h1 className="text-2xl font-display font-bold text-foreground">{t("settings.title")}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("settings.subtitle")}</p>
       </div>
 
       <Tabs defaultValue="organization">
@@ -234,7 +235,7 @@ export default function SettingsPage() {
           </SettingsCard>
 
           <Button size="sm" onClick={saveOrganization} disabled={saving} className="gap-2">
-            <Save className="w-4 h-4" />{saving ? "Opslaan..." : t.common.save}
+            <Save className="w-4 h-4" />{saving ? t("common.saving") : t("common.save")}
           </Button>
         </TabsContent>
 

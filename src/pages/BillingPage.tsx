@@ -1,6 +1,6 @@
 import { Shield, Sparkles, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useUILanguage";
 import { UsageMeter } from "@/components/UsageMeter";
 import { CurrentPlanCard } from "@/components/billing/CurrentPlanCard";
 import { PlanComparisonTable } from "@/components/billing/PlanComparisonTable";
@@ -20,6 +20,7 @@ const STRIPE_PRICES: Record<string, string> = {
 };
 
 export default function BillingPage() {
+  const { t } = useTranslation();
   const { planId, effectivePlanId, hasOverride, overrideEndsAt } = usePlan();
   const { tenantId } = useTenant();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
@@ -101,9 +102,9 @@ export default function BillingPage() {
   return (
     <div className="space-y-6 max-w-5xl pb-12">
       <div>
-        <h1 className="text-2xl font-display font-bold text-foreground">{t.nav.billing}</h1>
+        <h1 className="text-2xl font-display font-bold text-foreground">{t("nav.billing")}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Bekijk je plan, gebruik en relevante uitbreidingen.
+          {t("billing.subtitle")}
         </p>
       </div>
 
@@ -120,7 +121,7 @@ export default function BillingPage() {
       {/* 2. Gebruik */}
       <div className="rounded-2xl bg-card border border-border shadow-card p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-display font-semibold text-foreground text-sm">Gebruik deze periode</h3>
+          <h3 className="font-display font-semibold text-foreground text-sm">{t("billing.usageThisPeriod")}</h3>
           {upgradeKey && (
             <p className="hidden sm:block text-xs text-muted-foreground italic">
               {upgradeReason[upgradeKey]}
@@ -128,16 +129,16 @@ export default function BillingPage() {
           )}
         </div>
         <div className="grid sm:grid-cols-3 gap-5">
-          <UsageMeter metric="events" current={usage.events} label="Actieve evenementen" />
-          <UsageMeter metric="widgets" current={usage.widgets} label="Widgets" />
-          <UsageMeter metric="team" current={usage.team} label="Teamleden" />
+          <UsageMeter metric="events" current={usage.events} label={t("billing.activeEvents")} />
+          <UsageMeter metric="widgets" current={usage.widgets} label={t("billing.widgets")} />
+          <UsageMeter metric="team" current={usage.team} label={t("billing.teamMembers")} />
         </div>
       </div>
 
       {/* 3. Plan-vergelijking */}
       <div>
         <h2 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-          Plannen vergelijken
+          {t("billing.comparePlans")}
         </h2>
         <PlanComparisonTable
           currentPlanId={displayPlanId}

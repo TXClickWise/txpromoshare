@@ -1,7 +1,7 @@
 import { Code2, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useUILanguage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ import type { Database } from "@/integrations/supabase/types";
 type WidgetType = Database["public"]["Enums"]["widget_type"];
 
 export default function WidgetsPage() {
+  const { t } = useTranslation();
   const { tenantId } = useTenant();
   const [widgets, setWidgets] = useState<Tables<"widgets">[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,8 +127,8 @@ export default function WidgetsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">{t.widgets.title}</h1>
-          <p className="text-sm text-muted-foreground mt-1">Embed je agenda of een enkel evenement op je website</p>
+          <h1 className="text-2xl font-display font-bold text-foreground">{t("widgets.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("widgets.subtitle")}</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -149,8 +150,8 @@ export default function WidgetsPage() {
                 <Select value={newType} onValueChange={(v) => { setNewType(v as WidgetType); setNewEventId(""); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="agenda">{t.widgets.agenda}</SelectItem>
-                    <SelectItem value="single_event">{t.widgets.singleEvent}</SelectItem>
+                    <SelectItem value="agenda">{t("widgets.agenda")}</SelectItem>
+                    <SelectItem value="single_event">{t("widgets.singleEvent")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
