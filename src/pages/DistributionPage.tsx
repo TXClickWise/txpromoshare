@@ -77,6 +77,18 @@ export default function DistributionPage() {
     }
   }, [searchParams, publishedEvents, selectedEvent]);
 
+  // Hydrate channel texts from saved DB columns when the selected event changes
+  useEffect(() => {
+    const ev = publishedEvents.find((e) => e.id === selectedEvent);
+    if (!ev) return;
+    const next: Record<string, string> = {};
+    for (const [channelId, column] of Object.entries(CHANNEL_DB_MAP)) {
+      const saved = (ev as unknown as Record<string, string | null>)[column];
+      if (saved && saved.trim()) next[channelId] = saved;
+    }
+    setChannelTexts(next);
+  }, [selectedEvent, publishedEvents]);
+
   // Fetch venue for selected event
   const { data: venue } = useQuery({
     queryKey: ["event-venue", selectedEvent],
