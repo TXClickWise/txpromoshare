@@ -152,8 +152,13 @@ export default function DistributionPage() {
     gbp: `${event.title} — ${dateStr} om ${timeStr}. ${event.short_description || "Bekijk de details op onze pagina."} ${venueName}. Meer informatie: ${publicShareUrl}`,
   };
 
-  const getText = (channel: string) => channelTexts[channel] || defaultTexts[channel as keyof typeof defaultTexts] || "";
-  const setText = (channel: string, text: string) => setChannelTexts((prev) => ({ ...prev, [channel]: text }));
+  const getText = (channel: string) => channelTexts[channel] ?? defaultTexts[channel as keyof typeof defaultTexts] ?? "";
+  const setText = (channel: string, text: string) => {
+    setChannelTexts((prev) => ({ ...prev, [channel]: text }));
+    // Persist to event DB column when one is mapped
+    const dbColumn = CHANNEL_DB_MAP[channel];
+    if (dbColumn) scheduleSave({ [dbColumn]: text });
+  };
 
   const trackAction = async (channel: string) => {
     if (!tenantId || !user) return;
