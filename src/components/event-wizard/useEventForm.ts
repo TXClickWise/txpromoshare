@@ -174,19 +174,33 @@ export function useEventForm() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
 
-  // Autosave for drafts (only when editing or after first save)
+  // Autosave drafts: works for both existing drafts and brand-new events (creates first, then updates).
+  // Skipped for already-published events (those require explicit "Save changes").
   useEffect(() => {
-    if (!isDirty || !autoSavedEventId || !tenantId) return;
+    if (!isDirty || !tenantId) return;
+    if (loadedStatusRef.current === "published" || loadedStatusRef.current === "scheduled") return;
+    if (!form.title.trim()) return;
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     autosaveTimerRef.current = setTimeout(async () => {
-      if (!form.title.trim()) return;
-      const data = buildEventData("draft");
-      const { tenant_id, created_by, ...updateData } = data;
-      const { error } = await supabase.from("events").update(updateData).eq("id", autoSavedEventId);
-      if (!error) {
+      setAutosaving(true);
+      try {
+        const data = buildEventData("draft");
+        if (autoSavedEventId) {
+          const { tenant_id, created_by, ...updateData } = data;
+          const { error } = await supabase.from("events").update(updateData).eq("id", autoSavedEventId);
+          if (error) return;
+        } else {
+          const { data: inserted, error } = await supabase.from("events").insert(data).select("id").single();
+          if (error || !inserted) return;
+          setAutoSavedEventId(inserted.id);
+          // Replace URL silently so refresh works, without triggering a full reload
+          window.history.replaceState(null, "", `/app/events/${inserted.id}`);
+        }
         setLastSavedAt(new Date());
         setIsDirty(false);
         initialFormRef.current = JSON.stringify(form);
+      } finally {
+        setAutosaving(false);
       }
     }, AUTOSAVE_DELAY_MS);
     return () => { if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current); };
