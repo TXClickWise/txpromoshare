@@ -609,7 +609,27 @@ export function useEventForm() {
     }
   }
 
-  async function handleSave() {
+  /**
+   * Bepaalt of een gebruiker een scope-keuze moet maken voor recurring saves.
+   * - Alleen bij bestaand event (eventId aanwezig)
+   * - Recurring aan
+   * - Bestaande occurrences > 0
+   * - Recurrence rule daadwerkelijk gewijzigd t.o.v. snapshot bij load
+   */
+  async function shouldPromptRecurringScope(eventId: string | undefined): Promise<
+    | null
+    | { futureCount: number; totalCount: number; hasManualEdits: boolean }
+  > {
+    if (!eventId || !form.isRecurring) return null;
+    if (!initialRecurrenceRef.current) return null;
+    const current = recurrenceSignature(form);
+    if (current === initialRecurrenceRef.current) return null;
+    const info = await inspectExistingOccurrences(eventId);
+    if (info.total === 0) return null;
+    return info;
+  }
+
+  async function performSave(scope: RecurringEditScope = "future") {
     if (!tenantId || !form.title.trim()) {
       toast.error("Vul minimaal een titel in om op te slaan");
       return false;
@@ -631,7 +651,7 @@ export function useEventForm() {
     if (!error && eventId) {
       await saveSponsors(eventId);
       await saveGallery(eventId);
-      if (form.isRecurring) await generateOccurrences(eventId);
+      if (form.isRecurring) await generateOccurrences(eventId, scope);
     }
     setSaving(false);
     if (error) {
@@ -641,6 +661,7 @@ export function useEventForm() {
     setIsDirty(false);
     setLastSavedAt(new Date());
     initialFormRef.current = JSON.stringify(form);
+    initialRecurrenceRef.current = recurrenceSignature(form);
     toast.success("Concept opgeslagen ✓");
     logAudit({ tenantId, entityType: "event", action: isEditing ? "updated" : "created", entityId: eventId });
     if (isEditing && eventId && loadedStatusRef.current === "published") {
@@ -652,7 +673,17 @@ export function useEventForm() {
     return true;
   }
 
-  async function handlePublish() {
+  async function handleSave() {
+    const eventId = id || autoSavedEventId;
+    const prompt = await shouldPromptRecurringScope(eventId);
+    if (prompt) {
+      setPendingRecurringSave({ intent: "save", ...prompt });
+      return false;
+    }
+    return performSave("future");
+  }
+
+  async function performPublish(scope: RecurringEditScope = "future") {
     const validation = validateStep(5);
     if (!validation.isValid) {
       validation.errors.forEach(err => toast.error(err));
@@ -676,7 +707,7 @@ export function useEventForm() {
     if (!error && eventId) {
       await saveSponsors(eventId);
       await saveGallery(eventId);
-      if (form.isRecurring) await generateOccurrences(eventId);
+      if (form.isRecurring) await generateOccurrences(eventId, scope);
     }
     setSaving(false);
     if (error) {
@@ -685,6 +716,7 @@ export function useEventForm() {
     }
     setIsDirty(false);
     initialFormRef.current = JSON.stringify(form);
+    initialRecurrenceRef.current = recurrenceSignature(form);
     const syncEventType = isEditing && loadedStatusRef.current === "published"
       ? "event.updated"
       : "event.published";
@@ -692,11 +724,32 @@ export function useEventForm() {
     if (status === "published" && eventId) {
       triggerClickWiseSync(tenantId, syncEventType, eventId, { title: form.title, slug: form.slug });
     }
-    // Surface success modal instead of toast+redirect
     setPublishedEventId(eventId!);
     setPublishedStatus(status as "published" | "scheduled");
     loadedStatusRef.current = status;
     return true;
+  }
+
+  async function handlePublish() {
+    const eventId = id || autoSavedEventId;
+    const prompt = await shouldPromptRecurringScope(eventId);
+    if (prompt) {
+      setPendingRecurringSave({ intent: "publish", ...prompt });
+      return false;
+    }
+    return performPublish("future");
+  }
+
+  async function confirmRecurringScope(scope: RecurringEditScope) {
+    const intent = pendingRecurringSave?.intent;
+    setPendingRecurringSave(null);
+    if (intent === "publish") return performPublish(scope);
+    if (intent === "save") return performSave(scope);
+    return false;
+  }
+
+  function cancelRecurringScope() {
+    setPendingRecurringSave(null);
   }
 
   function dismissPublishSuccess() {
