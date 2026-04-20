@@ -29,6 +29,18 @@ function buildGoogleCalendarUrl(event: Tables<"events">, venueName: string) {
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${start}/${end}&location=${encodeURIComponent(venueName)}&details=${encodeURIComponent(event.short_description || "")}`;
 }
 
+/** Map internal channel/variant id -> events table column for autosave */
+const CHANNEL_DB_MAP: Record<string, string> = {
+  whatsapp: "whatsapp_share_text",
+  whatsapp_short: "whatsapp_share_text_short",
+  instagram: "instagram_share_text",
+  social: "social_share_text",
+  teaser: "teaser_text",
+  promo: "long_promo_text",
+  newsletter: "newsletter_intro",
+  website: "website_snippet",
+};
+
 export default function DistributionPage() {
   const { tenantId, tenant } = useTenant();
   const { user } = useAuth();
