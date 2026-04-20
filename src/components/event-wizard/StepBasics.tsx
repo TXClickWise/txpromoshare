@@ -22,7 +22,7 @@ export function StepBasics({ form, updateForm, categories }: StepBasicsProps) {
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
       <div className="space-y-1">
         <h2 className="text-xl font-display font-bold text-foreground">Basis</h2>
-        <p className="text-sm text-muted-foreground">Geef je evenement een naam en korte omschrijving.</p>
+        <p className="text-sm text-muted-foreground">Begin met een pakkende titel — de rest vult zich vanzelf aan via slimme defaults.</p>
       </div>
 
       {/* AI Quick Start - only show for new events without title */}
