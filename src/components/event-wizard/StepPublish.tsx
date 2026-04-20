@@ -1,7 +1,9 @@
-import { Globe, CalendarClock, Star, Send, Save, Eye, ExternalLink, AlertCircle } from "lucide-react";
+import { Globe, CalendarClock, Star, Send, Save, Eye, ExternalLink, AlertCircle, Smartphone, Monitor } from "lucide-react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
