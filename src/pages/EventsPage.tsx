@@ -102,7 +102,38 @@ export default function EventsPage() {
       .select("*, featured_image:media!events_featured_image_id_fkey(storage_path, original_url), venue:venues(name, city)")
       .eq("tenant_id", tenantId)
       .order("start_date", { ascending: false });
-    setEvents(data || []);
+
+    const list = data || [];
+
+    // Enrich recurring events with next upcoming occurrence
+    const recurringIds = list.filter((e: any) => e.is_recurring).map((e: any) => e.id);
+    if (recurringIds.length > 0) {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: occs } = await supabase
+        .from("event_occurrences")
+        .select("event_id, occurrence_date, start_time, status")
+        .in("event_id", recurringIds)
+        .eq("status", "active")
+        .gte("occurrence_date", today)
+        .order("occurrence_date", { ascending: true });
+
+      const nextByEvent = new Map<string, { date: string; time: string | null }>();
+      (occs || []).forEach((o: any) => {
+        if (!nextByEvent.has(o.event_id)) {
+          nextByEvent.set(o.event_id, { date: o.occurrence_date, time: o.start_time });
+        }
+      });
+
+      list.forEach((e: any) => {
+        if (e.is_recurring && nextByEvent.has(e.id)) {
+          const next = nextByEvent.get(e.id)!;
+          e._nextDate = next.date;
+          e._nextTime = next.time;
+        }
+      });
+    }
+
+    setEvents(list);
     setLoading(false);
   }
 
@@ -157,12 +188,14 @@ export default function EventsPage() {
     })
     .filter((e) => categoryFilter === "all" || e.category_id === categoryFilter)
     .sort((a, b) => {
+      const aDate = a._nextDate || a.start_date;
+      const bDate = b._nextDate || b.start_date;
       switch (sortBy) {
-        case "date_asc": return a.start_date.localeCompare(b.start_date);
+        case "date_asc": return aDate.localeCompare(bDate);
         case "title_asc": return a.title.localeCompare(b.title);
         case "title_desc": return b.title.localeCompare(a.title);
         case "updated": return b.updated_at.localeCompare(a.updated_at);
-        default: return b.start_date.localeCompare(a.start_date);
+        default: return bDate.localeCompare(aDate);
       }
     });
 
@@ -363,7 +396,14 @@ export default function EventsPage() {
                     <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                       <span className="flex items-center gap-1 font-medium text-foreground/80">
                         <Clock className="w-3 h-3" />
-                        {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.start_time?.slice(0, 5)}
+                        {event.is_recurring && event._nextDate ? (
+                          <>
+                            {new Date(event._nextDate).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {(event._nextTime || event.start_time)?.slice(0, 5)}
+                            <span className="text-accent ml-1">(volgende)</span>
+                          </>
+                        ) : (
+                          <>{new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.start_time?.slice(0, 5)}</>
+                        )}
                       </span>
                       {event.venue?.name && (
                         <span className="flex items-center gap-1 truncate">
@@ -444,10 +484,21 @@ export default function EventsPage() {
                     )}
                   </div>
                   <div className="w-32 hidden sm:block">
-                    <p className="text-xs font-medium text-foreground">
-                      {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">{event.start_time?.slice(0, 5)}</p>
+                    {event.is_recurring && event._nextDate ? (
+                      <>
+                        <p className="text-xs font-medium text-foreground">
+                          {new Date(event._nextDate).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}
+                        </p>
+                        <p className="text-[11px] text-accent">volgende · {(event._nextTime || event.start_time)?.slice(0, 5)}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xs font-medium text-foreground">
+                          {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">{event.start_time?.slice(0, 5)}</p>
+                      </>
+                    )}
                   </div>
                   <div className="w-20">
                     <EventStatusBadge status={event.status} />

@@ -62,6 +62,7 @@ export default function PublicEventPage() {
   const [sponsors, setSponsors] = useState<Tables<"event_sponsors">[]>([]);
   const [featuredImageUrl, setFeaturedImageUrl] = useState<string | null>(null);
   const [gallery, setGallery] = useState<string[]>([]);
+  const [upcomingOccurrences, setUpcomingOccurrences] = useState<Array<{ date: string; start_time: string | null; end_time: string | null; label: string | null }>>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -102,6 +103,29 @@ export default function PublicEventPage() {
         .map((g: any) => g.media?.original_url)
         .filter(Boolean);
       setGallery(galleryUrls);
+
+      // Upcoming occurrences for recurring events
+      if (ev.is_recurring) {
+        const today = new Date().toISOString().slice(0, 10);
+        const { data: occs } = await supabase
+          .from("event_occurrences")
+          .select("occurrence_date, start_time, end_time, label, status")
+          .eq("event_id", ev.id)
+          .eq("status", "active")
+          .gte("occurrence_date", today)
+          .order("occurrence_date", { ascending: true })
+          .limit(8);
+        setUpcomingOccurrences(
+          (occs || []).map((o: any) => ({
+            date: o.occurrence_date,
+            start_time: o.start_time,
+            end_time: o.end_time,
+            label: o.label,
+          }))
+        );
+      } else {
+        setUpcomingOccurrences([]);
+      }
 
       setLoading(false);
     }
@@ -273,6 +297,46 @@ export default function PublicEventPage() {
                 </div>
               )}
             </motion.div>
+
+            {/* Komende data — recurring */}
+            {event.is_recurring && upcomingOccurrences.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
+                className="rounded-xl bg-card border border-border shadow-card p-6">
+                <h2 className="font-display text-lg font-bold text-foreground mb-1 flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-primary" />Komende data
+                </h2>
+                <p className="text-xs text-muted-foreground mb-4">Dit evenement vindt meerdere keren plaats. Hieronder de eerstvolgende data:</p>
+                <ul className="divide-y divide-border">
+                  {upcomingOccurrences.slice(0, 6).map((o, i) => {
+                    const time = (o.start_time || event.start_time)?.slice(0, 5);
+                    const endTime = (o.end_time || event.end_time)?.slice(0, 5);
+                    return (
+                      <li key={i} className="flex items-center gap-3 py-2.5">
+                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex flex-col items-center justify-center shrink-0">
+                          <span className="text-[10px] font-semibold uppercase text-primary leading-none">
+                            {new Date(o.date).toLocaleDateString("nl-NL", { month: "short" }).replace(".", "")}
+                          </span>
+                          <span className="text-base font-bold text-foreground leading-none mt-0.5">
+                            {new Date(o.date).getDate()}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground capitalize">
+                            {new Date(o.date).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" })}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {time}{endTime ? ` – ${endTime}` : ""}{o.label ? ` · ${o.label}` : ""}
+                          </p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                {upcomingOccurrences.length > 6 && (
+                  <p className="text-[11px] text-muted-foreground mt-3">+ nog {upcomingOccurrences.length - 6} data</p>
+                )}
+              </motion.div>
+            )}
 
             {/* Gallery */}
             {gallery.length > 0 && (
