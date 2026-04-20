@@ -19,26 +19,45 @@ const metricLabels: Record<string, string> = {
 export function UsageMeter({ metric, current, label }: UsageMeterProps) {
   const { limits, usagePercent, isAtLimit } = usePlan();
   const percent = usagePercent(metric, current);
-  const max = metric === "events" ? limits.maxActiveEvents : metric === "widgets" ? limits.maxWidgets : limits.maxTeamMembers;
+  const max =
+    metric === "events" ? limits.maxActiveEvents : metric === "widgets" ? limits.maxWidgets : limits.maxTeamMembers;
   const atLimit = isAtLimit(metric, current);
   const nearLimit = percent >= 80;
+  const isUnlimited = max === Infinity;
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <div className="flex items-center justify-between text-xs">
         <span className="font-medium text-foreground">{label}</span>
-        <span className={cn("text-muted-foreground", atLimit && "text-destructive font-semibold")}>
-          {current} / {max === Infinity ? "∞" : max}
+        <span
+          className={cn(
+            "tabular-nums",
+            atLimit ? "text-foreground font-semibold" : "text-muted-foreground",
+          )}
+        >
+          {current} <span className="text-muted-foreground/70">/ {isUnlimited ? "onbeperkt" : max}</span>
         </span>
       </div>
-      <Progress value={max === Infinity ? 0 : percent} className={cn("h-2", atLimit && "[&>div]:bg-destructive")} />
-      {atLimit && (
-        <Link to="/app/billing" className="flex items-center gap-1 text-[11px] text-primary font-medium hover:underline">
-          Upgrade voor meer {metricLabels[metric]} <ArrowRight className="w-3 h-3" />
+      <Progress
+        value={isUnlimited ? 100 : percent}
+        className={cn(
+          "h-1.5",
+          isUnlimited && "[&>div]:bg-accent/60",
+          atLimit && "[&>div]:bg-primary",
+          !atLimit && nearLimit && "[&>div]:bg-amber-500",
+        )}
+      />
+      {atLimit && !isUnlimited && (
+        <Link
+          to="/app/billing"
+          className="inline-flex items-center gap-1 text-[11px] text-primary font-medium hover:underline"
+        >
+          Limiet bereikt — bekijk opties voor meer {metricLabels[metric]}
+          <ArrowRight className="w-3 h-3" />
         </Link>
       )}
       {nearLimit && !atLimit && (
-        <p className="text-[11px] text-amber-500">Je nadert je limiet</p>
+        <p className="text-[11px] text-muted-foreground">Je nadert je limiet ({percent}%)</p>
       )}
     </div>
   );

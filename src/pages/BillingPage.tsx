@@ -1,33 +1,29 @@
-import { CreditCard, Check, ArrowRight, Sparkles, Shield, ExternalLink, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { Shield, Sparkles, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { t } from "@/lib/i18n";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { UsageMeter } from "@/components/UsageMeter";
+import { CurrentPlanCard } from "@/components/billing/CurrentPlanCard";
+import { PlanComparisonTable } from "@/components/billing/PlanComparisonTable";
+import { AddOnsSection } from "@/components/billing/AddOnsSection";
 import { usePlan } from "@/hooks/usePlan";
 import { useTenant } from "@/hooks/useTenant";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
-import { STRIPE_PLAN_PRICES } from "@/lib/stripePrices";
+import { STRIPE_PLAN_PRICES, type AddonDefinition } from "@/lib/stripePrices";
+import { upgradeReason } from "@/lib/planPricing";
+import type { PlanId } from "@/lib/plans";
 
-// Stripe price IDs (excl. 21% btw)
 const STRIPE_PRICES: Record<string, string> = {
   basic: STRIPE_PLAN_PRICES.basic,
   pro: STRIPE_PLAN_PRICES.pro,
 };
 
-const plans = [
-  { ...t.plans.free, id: "free" as const },
-  { ...t.plans.basic, id: "basic" as const },
-  { ...t.plans.pro, id: "pro" as const },
-];
-
 export default function BillingPage() {
   const { planId, effectivePlanId, hasOverride, overrideEndsAt } = usePlan();
   const { tenantId } = useTenant();
-  const [loading, setLoading] = useState<string | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [loadingAddon, setLoadingAddon] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const [searchParams] = useSearchParams();
   const [usage, setUsage] = useState({ events: 0, widgets: 0, team: 0 });
@@ -35,7 +31,6 @@ export default function BillingPage() {
 
   useEffect(() => {
     if (!tenantId) return;
-    // Refresh usage counts from DB
     supabase.rpc("refresh_tenant_usage", { _tenant_id: tenantId }).then(() => {
       supabase.from("usage_tracking").select("metric, current_value").eq("tenant_id", tenantId).then(({ data }) => {
         const u = { events: 0, widgets: 0, team: 0 };
@@ -49,12 +44,9 @@ export default function BillingPage() {
 
   useEffect(() => {
     if (searchParams.get("success") === "true") {
-      toast.success("Abonnement succesvol geactiveerd! Je plan wordt bijgewerkt.");
-      // Trigger subscription check to sync
+      toast.success("Gelukt — je plan wordt bijgewerkt.");
       supabase.functions.invoke("check-subscription").then(({ data }) => {
-        if (data?.plan_id) {
-          window.location.reload();
-        }
+        if (data?.plan_id) window.location.reload();
       });
     }
     if (searchParams.get("canceled") === "true") {
@@ -62,23 +54,31 @@ export default function BillingPage() {
     }
   }, [searchParams]);
 
-  async function handleCheckout(targetPlanId: string) {
+  async function handleCheckout(targetPlanId: PlanId) {
     const priceId = STRIPE_PRICES[targetPlanId];
     if (!priceId) return;
-
-    setLoading(targetPlanId);
+    setLoadingPlan(targetPlanId);
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId },
-      });
+      const { data, error } = await supabase.functions.invoke("create-checkout", { body: { priceId } });
       if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, "_blank");
-      }
+      if (data?.url) window.open(data.url, "_blank");
     } catch (err: any) {
       toast.error("Checkout kon niet worden gestart: " + (err.message || "Onbekende fout"));
     } finally {
-      setLoading(null);
+      setLoadingPlan(null);
+    }
+  }
+
+  async function handleAddon(addon: AddonDefinition) {
+    setLoadingAddon(addon.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", { body: { priceId: addon.priceId } });
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+    } catch (err: any) {
+      toast.error("Add-on kon niet worden gestart: " + (err.message || "Onbekende fout"));
+    } finally {
+      setLoadingAddon(null);
     }
   }
 
@@ -87,9 +87,7 @@ export default function BillingPage() {
     try {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, "_blank");
-      }
+      if (data?.url) window.open(data.url, "_blank");
     } catch (err: any) {
       toast.error("Portal kon niet worden geopend: " + (err.message || "Onbekende fout"));
     } finally {
@@ -97,143 +95,85 @@ export default function BillingPage() {
     }
   }
 
+  const upgradeKey =
+    displayPlanId === "free" ? "free-to-basic" : displayPlanId === "basic" ? "basic-to-pro" : null;
+
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-5xl pb-12">
       <div>
         <h1 className="text-2xl font-display font-bold text-foreground">{t.nav.billing}</h1>
-        <p className="text-sm text-muted-foreground mt-1">Beheer je abonnement en bekijk je gebruik</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Bekijk je plan, gebruik en relevante uitbreidingen.
+        </p>
       </div>
 
-      {/* Current plan */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl gradient-hero flex items-center justify-center">
-              <CreditCard className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h3 className="font-display font-bold text-foreground">{displayPlanId.charAt(0).toUpperCase() + displayPlanId.slice(1)} plan</h3>
-              <p className="text-sm text-muted-foreground">
-                {hasOverride
-                  ? `Tijdelijke override${overrideEndsAt ? ` · tot ${new Date(overrideEndsAt).toLocaleDateString("nl-NL")}` : ""} · basisabonnement ${planId}`
-                  : displayPlanId === "free"
-                    ? "Gratis · Geen factuurperiode"
-                    : displayPlanId === "basic"
-                      ? "€24/maand · excl. btw"
-                      : "€69/maand · excl. btw"}
-              </p>
-            </div>
-          </div>
-          {planId !== "free" && (
-            <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
-              {portalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <ExternalLink className="w-3 h-3 mr-1" />}
-              Beheer abonnement
-            </Button>
+      {/* 1. Huidig plan */}
+      <CurrentPlanCard
+        planId={planId}
+        effectivePlanId={effectivePlanId}
+        hasOverride={hasOverride}
+        overrideEndsAt={overrideEndsAt}
+        onManage={handleManageSubscription}
+        manageLoading={portalLoading}
+      />
+
+      {/* 2. Gebruik */}
+      <div className="rounded-2xl bg-card border border-border shadow-card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-display font-semibold text-foreground text-sm">Gebruik deze periode</h3>
+          {upgradeKey && (
+            <p className="hidden sm:block text-xs text-muted-foreground italic">
+              {upgradeReason[upgradeKey]}
+            </p>
           )}
         </div>
-      </motion.div>
-
-      {/* Usage */}
-      <div className="rounded-xl bg-card border border-border shadow-card p-6">
-        <h3 className="font-display font-semibold text-foreground text-sm mb-4">Gebruik deze periode</h3>
-        <div className="space-y-4">
+        <div className="grid sm:grid-cols-3 gap-5">
           <UsageMeter metric="events" current={usage.events} label="Actieve evenementen" />
           <UsageMeter metric="widgets" current={usage.widgets} label="Widgets" />
           <UsageMeter metric="team" current={usage.team} label="Teamleden" />
         </div>
       </div>
 
-      {/* Plan comparison */}
+      {/* 3. Plan-vergelijking */}
       <div>
-        <h2 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider mb-4">Alle plannen vergelijken</h2>
-        <div className="grid md:grid-cols-3 gap-4">
-          {plans.map((plan, i) => {
-            const isCurrent = plan.id === displayPlanId;
-            const isUpgrade = (displayPlanId === "free" && plan.id !== "free") || (displayPlanId === "basic" && plan.id === "pro");
-            const isDowngrade = (displayPlanId === "pro" && plan.id !== "pro") || (displayPlanId === "basic" && plan.id === "free");
-            const isLoading = loading === plan.id;
-            return (
-              <motion.div
-                key={plan.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className={cn(
-                  "rounded-xl p-5 border flex flex-col relative",
-                  isCurrent ? "border-primary bg-primary/5 shadow-glow" : "border-border bg-card shadow-card"
-                )}
-              >
-                {isCurrent && (
-                  <div className="absolute -top-2.5 left-4 px-2.5 py-0.5 rounded-full gradient-hero text-primary-foreground text-[10px] font-bold">
-                    Huidig plan
-                  </div>
-                )}
-                {plan.id === "pro" && !isCurrent && (
-                  <div className="absolute -top-2.5 left-4 px-2.5 py-0.5 rounded-full gradient-accent text-accent-foreground text-[10px] font-bold flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" />Aanbevolen
-                  </div>
-                )}
-                <h3 className="font-display font-bold text-foreground mt-1">{plan.name}</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">{plan.description}</p>
-                <p className="text-3xl font-display font-bold text-foreground mt-3">{plan.price}<span className="text-sm text-muted-foreground font-normal">{plan.period}</span></p>
-                <ul className="mt-4 space-y-2 flex-1">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-xs">
-                      <Check className="w-3 h-3 text-accent shrink-0 mt-0.5" />
-                      <span className="text-foreground">{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  variant={isCurrent ? "outline" : "default"}
-                  size="sm"
-                  className={cn("mt-4", isUpgrade && plan.id === "pro" && "gradient-hero text-primary-foreground border-0")}
-                  disabled={isCurrent || plan.id === "free" || !!loading}
-                  onClick={() => {
-                    if (isUpgrade) {
-                      handleCheckout(plan.id);
-                    } else if (isDowngrade) {
-                      handleManageSubscription();
-                    }
-                  }}
-                >
-                  {isLoading ? (
-                    <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Even geduld...</>
-                  ) : isCurrent ? (
-                    "Huidig plan"
-                  ) : isDowngrade ? (
-                    <>Beheer abonnement<ExternalLink className="w-3 h-3 ml-1" /></>
-                  ) : plan.id === "free" ? (
-                    "Gratis plan"
-                  ) : (
-                    <>Upgraden<ArrowRight className="w-3 h-3 ml-1" /></>
-                  )}
-                </Button>
-              </motion.div>
-            );
-          })}
-        </div>
+        <h2 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+          Plannen vergelijken
+        </h2>
+        <PlanComparisonTable
+          currentPlanId={displayPlanId}
+          loadingPlan={loadingPlan}
+          onUpgrade={handleCheckout}
+          onManage={handleManageSubscription}
+        />
       </div>
 
-      {/* Ticketing upsell teaser */}
-      <div className="rounded-xl border border-dashed border-primary/20 bg-primary/5 p-5 flex items-start gap-3">
-        <Sparkles className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+      {/* 4. Add-ons */}
+      <AddOnsSection planId={displayPlanId} loadingAddon={loadingAddon} onAdd={handleAddon} />
+
+      {/* 5. Ticketing teaser — ondergeschikt */}
+      <div className="rounded-xl border border-dashed border-border bg-secondary/40 p-4 flex items-start gap-3">
+        <Sparkles className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-foreground">🎟️ Ticketing module — binnenkort beschikbaar</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Verkoop tickets direct via je evenementpagina. Beschikbaar als add-on voor Pro plan gebruikers.
-            Inclusief QR-scanning, betalingen en bezoekersbeheer.
+          <p className="text-xs font-semibold text-foreground">Ticketing module · binnenkort</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Verkoop tickets vanaf je eigen pagina, met QR-scanning en bezoekersbeheer. Pro gebruikers krijgen als eerste toegang.
           </p>
-          <p className="text-xs text-primary font-medium mt-2">Pro plan gebruikers krijgen als eerste toegang</p>
         </div>
       </div>
 
-      <div className="rounded-xl border border-dashed border-border p-4 flex items-start gap-3">
-        <Shield className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-        <p className="text-xs text-muted-foreground">
-          💳 Betalingen worden veilig afgehandeld via Stripe. Je creditcard- of betaalgegevens worden nooit op ons platform opgeslagen.
+      {/* 6. Trust */}
+      <div className="rounded-xl border border-dashed border-border p-3 flex items-start gap-2">
+        <Shield className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+        <p className="text-[11px] text-muted-foreground">
+          Betalingen verlopen veilig via Stripe. Je betaalgegevens worden nooit op TX EventShare opgeslagen.
         </p>
       </div>
+
+      {portalLoading && (
+        <div className="fixed bottom-4 right-4 bg-card border border-border rounded-lg px-3 py-2 shadow-elevated flex items-center gap-2 text-xs">
+          <Loader2 className="w-3 h-3 animate-spin" /> Portal openen…
+        </div>
+      )}
     </div>
   );
 }
