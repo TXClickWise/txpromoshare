@@ -275,19 +275,6 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
       })}
     </div>
   );
-            <div className="absolute bottom-0 left-0 right-0 px-1.5 py-1 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-              <p className="text-[9px] text-white truncate">{item.filename}</p>
-            </div>
-            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Badge variant="secondary" className="text-[8px] h-4 bg-black/50 text-white border-0">
-                {item.source === "stock" ? "Stock" : "Upload"}
-              </Badge>
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
