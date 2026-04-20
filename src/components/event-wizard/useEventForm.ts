@@ -144,6 +144,15 @@ export function useEventForm() {
   const initialFormRef = useRef<string>("");
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadedStatusRef = useRef<string>("draft");
+  // Original recurrence snapshot to detect actual rule changes
+  const initialRecurrenceRef = useRef<string>("");
+  // Pending recurring save awaiting scope choice
+  const [pendingRecurringSave, setPendingRecurringSave] = useState<null | {
+    intent: "save" | "publish";
+    futureCount: number;
+    totalCount: number;
+    hasManualEdits: boolean;
+  }>(null);
 
   const updateForm = useCallback((updates: Partial<EventFormState>) => {
     setForm(prev => {
