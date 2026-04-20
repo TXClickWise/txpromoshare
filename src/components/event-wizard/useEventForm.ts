@@ -466,19 +466,44 @@ export function useEventForm() {
     const dates = generatePreviewDates(form);
     if (dates.length === 0) return;
 
-    // Delete existing occurrences and regenerate
-    await supabase.from("event_occurrences").delete().eq("event_id", eventId);
+    // Load existing occurrences and merge non-destructively (preserves manual edits/overrides/past)
+    const { mergeOccurrences } = await import("@/lib/recurrence");
+    const { data: existing } = await supabase
+      .from("event_occurrences")
+      .select("id, occurrence_date, start_time, end_time, status, label, overrides")
+      .eq("event_id", eventId);
 
-    const rows = dates.map(d => ({
+    const existingTyped = (existing || []).map(o => ({
+      id: o.id,
+      occurrence_date: o.occurrence_date,
+      start_time: o.start_time,
+      end_time: o.end_time,
+      status: o.status,
+      label: o.label,
+      overrides: (o.overrides as Record<string, unknown>) || {},
+    }));
+
+    const merge = mergeOccurrences(
+      dates,
+      existingTyped,
+      form.startTime || null,
+      form.endTime || null,
+    );
+
+    // Delete obsolete (only those without manual edits / not in past)
+    if (merge.toDelete.length > 0) {
+      await supabase.from("event_occurrences").delete().in("id", merge.toDelete);
+    }
+
+    // Insert new dates in batches of 50
+    const rows = merge.toInsert.map(({ occurrence_date }) => ({
       event_id: eventId,
       tenant_id: tenantId,
-      occurrence_date: d,
+      occurrence_date,
       start_time: form.startTime || null,
       end_time: form.endTime || null,
       status: "active" as const,
     }));
-
-    // Insert in batches of 50
     for (let i = 0; i < rows.length; i += 50) {
       const batch = rows.slice(i, i + 50);
       await supabase.from("event_occurrences").insert(batch);
