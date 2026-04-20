@@ -9,16 +9,18 @@ import { STRIPE_ADDONS } from "@/lib/stripePrices";
 
 type PlanId = "free" | "basic" | "pro";
 
-const plans: Array<{
+interface PlanCard {
   id: PlanId;
   name: string;
   price: string;
   period: string;
   description: string;
-  features: string[];
+  features: readonly string[];
   popular: boolean;
   cta: string;
-}> = [
+}
+
+const plans: PlanCard[] = [
   { ...t.plans.free, id: "free", popular: false, cta: "Start gratis" },
   { ...t.plans.basic, id: "basic", popular: true, cta: "Start met Basic" },
   { ...t.plans.pro, id: "pro", popular: false, cta: "Kies Pro" },
