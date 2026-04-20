@@ -29,6 +29,7 @@ GET /v1/tenants/{tenant_slug}/events
 | `category` | string  | —             | Filter op category-slug                            |
 | `limit`    | int     | 20 (max 100)  | Max aantal events per response                     |
 | `offset`   | int     | 0             | Pagination offset                                  |
+| `lang`     | `nl` \| `en` \| `de` \| `fy` | `nl` | Taal van titels/beschrijvingen — valt per veld terug op NL als de vertaling ontbreekt |
 
 **Response 200**
 
