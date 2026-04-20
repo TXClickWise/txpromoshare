@@ -102,7 +102,38 @@ export default function EventsPage() {
       .select("*, featured_image:media!events_featured_image_id_fkey(storage_path, original_url), venue:venues(name, city)")
       .eq("tenant_id", tenantId)
       .order("start_date", { ascending: false });
-    setEvents(data || []);
+
+    const list = data || [];
+
+    // Enrich recurring events with next upcoming occurrence
+    const recurringIds = list.filter((e: any) => e.is_recurring).map((e: any) => e.id);
+    if (recurringIds.length > 0) {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: occs } = await supabase
+        .from("event_occurrences")
+        .select("event_id, occurrence_date, start_time, status")
+        .in("event_id", recurringIds)
+        .eq("status", "active")
+        .gte("occurrence_date", today)
+        .order("occurrence_date", { ascending: true });
+
+      const nextByEvent = new Map<string, { date: string; time: string | null }>();
+      (occs || []).forEach((o: any) => {
+        if (!nextByEvent.has(o.event_id)) {
+          nextByEvent.set(o.event_id, { date: o.occurrence_date, time: o.start_time });
+        }
+      });
+
+      list.forEach((e: any) => {
+        if (e.is_recurring && nextByEvent.has(e.id)) {
+          const next = nextByEvent.get(e.id)!;
+          e._nextDate = next.date;
+          e._nextTime = next.time;
+        }
+      });
+    }
+
+    setEvents(list);
     setLoading(false);
   }
 
