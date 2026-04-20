@@ -40,6 +40,7 @@ export function PublicLanguageSwitcher({
           variant="ghost"
           size="sm"
           aria-label="Content language"
+          style={{ marginBottom: "max(0px, env(safe-area-inset-bottom, 0px))" }}
           className={`gap-1.5 backdrop-blur-sm bg-white/10 text-white hover:bg-white/20 hover:text-white border-0 h-7 px-2 ${className ?? ""}`}
         >
           <Globe className="h-3.5 w-3.5" />

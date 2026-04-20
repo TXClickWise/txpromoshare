@@ -10,11 +10,13 @@ interface WidgetPreviewProps {
 export function WidgetPreview({ widget }: WidgetPreviewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [viewport, setViewport] = useState<"desktop" | "mobile">("desktop");
+  const [version, setVersion] = useState<"1" | "2">("2");
   const [refreshKey, setRefreshKey] = useState(0);
   const [iframeHeight, setIframeHeight] = useState(420);
 
   const baseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-  const scriptUrl = `${baseUrl}/functions/v1/widget-embed?widget_id=${widget.id}&format=js&_t=${refreshKey}`;
+  const versionParam = version === "2" ? "&v=2" : "";
+  const scriptUrl = `${baseUrl}/functions/v1/widget-embed?widget_id=${widget.id}&format=js${versionParam}&_t=${refreshKey}`;
 
   // Inject postMessage-based auto-resize so iframe height matches content
   const previewHtml = `<!DOCTYPE html>
@@ -57,8 +59,26 @@ export function WidgetPreview({ widget }: WidgetPreviewProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Live preview</p>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Live preview</p>
+          <div className="flex gap-0.5 rounded-md border border-border bg-card p-0.5">
+            <button
+              type="button"
+              onClick={() => setVersion("1")}
+              className={`text-[10px] px-2 py-0.5 rounded ${version === "1" ? "bg-secondary text-foreground font-medium" : "text-muted-foreground"}`}
+            >
+              v1
+            </button>
+            <button
+              type="button"
+              onClick={() => setVersion("2")}
+              className={`text-[10px] px-2 py-0.5 rounded ${version === "2" ? "bg-secondary text-foreground font-medium" : "text-muted-foreground"}`}
+            >
+              v2
+            </button>
+          </div>
+        </div>
         <div className="flex gap-1">
           <Button
             variant={viewport === "desktop" ? "secondary" : "ghost"}
