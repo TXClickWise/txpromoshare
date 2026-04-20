@@ -38,8 +38,9 @@ export default function DistributionPage() {
   const [generating, setGenerating] = useState(false);
   const [rewriting, setRewriting] = useState<string | null>(null);
 
-  // Channel-specific texts state
+  // Channel-specific texts state (in-memory, hydrated from DB on event change)
   const [channelTexts, setChannelTexts] = useState<Record<string, string>>({});
+  const { schedule: scheduleSave, saving, saved } = useEventCopyAutosave(selectedEvent);
 
   const { data: publishedEvents = [], isLoading } = useQuery({
     queryKey: ["events-published", tenantId],
