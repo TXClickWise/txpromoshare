@@ -41,9 +41,9 @@ export default function AppLayout() {
     return <Navigate to="/login" replace />;
   }
 
-  const fullName = user?.user_metadata?.full_name || "Gebruiker";
+  const fullName = user?.user_metadata?.full_name || t("common.user");
   const initials = fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
-  const planLabel = effectivePlanId.charAt(0).toUpperCase() + effectivePlanId.slice(1) + " plan";
+  const planLabel = t("nav.plan", { plan: effectivePlanId.charAt(0).toUpperCase() + effectivePlanId.slice(1) });
 
   const handleSignOut = async () => {
     await signOut();
@@ -101,7 +101,7 @@ export default function AppLayout() {
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
             >
               <Shield className="w-4 h-4 shrink-0" />
-              Admin
+              {t("nav.admin")}
             </Link>
           )}
         </nav>
@@ -115,7 +115,7 @@ export default function AppLayout() {
               <p className="text-sm font-medium text-foreground truncate">{fullName}</p>
               <p className="text-xs text-muted-foreground truncate">{planLabel}</p>
             </div>
-            <button onClick={handleSignOut} className="text-muted-foreground hover:text-foreground transition-colors" title="Uitloggen">
+            <button onClick={handleSignOut} className="text-muted-foreground hover:text-foreground transition-colors" title={t("common.signOut")}>
               <LogOut className="w-4 h-4" />
             </button>
           </div>
