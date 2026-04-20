@@ -540,11 +540,19 @@ export default function PublicEventPage() {
 
             {/* Share */}
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-              className="rounded-xl border border-border bg-card p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Share2 className="w-4 h-4 text-primary" />Delen
-              </h3>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              className="rounded-xl border border-border bg-card p-4">
+              <button
+                type="button"
+                onClick={() => setShareOpen((v) => !v)}
+                className="w-full flex items-center justify-between gap-2 text-sm font-semibold text-foreground"
+                aria-expanded={shareOpen}
+              >
+                <span className="flex items-center gap-2">
+                  <Share2 className="w-4 h-4 text-primary" />Delen
+                </span>
+                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${shareOpen ? "rotate-180" : ""}`} />
+              </button>
+              <div className={`grid grid-cols-4 gap-1.5 mt-3 ${shareOpen ? "" : "hidden"}`}>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
                   <a href={`https://wa.me/?text=${encodeURIComponent(visitorWhatsappText)}`} target="_blank" rel="noopener noreferrer">
                     <MessageCircle className="w-3.5 h-3.5" />WhatsApp
