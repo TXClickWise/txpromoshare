@@ -394,7 +394,14 @@ export default function EventsPage() {
                     <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                       <span className="flex items-center gap-1 font-medium text-foreground/80">
                         <Clock className="w-3 h-3" />
-                        {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.start_time?.slice(0, 5)}
+                        {event.is_recurring && event._nextDate ? (
+                          <>
+                            {new Date(event._nextDate).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {(event._nextTime || event.start_time)?.slice(0, 5)}
+                            <span className="text-accent ml-1">(volgende)</span>
+                          </>
+                        ) : (
+                          <>{new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.start_time?.slice(0, 5)}</>
+                        )}
                       </span>
                       {event.venue?.name && (
                         <span className="flex items-center gap-1 truncate">
