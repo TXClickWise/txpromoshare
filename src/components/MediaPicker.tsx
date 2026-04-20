@@ -221,6 +221,8 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
           <button
             key={item.id}
             onClick={() => selectExisting(item)}
+            onMouseEnter={() => setHoveredItem(item)}
+            onMouseLeave={() => setHoveredItem(null)}
             className={`group relative rounded-lg border-2 overflow-hidden aspect-square transition-all ${
               isSelected ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
             }`}
