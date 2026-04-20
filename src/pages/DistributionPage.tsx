@@ -42,6 +42,7 @@ const CHANNEL_DB_MAP: Record<string, string> = {
 };
 
 export default function DistributionPage() {
+  const { t } = useTranslation();
   const { tenantId, tenant } = useTenant();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
@@ -139,7 +140,7 @@ export default function DistributionPage() {
   if (!isLoading && publishedEvents.length === 0) {
     return (
       <div className="max-w-3xl">
-        <h1 className="text-2xl font-display font-bold text-foreground mb-2">{t.distribution.title}</h1>
+        <h1 className="text-2xl font-display font-bold text-foreground mb-2">{t("distribution.title")}</h1>
         <EmptyState
           icon={Share2}
           title="Nog geen gepubliceerde evenementen"
@@ -275,7 +276,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground">{t.distribution.title}</h1>
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground">{t("distribution.title")}</h1>
           <p className="text-sm text-muted-foreground mt-1">Bereid je content voor en deel je event overal — in één klik.</p>
         </div>
         <Button onClick={handleGenerateAll} disabled={generating} className="gap-2 shrink-0 w-full sm:w-auto">

@@ -33,6 +33,7 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
 
 export default function IntegrationsPage() {
   const { status, connection, syncRules, events, loading, syncing, connect, disconnect, toggleRule, refreshEvents, createSubaccount } = useClickWiseIntegration();
+  const { t } = useTranslation();
   const { tenant } = useTenant();
   const [subaccountId, setSubaccountId] = useState("");
   const [apiKey, setApiKey] = useState("");
@@ -62,7 +63,7 @@ export default function IntegrationsPage() {
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-display font-bold text-foreground">{t.integrations.title}</h1>
+        <h1 className="text-2xl font-display font-bold text-foreground">{t("integrations.title")}</h1>
         <p className="text-sm text-muted-foreground mt-1">Verbind ClickWise om events, contacten en teamleden in je CRM-workflow te gebruiken</p>
       </div>
 
@@ -309,7 +310,7 @@ export default function IntegrationsPage() {
           <div className="flex-1">
             <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
               Ticketing Module
-              <Badge variant="outline" className="text-[10px]">{t.common.futureModule}</Badge>
+              <Badge variant="outline" className="text-[10px]">{t("common.futureModule")}</Badge>
             </h3>
             <p className="text-sm text-muted-foreground mt-1">Mollie & Stripe betalingen, QR-codes, scannen, mobile wallet</p>
           </div>
