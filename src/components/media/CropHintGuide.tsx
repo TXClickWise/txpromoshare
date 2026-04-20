@@ -124,7 +124,7 @@ export function CropHintGuide({ imageUrl, imageWidth, imageHeight, role, classNa
               "text-[10px] px-2 py-0.5 rounded-full font-medium",
               tooSmall
                 ? "bg-destructive/10 text-destructive"
-                : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "bg-primary/10 text-primary"
             )}
           >
             {imageWidth}×{imageHeight}
@@ -156,16 +156,16 @@ export function CropHintGuide({ imageUrl, imageWidth, imageHeight, role, classNa
       </motion.div>
 
       {(tooSmall || ratioMismatch) && (
-        <div className="flex items-start gap-2 p-2 rounded-md bg-amber-500/10 border border-amber-500/20">
-          <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-2 p-2 rounded-md bg-destructive/10 border border-destructive/20">
+          <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
           <div className="space-y-0.5">
             {tooSmall && (
-              <p className="text-[11px] text-amber-700 dark:text-amber-300">
+              <p className="text-[11px] text-destructive">
                 Resolutie te laag — minimaal {spec.minWidth}×{spec.minHeight}px aanbevolen.
               </p>
             )}
             {ratioMismatch && !tooSmall && (
-              <p className="text-[11px] text-amber-700 dark:text-amber-300">
+              <p className="text-[11px] text-destructive">
                 Verhouding wijkt af — afbeelding wordt bijgesneden naar {spec.ratio}.
               </p>
             )}
