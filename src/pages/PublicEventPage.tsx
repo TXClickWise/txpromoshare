@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Calendar, Clock, MapPin, User, Share2, ExternalLink, ChevronLeft,
-  Tag, CalendarPlus, MessageCircle, Facebook, Copy, Check, Mail,
+  Tag, CalendarPlus, MessageCircle, Facebook, Copy, Check, Mail, ChevronDown,
   Instagram, Music, Building2, ZoomIn, ChevronRight, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
