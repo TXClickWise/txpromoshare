@@ -7,8 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ScrollText, Search, Eye } from "lucide-react";
-import { format } from "date-fns";
+import { ScrollText, Search, Eye, X } from "lucide-react";
+import { format, subDays, startOfDay } from "date-fns";
 import { nl } from "date-fns/locale";
 
 interface AuditRow {
@@ -17,18 +17,28 @@ interface AuditRow {
   user_id: string | null; metadata: any; created_at: string;
 }
 
+const DATE_RANGES = [
+  { value: "all", label: "Alle datums" },
+  { value: "today", label: "Vandaag" },
+  { value: "7d", label: "Laatste 7 dagen" },
+  { value: "30d", label: "Laatste 30 dagen" },
+  { value: "90d", label: "Laatste 90 dagen" },
+];
+
 export default function AdminAuditPage() {
   const [items, setItems] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [actionFilter, setActionFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("30d");
   const [detailOpen, setDetailOpen] = useState(false);
   const [selected, setSelected] = useState<AuditRow | null>(null);
 
   useEffect(() => {
     async function fetch() {
       const [auditRes, tenantsRes] = await Promise.all([
-        supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(500),
+        supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(1000),
         supabase.from("tenants").select("id, name"),
       ]);
       const tMap: Record<string, string> = {};
@@ -39,18 +49,37 @@ export default function AdminAuditPage() {
     fetch();
   }, []);
 
+  const dateThreshold = useMemo(() => {
+    if (dateFilter === "all") return null;
+    if (dateFilter === "today") return startOfDay(new Date());
+    const days = dateFilter === "7d" ? 7 : dateFilter === "30d" ? 30 : 90;
+    return subDays(new Date(), days);
+  }, [dateFilter]);
+
   const filtered = useMemo(() => {
     return items.filter((a) => {
       const matchSearch = !search ||
         a.tenant_name.toLowerCase().includes(search.toLowerCase()) ||
         a.action.toLowerCase().includes(search.toLowerCase()) ||
-        a.entity_type.toLowerCase().includes(search.toLowerCase());
+        a.entity_type.toLowerCase().includes(search.toLowerCase()) ||
+        (a.entity_id && a.entity_id.toLowerCase().includes(search.toLowerCase()));
       const matchType = typeFilter === "all" || a.entity_type === typeFilter;
-      return matchSearch && matchType;
+      const matchAction = actionFilter === "all" || a.action === actionFilter;
+      const matchDate = !dateThreshold || new Date(a.created_at) >= dateThreshold;
+      return matchSearch && matchType && matchAction && matchDate;
     });
-  }, [items, search, typeFilter]);
+  }, [items, search, typeFilter, actionFilter, dateThreshold]);
 
-  const entityTypes = [...new Set(items.map((i) => i.entity_type))];
+  const entityTypes = useMemo(() => [...new Set(items.map((i) => i.entity_type))].sort(), [items]);
+  const actions = useMemo(() => [...new Set(items.map((i) => i.action))].sort(), [items]);
+  const hasActiveFilters = search || typeFilter !== "all" || actionFilter !== "all" || dateFilter !== "30d";
+
+  function clearFilters() {
+    setSearch("");
+    setTypeFilter("all");
+    setActionFilter("all");
+    setDateFilter("30d");
+  }
 
   function viewDetail(item: AuditRow) {
     setSelected(item);
@@ -70,21 +99,43 @@ export default function AdminAuditPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground">Audit Log</h1>
-        <p className="text-muted-foreground mt-1">Volledige geschiedenis van platformwijzigingen</p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-foreground">Audit Log</h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Volledige geschiedenis van platformwijzigingen — <span className="font-medium text-foreground">{filtered.length}</span> van {items.length} items
+          </p>
+        </div>
+        {hasActiveFilters && (
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1.5 text-xs">
+            <X className="w-3.5 h-3.5" /> Filters wissen
+          </Button>
+        )}
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
+      <div className="flex flex-wrap gap-2">
+        <div className="relative flex-1 min-w-[220px] max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Zoek in audit log..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder="Zoek op tenant, actie, type of entity ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
+        <Select value={dateFilter} onValueChange={setDateFilter}>
+          <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {DATE_RANGES.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Type" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Alle types</SelectItem>
-            {entityTypes.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+            {entityTypes.map((t) => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={actionFilter} onValueChange={setActionFilter}>
+          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Actie" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Alle acties</SelectItem>
+            {actions.map((a) => <SelectItem key={a} value={a} className="capitalize">{a}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -94,35 +145,35 @@ export default function AdminAuditPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Datum</TableHead>
+                <TableHead className="w-[160px]">Datum</TableHead>
                 <TableHead>Organisatie</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Actie</TableHead>
-                <TableHead>Entity ID</TableHead>
-                <TableHead className="text-right">Details</TableHead>
+                <TableHead className="w-[130px]">Type</TableHead>
+                <TableHead className="w-[130px]">Actie</TableHead>
+                <TableHead className="w-[110px]">Entity ID</TableHead>
+                <TableHead className="text-right w-[60px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
                     <ScrollText className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                    Geen audit items gevonden
+                    Geen audit items gevonden met de huidige filters
                   </TableCell>
                 </TableRow>
               )}
               {filtered.map((a) => (
-                <TableRow key={a.id} className="group">
-                  <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                    {format(new Date(a.created_at), "d MMM yyyy HH:mm", { locale: nl })}
+                <TableRow key={a.id} className="group cursor-pointer" onClick={() => viewDetail(a)}>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap tabular-nums">
+                    {format(new Date(a.created_at), "d MMM yy HH:mm", { locale: nl })}
                   </TableCell>
-                  <TableCell className="text-sm">{a.tenant_name}</TableCell>
-                  <TableCell><Badge variant="outline" className="text-xs capitalize">{a.entity_type}</Badge></TableCell>
-                  <TableCell><Badge variant={actionColor(a.action) as any} className="text-xs capitalize">{a.action}</Badge></TableCell>
-                  <TableCell className="text-xs text-muted-foreground font-mono">{a.entity_id ? a.entity_id.slice(0, 8) + "..." : "—"}</TableCell>
+                  <TableCell className="text-sm font-medium">{a.tenant_name}</TableCell>
+                  <TableCell><Badge variant="outline" className="text-[10px] capitalize">{a.entity_type}</Badge></TableCell>
+                  <TableCell><Badge variant={actionColor(a.action) as any} className="text-[10px] capitalize">{a.action}</Badge></TableCell>
+                  <TableCell className="text-[10px] text-muted-foreground font-mono">{a.entity_id ? a.entity_id.slice(0, 8) : "—"}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => viewDetail(a)} className="opacity-0 group-hover:opacity-100">
-                      <Eye className="w-4 h-4" />
+                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
+                      <Eye className="w-3.5 h-3.5" />
                     </Button>
                   </TableCell>
                 </TableRow>
