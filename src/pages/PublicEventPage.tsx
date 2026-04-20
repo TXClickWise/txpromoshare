@@ -104,6 +104,29 @@ export default function PublicEventPage() {
         .filter(Boolean);
       setGallery(galleryUrls);
 
+      // Upcoming occurrences for recurring events
+      if (ev.is_recurring) {
+        const today = new Date().toISOString().slice(0, 10);
+        const { data: occs } = await supabase
+          .from("event_occurrences")
+          .select("occurrence_date, start_time, end_time, label, status")
+          .eq("event_id", ev.id)
+          .eq("status", "active")
+          .gte("occurrence_date", today)
+          .order("occurrence_date", { ascending: true })
+          .limit(8);
+        setUpcomingOccurrences(
+          (occs || []).map((o: any) => ({
+            date: o.occurrence_date,
+            start_time: o.start_time,
+            end_time: o.end_time,
+            label: o.label,
+          }))
+        );
+      } else {
+        setUpcomingOccurrences([]);
+      }
+
       setLoading(false);
     }
     load();
