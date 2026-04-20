@@ -90,17 +90,20 @@ export default function PublicEventPage() {
       if (!ev) { setLoading(false); return; }
       setEvent(ev);
 
-      const [venueRes, sponsorsRes, relatedRes, catRes, imgRes, galleryRes] = await Promise.all([
+      const [venueRes, sponsorsRes, relatedRes, catRes, imgRes, galleryRes, transRes] = await Promise.all([
         ev.venue_id ? supabase.from("venues").select("*").eq("id", ev.venue_id).maybeSingle().then(r => r) : Promise.resolve({ data: null }),
         supabase.from("event_sponsors").select("*").eq("event_id", ev.id).order("sort_order").then(r => r),
         supabase.from("events").select("*, media!events_featured_image_id_fkey(original_url)").eq("tenant_id", ev.tenant_id).eq("status", "published").neq("id", ev.id).order("start_date").limit(4).then(r => r),
         ev.category_id ? supabase.from("categories").select("name, color").eq("id", ev.category_id).maybeSingle().then(r => r) : Promise.resolve({ data: null }),
         ev.featured_image_id ? supabase.from("media").select("original_url").eq("id", ev.featured_image_id).maybeSingle().then(r => r) : Promise.resolve({ data: null }),
         supabase.from("event_gallery").select("media(original_url)").eq("event_id", ev.id).order("sort_order").then(r => r),
+        supabase.from("event_translations").select("*").eq("event_id", ev.id).then(r => r),
       ]);
       setVenue(venueRes.data);
       setSponsors(sponsorsRes.data ?? []);
       setCategory(catRes.data);
+      setTranslations((transRes.data as Tables<"event_translations">[]) ?? []);
+
       if (imgRes.data?.original_url) setFeaturedImageUrl(imgRes.data.original_url);
 
       // Map related events with images
