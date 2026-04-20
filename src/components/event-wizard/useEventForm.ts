@@ -626,7 +626,7 @@ export function useEventForm() {
     if (current === initialRecurrenceRef.current) return null;
     const info = await inspectExistingOccurrences(eventId);
     if (info.total === 0) return null;
-    return info;
+    return { futureCount: info.future, totalCount: info.total, hasManualEdits: info.hasManualEdits };
   }
 
   async function performSave(scope: RecurringEditScope = "future") {
