@@ -744,6 +744,8 @@ export type Database = {
           filename: string
           height: number | null
           id: string
+          is_favorite: boolean
+          last_used_at: string | null
           mime_type: string | null
           original_url: string | null
           source: Database["public"]["Enums"]["media_source"]
@@ -759,6 +761,8 @@ export type Database = {
           filename: string
           height?: number | null
           id?: string
+          is_favorite?: boolean
+          last_used_at?: string | null
           mime_type?: string | null
           original_url?: string | null
           source?: Database["public"]["Enums"]["media_source"]
@@ -774,6 +778,8 @@ export type Database = {
           filename?: string
           height?: number | null
           id?: string
+          is_favorite?: boolean
+          last_used_at?: string | null
           mime_type?: string | null
           original_url?: string | null
           source?: Database["public"]["Enums"]["media_source"]
