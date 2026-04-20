@@ -80,6 +80,14 @@ export default function PublicLayout() {
                 </Link>
               )
             ))}
+            <span className="h-5 w-px bg-border" aria-hidden />
+            <Link
+              to={featuredLink.to}
+              className="relative inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-sm font-semibold text-primary hover:bg-primary/10 hover:border-primary/50 transition-colors animate-soft-glow"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" aria-hidden />
+              {featuredLink.label}
+            </Link>
             <Link to="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               {t.auth.login}
             </Link>
