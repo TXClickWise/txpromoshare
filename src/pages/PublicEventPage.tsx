@@ -239,8 +239,8 @@ export default function PublicEventPage() {
   const days = daysUntil(event.start_date);
   const countdownLabel = days === 0 ? "Vandaag!" : days === 1 ? "Morgen" : days > 0 ? `Nog ${days} dagen` : "Afgelopen";
 
-  const ctaText = event.cta_button_text || "Meer info";
-  const shareText = `${event.title} — ${formatDate(event.start_date)} om ${formatTime(event.start_time)}${venueName ? ` bij ${venueName}` : ""}. Bekijk alle details van dit evenement.`;
+  const ctaText = localized.cta_button_text || "Meer info";
+  const shareText = `${localized.title} — ${formatDate(event.start_date)} om ${formatTime(event.start_time)}${venueName ? ` bij ${venueName}` : ""}. Bekijk alle details van dit evenement.`;
 
  const visitorWhatsappText = `Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?\n\n${previewShareUrl}`;
 
