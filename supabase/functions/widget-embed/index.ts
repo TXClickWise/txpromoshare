@@ -120,6 +120,7 @@ serve(async (req) => {
         slug: tenant?.slug,
         logoUrl: tenant?.logo_url,
       },
+      language: lang,
       events: eventsWithImages,
     };
 
