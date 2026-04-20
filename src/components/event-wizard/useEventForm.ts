@@ -128,6 +128,7 @@ export function useEventForm() {
   const [availableCategories, setAvailableCategories] = useState<Pick<Tables<"categories">, "id" | "name" | "slug">[]>([]);
   const [venues, setVenues] = useState<Tables<"venues">[]>([]);
   const [saving, setSaving] = useState(false);
+  const [autosaving, setAutosaving] = useState(false);
   const [loading, setLoading] = useState(isEditing);
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [mediaItems, setMediaItems] = useState<Tables<"media">[]>([]);
@@ -136,6 +137,8 @@ export function useEventForm() {
   const [isDirty, setIsDirty] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [autoSavedEventId, setAutoSavedEventId] = useState<string | null>(id || null);
+  const [publishedEventId, setPublishedEventId] = useState<string | null>(null);
+  const [publishedStatus, setPublishedStatus] = useState<"published" | "scheduled" | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initialFormRef = useRef<string>("");
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
