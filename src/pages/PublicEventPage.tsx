@@ -253,13 +253,14 @@ export default function PublicEventPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* HERO */}
-      <section className="relative w-full overflow-hidden" style={{ minHeight: "min(55vh, 440px)" }}>
+      {/* HERO — calm, premium: image + back + title only */}
+      <section className="relative w-full overflow-hidden" style={{ minHeight: "min(48vh, 380px)" }}>
         <img src={heroImg} alt={localized.title} className="absolute inset-0 w-full h-full object-cover" loading="eager" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/5" />
+        {/* Subtle gradient: only enough for legibility of top controls and bottom title */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/55" />
         <div className="relative z-10 max-w-5xl mx-auto px-4 pt-4 flex items-center justify-between gap-2">
-          <Link to="/evenementen" className="inline-flex items-center gap-1 text-white/70 hover:text-white text-sm transition-colors backdrop-blur-sm bg-white/10 rounded-full px-3 py-1">
-            <ChevronLeft className="w-4 h-4" />Alle evenementen
+          <Link to="/evenementen" className="inline-flex items-center gap-1 text-white/85 hover:text-white text-sm transition-colors backdrop-blur-sm bg-black/25 rounded-full px-3 py-1.5">
+            <ChevronLeft className="w-4 h-4" />Terug
           </Link>
           <PublicLanguageSwitcher
             availableLanguages={availableLanguages}
@@ -267,42 +268,61 @@ export default function PublicEventPage() {
             onChange={handleLanguageChange}
           />
         </div>
-        <div className="relative z-10 max-w-5xl mx-auto px-4 flex flex-col justify-end" style={{ minHeight: "min(55vh, 440px)", paddingBottom: "2rem" }}>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="flex gap-2 mb-3 flex-wrap">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 flex flex-col justify-end" style={{ minHeight: "min(48vh, 380px)", paddingBottom: "2.5rem" }}>
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-3xl">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight drop-shadow-sm">
+              {localized.title}
+            </h1>
+            <p className="mt-3 text-white/85 text-sm sm:text-base font-medium">
+              <span className="capitalize">{formatShortDate(event.start_date)}</span>
+              <span className="mx-2 text-white/50">·</span>
+              {formatTime(event.start_time)}
+              {venueName && (
+                <>
+                  <span className="mx-2 text-white/50">·</span>
+                  <span>{venueName}</span>
+                </>
+              )}
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Sub-hero strip: subtitle + chips moved out of hero */}
+      {(localized.subtitle || category || days >= 0 || (event.tags && event.tags.length > 0)) && (
+        <div className="border-b border-border bg-card/50">
+          <div className="max-w-5xl mx-auto px-4 py-4 space-y-3">
+            {localized.subtitle && (
+              <p className="text-base sm:text-lg text-foreground/80 font-medium leading-snug">
+                {localized.subtitle}
+              </p>
+            )}
+            <div className="flex gap-2 flex-wrap">
               {category && (
-                <Badge className="text-xs border-0 backdrop-blur-sm" style={{
-                  backgroundColor: category.color ? `${category.color}33` : "rgba(255,255,255,0.15)",
-                  color: "white",
+                <Badge className="text-xs border-0" style={{
+                  backgroundColor: category.color ? `${category.color}1f` : undefined,
+                  color: category.color || undefined,
                 }}>
                   {category.name}
                 </Badge>
               )}
               {days >= 0 && (
-                <Badge variant="secondary" className="bg-white/15 text-white border-0 backdrop-blur-sm text-xs">
+                <Badge variant="secondary" className="text-xs">
                   {countdownLabel}
                 </Badge>
               )}
               {event.tags && event.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="bg-white/10 text-white/80 border-0 backdrop-blur-sm text-xs">
+                <Badge key={tag} variant="outline" className="text-xs text-muted-foreground">
                   <Tag className="w-3 h-3 mr-1" />{tag}
                 </Badge>
               ))}
             </div>
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">{localized.title}</h1>
-            {localized.subtitle && <p className="text-lg sm:text-xl text-white/80 mt-2 max-w-2xl">{localized.subtitle}</p>}
-            {/* Quick meta row */}
-            <div className="flex flex-wrap items-center gap-4 mt-4 text-white/70 text-sm">
-              <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" />{formatShortDate(event.start_date)}</span>
-              <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" />{formatTime(event.start_time)}</span>
-              <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" />{venueName}</span>
-            </div>
-          </motion.div>
+          </div>
         </div>
-      </section>
+      )}
 
       {/* MAIN CONTENT */}
-      <main className="max-w-5xl mx-auto px-4 -mt-6 relative z-20 pb-24 md:pb-16">
+      <main className="max-w-5xl mx-auto px-4 mt-6 relative z-20 pb-24 md:pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {/* Quick info cards */}
