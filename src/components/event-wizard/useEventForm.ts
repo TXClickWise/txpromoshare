@@ -311,6 +311,27 @@ export function useEventForm() {
     }
   }, [form.title, isEditing]);
 
+  // Smart default: when start time is set and end time is empty, suggest +3h
+  useEffect(() => {
+    if (form.startTime && !form.endTime) {
+      const [h, m] = form.startTime.split(":").map(Number);
+      if (!isNaN(h) && !isNaN(m)) {
+        const endH = (h + 3) % 24;
+        const suggested = `${endH.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+        setForm(prev => prev.endTime ? prev : { ...prev, endTime: suggested });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.startTime]);
+
+  // Smart default: fill organizer from tenant once tenant loads (for new events)
+  useEffect(() => {
+    if (!isEditing && tenant?.name && !form.organizer) {
+      setForm(prev => prev.organizer ? prev : { ...prev, organizer: tenant.name });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant?.name, isEditing]);
+
   // Step validation
   function validateStep(step: number): StepValidation {
     const errors: string[] = [];

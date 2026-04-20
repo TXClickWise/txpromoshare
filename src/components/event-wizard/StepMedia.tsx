@@ -66,7 +66,7 @@ export function StepMedia({
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
       <div className="space-y-1">
         <h2 className="text-xl font-display font-bold text-foreground">Content & media</h2>
-        <p className="text-sm text-muted-foreground">Voeg een beschrijving, afbeelding en eventuele sponsors toe.</p>
+        <p className="text-sm text-muted-foreground">Een goede foto verdubbelt je bereik. Voeg ook een uitgebreide beschrijving en eventuele sponsors toe.</p>
       </div>
 
       {/* Full description */}

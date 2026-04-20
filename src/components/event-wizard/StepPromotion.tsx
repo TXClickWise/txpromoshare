@@ -53,7 +53,7 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
       <div className="space-y-1">
         <h2 className="text-xl font-display font-bold text-foreground">Promotie</h2>
-        <p className="text-sm text-muted-foreground">Stel je CTA, deelteksten en SEO in voor maximaal bereik.</p>
+        <p className="text-sm text-muted-foreground">Stel je CTA-knop, deelteksten en SEO in. Tip: laat AI alle teksten in één klik genereren op basis van je titel.</p>
       </div>
 
       {/* CTA */}
