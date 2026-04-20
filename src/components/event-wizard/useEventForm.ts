@@ -26,6 +26,24 @@ function toDatetimeLocal(isoString: string | null): string {
   }
 }
 
+/**
+ * Capture only fields that affect occurrence generation.
+ * Used to detect whether the recurrence rule itself changed.
+ */
+function recurrenceSignature(f: Partial<EventFormState>): string {
+  return JSON.stringify({
+    isRecurring: f.isRecurring,
+    startDate: f.startDate,
+    recurringFreq: f.recurringFreq,
+    recurringCustomFreq: f.recurringCustomFreq,
+    recurringInterval: f.recurringInterval,
+    recurringDays: f.recurringDays,
+    recurringEndType: f.recurringEndType,
+    recurringEndDate: f.recurringEndDate,
+    recurringEndCount: f.recurringEndCount,
+  });
+}
+
 export interface EventFormState {
   title: string;
   subtitle: string;
