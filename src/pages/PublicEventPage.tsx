@@ -254,12 +254,17 @@ export default function PublicEventPage() {
     <div className="min-h-screen bg-background">
       {/* HERO */}
       <section className="relative w-full overflow-hidden" style={{ minHeight: "min(55vh, 440px)" }}>
-        <img src={heroImg} alt={event.title} className="absolute inset-0 w-full h-full object-cover" loading="eager" />
+        <img src={heroImg} alt={localized.title} className="absolute inset-0 w-full h-full object-cover" loading="eager" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/5" />
-        <div className="relative z-10 max-w-5xl mx-auto px-4 pt-4">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 pt-4 flex items-center justify-between gap-2">
           <Link to="/evenementen" className="inline-flex items-center gap-1 text-white/70 hover:text-white text-sm transition-colors backdrop-blur-sm bg-white/10 rounded-full px-3 py-1">
             <ChevronLeft className="w-4 h-4" />Alle evenementen
           </Link>
+          <PublicLanguageSwitcher
+            availableLanguages={availableLanguages}
+            current={activeLang}
+            onChange={handleLanguageChange}
+          />
         </div>
         <div className="relative z-10 max-w-5xl mx-auto px-4 flex flex-col justify-end" style={{ minHeight: "min(55vh, 440px)", paddingBottom: "2rem" }}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -283,8 +288,8 @@ export default function PublicEventPage() {
                 </Badge>
               ))}
             </div>
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">{event.title}</h1>
-            {event.subtitle && <p className="text-lg sm:text-xl text-white/80 mt-2 max-w-2xl">{event.subtitle}</p>}
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">{localized.title}</h1>
+            {localized.subtitle && <p className="text-lg sm:text-xl text-white/80 mt-2 max-w-2xl">{localized.subtitle}</p>}
             {/* Quick meta row */}
             <div className="flex flex-wrap items-center gap-4 mt-4 text-white/70 text-sm">
               <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" />{formatShortDate(event.start_date)}</span>
@@ -340,7 +345,7 @@ export default function PublicEventPage() {
               className="rounded-xl bg-card border border-border shadow-card p-6">
               <h2 className="font-display text-xl font-bold text-foreground mb-3">Over dit evenement</h2>
               <div className="prose prose-sm max-w-none text-muted-foreground leading-relaxed whitespace-pre-line">
-                {event.full_description || event.short_description || "Meer informatie volgt binnenkort."}
+                {localized.full_description || localized.short_description || "Meer informatie volgt binnenkort."}
               </div>
               {event.is_recurring && (
                 <div className="mt-4 flex items-center gap-2 text-xs text-primary font-medium bg-primary/5 rounded-lg px-3 py-2">
@@ -489,7 +494,7 @@ export default function PublicEventPage() {
                 <>
                   <Button asChild className="w-full h-12 text-base font-semibold gap-2">
                     <a href={event.cta_link} target="_blank" rel="noopener noreferrer">
-                      {event.cta_button_text || "Aanmelden"}<ExternalLink className="w-4 h-4" />
+                      {localized.cta_button_text || "Aanmelden"}<ExternalLink className="w-4 h-4" />
                     </a>
                   </Button>
                   <p className="text-[11px] text-center text-muted-foreground">Direct bevestigd • Geen account nodig</p>
@@ -654,8 +659,8 @@ export default function PublicEventPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Event",
-        name: event.title,
-        description: event.seo_description || event.short_description || event.full_description,
+        name: localized.title,
+        description: localized.seo_description || localized.short_description || localized.full_description,
         startDate: `${event.start_date}T${event.start_time}`,
         endDate: event.end_date ? `${event.end_date}T${event.end_time || event.start_time}` : undefined,
         location: venue ? {
