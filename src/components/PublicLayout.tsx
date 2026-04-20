@@ -1,24 +1,27 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Menu, X, ArrowRight } from "lucide-react";
-import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-
-const navLinks = [
-  { to: "/", label: "Home", hash: false },
-  { to: "/event-agenda-software", label: "Voordelen", hash: false },
-  { to: "/#hoe-het-werkt", label: "Hoe het werkt", hash: true },
-  { to: "/#prijzen", label: "Prijzen", hash: true },
-  { to: "/demo", label: "Demo", hash: false },
-];
-
-const featuredLink = { to: "/evenementen", label: "Evenementen" };
+import { useTranslation } from "@/hooks/useUILanguage";
+import { UILanguageSwitcher } from "@/components/i18n/UILanguageSwitcher";
 
 export default function PublicLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const navLinks = useMemo(() => [
+    { to: "/", label: t("publicNav.home"), hash: false },
+    { to: "/event-agenda-software", label: t("publicNav.benefits"), hash: false },
+    { to: "/#hoe-het-werkt", label: t("publicNav.howItWorks"), hash: true },
+    { to: "/#prijzen", label: t("publicNav.pricing"), hash: true },
+    { to: "/demo", label: t("publicNav.demo"), hash: false },
+  ], [t]);
+
+  const featuredLink = { to: "/evenementen", label: t("publicNav.events") };
+
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -98,11 +101,12 @@ export default function PublicLayout() {
               {featuredLink.label}
             </Link>
             <Link to="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              {t.auth.login}
+              {t("publicNav.login")}
             </Link>
             <Link to="/register" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity">
-              Start gratis <ArrowRight className="w-3.5 h-3.5" />
+              {t("publicNav.startFree")} <ArrowRight className="w-3.5 h-3.5" />
             </Link>
+            <UILanguageSwitcher variant="compact" />
           </nav>
 
           <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-foreground">
@@ -127,10 +131,11 @@ export default function PublicLayout() {
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" aria-hidden />
               {featuredLink.label}
             </Link>
-            <Link to="/login" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-muted-foreground">{t.auth.login}</Link>
+            <Link to="/login" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-muted-foreground">{t("publicNav.login")}</Link>
             <Link to="/register" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold text-center">
-              Start gratis
+              {t("publicNav.startFree")}
             </Link>
+            <div className="pt-2"><UILanguageSwitcher variant="compact" /></div>
           </div>
         )}
       </header>
