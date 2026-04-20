@@ -156,6 +156,25 @@ export default function PublicEventPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+  const prevLightbox = useCallback(() => {
+    setLightboxIndex((i) => (i === null ? null : (i - 1 + gallery.length) % gallery.length));
+  }, [gallery.length]);
+  const nextLightbox = useCallback(() => {
+    setLightboxIndex((i) => (i === null ? null : (i + 1) % gallery.length));
+  }, [gallery.length]);
+
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeLightbox();
+      else if (e.key === "ArrowLeft") prevLightbox();
+      else if (e.key === "ArrowRight") nextLightbox();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [lightboxIndex, closeLightbox, prevLightbox, nextLightbox]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* HERO */}
@@ -465,6 +484,56 @@ export default function PublicEventPage() {
           </div>
         </div>
       </main>
+
+      {/* Lightbox */}
+      <Dialog open={lightboxIndex !== null} onOpenChange={(open) => { if (!open) closeLightbox(); }}>
+        <DialogContent
+          className="max-w-[95vw] sm:max-w-5xl w-full h-[90vh] p-0 bg-black/95 border-0 [&>button]:hidden"
+          onClick={(e) => { if (e.target === e.currentTarget) closeLightbox(); }}
+        >
+          {lightboxIndex !== null && (
+            <div className="relative w-full h-full flex items-center justify-center" onClick={closeLightbox}>
+              <img
+                src={gallery[lightboxIndex]}
+                alt={`Foto ${lightboxIndex + 1}`}
+                className="max-w-full max-h-full object-contain select-none"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); closeLightbox(); }}
+                className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur text-white flex items-center justify-center transition-colors"
+                aria-label="Sluiten"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              {gallery.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); prevLightbox(); }}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur text-white flex items-center justify-center transition-colors"
+                    aria-label="Vorige foto"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); nextLightbox(); }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur text-white flex items-center justify-center transition-colors"
+                    aria-label="Volgende foto"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-white/10 backdrop-blur text-white text-sm font-medium">
+                    {lightboxIndex + 1} / {gallery.length}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* JSON-LD structured data */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
