@@ -601,6 +601,21 @@ export default function BrandingTab() {
                 />
               </Section>
             </TabsContent>
+            {/* OVERZICHT — alle previews tegelijk */}
+            <TabsContent value="overview" className="p-5 mt-0">
+              <BrandPreviewGrid
+                state={{
+                  logoUrl: state.logoUrl,
+                  primaryColor: state.primaryColor,
+                  secondaryColor: state.secondaryColor,
+                  fontFamily: state.fontFamily,
+                  buttonStyle: state.buttonStyle,
+                  defaultCtaText: state.defaultCtaText,
+                  tagline: state.tagline,
+                  organizationName: tenant?.name,
+                }}
+              />
+            </TabsContent>
           </Tabs>
 
           {/* Sticky save bar */}
