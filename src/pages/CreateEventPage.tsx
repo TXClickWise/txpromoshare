@@ -240,34 +240,44 @@ export default function CreateEventPage() {
       </AnimatePresence>
 
       {/* Navigation buttons */}
-      <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
-        <Button variant="outline" onClick={goPrev} disabled={currentStep === STEPS[0].id} className="gap-2">
-          <ArrowLeft className="w-4 h-4" />
-          Vorige
-        </Button>
-
-        {currentStep < maxStep ? (
-          <Button onClick={goNext} disabled={!canGoNext()} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
-            Volgende
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-        ) : currentStep !== 6 ? (
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={ctx.handleSave}
-              disabled={ctx.saving || (!ctx.isDirty && !!ctx.lastSavedAt)}
-              className="gap-2"
-            >
-              <Save className="w-4 h-4" />
-              Concept
-            </Button>
-            <Button onClick={ctx.handlePublish} disabled={ctx.saving || !ctx.validateStep(5).isValid} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
-              <Send className="w-4 h-4" />
-              {ctx.form.publishAt ? "Inplannen" : "Publiceren"}
-            </Button>
+      <div className="mt-8 pt-6 border-t border-border space-y-3">
+        {!canGoNext() && currentStep < maxStep && (
+          <div className="rounded-lg bg-highlight/5 border border-highlight/20 px-3 py-2">
+            <p className="text-[11px] text-muted-foreground">
+              <span className="text-highlight font-medium">Bijna goed</span> — vul nog in:{" "}
+              {ctx.validateStep(currentStep).errors.join(" · ")}
+            </p>
           </div>
-        ) : null}
+        )}
+        <div className="flex items-center justify-between">
+          <Button variant="outline" onClick={goPrev} disabled={currentStep === STEPS[0].id} className="gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            Vorige
+          </Button>
+
+          {currentStep < maxStep ? (
+            <Button onClick={goNext} disabled={!canGoNext()} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+              Volgende
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          ) : currentStep !== 6 ? (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={ctx.handleSave}
+                disabled={ctx.saving || (!ctx.isDirty && !!ctx.lastSavedAt)}
+                className="gap-2"
+              >
+                <Save className="w-4 h-4" />
+                Concept
+              </Button>
+              <Button onClick={ctx.handlePublish} disabled={ctx.saving || !ctx.validateStep(5).isValid} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                <Send className="w-4 h-4" />
+                {ctx.form.publishAt ? "Inplannen" : "Publiceren"}
+              </Button>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {/* Unsaved-changes guard (in-app navigation) */}
