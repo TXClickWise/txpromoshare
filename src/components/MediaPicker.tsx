@@ -211,13 +211,15 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
       });
       return;
     }
-    onSelect(item.id, item.original_url || "");
+      onSelect(item.id, item.original_url || "");
+      markAsUsed(item.id);
     onOpenChange(false);
   };
 
   const confirmMulti = () => {
     if (multiSelected.length === 0) return;
     onSelectMulti?.(multiSelected);
+    multiSelected.forEach((m) => markAsUsed(m.id));
     setMultiSelected([]);
     onOpenChange(false);
   };
@@ -235,6 +237,31 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
             className={`group relative rounded-lg border-2 overflow-hidden aspect-square transition-all ${
               isSelected ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
             }`}
+          >
+            <img src={item.original_url || ""} alt={item.alt_text || item.filename}
+              className="w-full h-full object-cover" loading="lazy" />
+            {isSelected && (
+              <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                <Check className="w-6 h-6 text-primary" />
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={(e) => toggleFavorite(e, item)}
+              className="absolute top-1 left-1 p-1 rounded-md bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 hover:bg-black/60 transition-all"
+              aria-label={item.is_favorite ? "Verwijder uit favorieten" : "Voeg toe aan favorieten"}
+            >
+              {item.is_favorite ? (
+                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+              ) : (
+                <StarOff className="w-3 h-3 text-white" />
+              )}
+            </button>
+            {item.is_favorite && (
+              <div className="absolute top-1 left-1 p-1 rounded-md bg-black/40 backdrop-blur-sm group-hover:opacity-0 transition-opacity">
+                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+              </div>
+            )}
           >
             <img src={item.original_url || ""} alt={item.alt_text || item.filename}
               className="w-full h-full object-cover" loading="lazy" />
