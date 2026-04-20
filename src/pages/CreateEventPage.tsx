@@ -302,6 +302,17 @@ export default function CreateEventPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Recurring edit-scope dialog */}
+      <RecurringEditScopeDialog
+        open={!!ctx.pendingRecurringSave}
+        onOpenChange={(open) => { if (!open) ctx.cancelRecurringScope(); }}
+        onConfirm={(scope) => ctx.confirmRecurringScope(scope)}
+        futureCount={ctx.pendingRecurringSave?.futureCount}
+        totalCount={ctx.pendingRecurringSave?.totalCount}
+        hasManualEdits={ctx.pendingRecurringSave?.hasManualEdits}
+        allowSingle={false}
+      />
+
       {/* Publish success modal */}
       <Dialog open={!!ctx.publishedEventId} onOpenChange={(open) => { if (!open) ctx.dismissPublishSuccess(); }}>
         <DialogContent className="sm:max-w-md">
