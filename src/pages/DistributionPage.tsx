@@ -339,69 +339,89 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         <ShareLinkCard url={publicShareUrl} eventId={event.id} />
       </motion.div>
 
-      {/* Channel-specific content sections */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
-          <img src="/images/whatsapp-icon.png" alt="WhatsApp" className="w-4 h-4 rounded-sm" />
-          WhatsApp
-        </h2>
-        <ShareTextCard
-          icon={<img src="/images/whatsapp-icon.png" alt="WhatsApp" className="w-4 h-4 rounded-sm" />}
-          title="WhatsApp bericht"
-          description="Vanuit jou als organisator aan je relaties"
-          text={getText("whatsapp")}
-          onTextChange={(t) => setText("whatsapp", t)}
-          charLimit={500}
-          onAiRewrite={handleRewrite}
-          aiLoading={!!rewriting}
-          actions={
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-              <Button size="sm" className="gap-2 bg-green-600 text-white hover:bg-green-700 border-0 text-xs">
-                <Smartphone className="w-3.5 h-3.5" />WhatsApp
-              </Button>
-            </a>
-          }
-        />
-      </div>
+      {/* WhatsApp — kort & medium variants */}
+      <ChannelCopyGroup
+        icon={<img src="/images/whatsapp-icon.png" alt="WhatsApp" className="w-4 h-4 rounded-sm" />}
+        title="WhatsApp"
+        subtitle="Vanuit jou als organisator aan je relaties"
+        saving={saving}
+        saved={saved}
+        onAiRewrite={handleRewrite}
+        aiLoading={!!rewriting}
+        onVariantChange={(id, t) => setText(id, t)}
+        variants={[
+          {
+            id: "whatsapp_short",
+            label: "Kort",
+            description: "Eén zin, perfect voor een snelle 1-op-1 chat",
+            text: getText("whatsapp_short"),
+            charLimit: 160,
+          },
+          {
+            id: "whatsapp",
+            label: "Medium",
+            description: "Met datum, tijd en locatie — ideaal voor groepschats",
+            text: getText("whatsapp"),
+            charLimit: 500,
+            recommended: true,
+          },
+        ]}
+        actions={
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+            <Button size="sm" className="gap-2 bg-green-600 text-white hover:bg-green-700 border-0 text-xs">
+              <Smartphone className="w-3.5 h-3.5" />WhatsApp
+            </Button>
+          </a>
+        }
+      />
 
-      <div className="space-y-3">
-        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
-          <img src="/images/instagram-icon.png" alt="Instagram" className="w-4 h-4 rounded-sm" />
-          Social media
-        </h2>
-        <div className="grid md:grid-cols-2 gap-3">
-          <ShareTextCard
-            icon={<img src="/images/instagram-icon.png" alt="Instagram" className="w-4 h-4 rounded-sm" />}
-            title="Instagram / Facebook post"
-            description="Met hashtags, visueel gericht"
-            text={getText("instagram")}
-            onTextChange={(t) => setText("instagram", t)}
-            charLimit={2200}
-            onAiRewrite={handleRewrite}
-            aiLoading={!!rewriting}
-          />
-          <ShareTextCard
-            icon={<img src="/images/tiktok-icon.png" alt="TikTok" className="w-4 h-4 rounded-sm" />}
-            title="TikTok caption"
-            description="Korte, pakkende tekst voor TikTok"
-            text={getText("tiktok")}
-            onTextChange={(t) => setText("tiktok", t)}
-            charLimit={2200}
-            onAiRewrite={handleRewrite}
-            aiLoading={!!rewriting}
-          />
-        </div>
-        <ShareTextCard
-          icon={<Share2 className="w-4 h-4 text-primary" />}
-          title="Korte teaser"
-          description="Voor stories of advertenties"
-          text={getText("teaser")}
-          onTextChange={(t) => setText("teaser", t)}
-          charLimit={160}
-          onAiRewrite={handleRewrite}
-          aiLoading={!!rewriting}
-        />
-      </div>
+      {/* Social — teaser / Instagram-Facebook / lange promo */}
+      <ChannelCopyGroup
+        icon={<img src="/images/instagram-icon.png" alt="Instagram" className="w-4 h-4 rounded-sm" />}
+        title="Instagram & Facebook"
+        subtitle="Eén copy, drie lengtes voor verschillende plaatsingen"
+        saving={saving}
+        saved={saved}
+        onAiRewrite={handleRewrite}
+        aiLoading={!!rewriting}
+        onVariantChange={(id, t) => setText(id, t)}
+        variants={[
+          {
+            id: "teaser",
+            label: "Teaser",
+            description: "Voor stories, ads of een korte aankondiging",
+            text: getText("teaser"),
+            charLimit: 160,
+          },
+          {
+            id: "instagram",
+            label: "Post",
+            description: "Volledige feedpost met hashtags",
+            text: getText("instagram"),
+            charLimit: 2200,
+            recommended: true,
+          },
+          {
+            id: "promo",
+            label: "Lang",
+            description: "Uitgebreide promo voor persbericht of uitnodiging",
+            text: getText("promo"),
+          },
+        ]}
+      />
+
+      {/* TikTok blijft losstaand */}
+      <ShareTextCard
+        icon={<img src="/images/tiktok-icon.png" alt="TikTok" className="w-4 h-4 rounded-sm" />}
+        title="TikTok caption"
+        description="Korte, pakkende tekst voor TikTok"
+        text={getText("tiktok")}
+        onTextChange={(t) => setText("tiktok", t)}
+        charLimit={2200}
+        onAiRewrite={handleRewrite}
+        aiLoading={!!rewriting}
+      />
+
 
       <div className="space-y-3">
         <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
