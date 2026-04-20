@@ -774,6 +774,7 @@ export function useEventForm() {
     handleSave, handlePublish, handleDelete,
     validateStep, isDirty, lastSavedAt,
     publishedEventId, publishedStatus, dismissPublishSuccess,
+    pendingRecurringSave, confirmRecurringScope, cancelRecurringScope,
     navigate, tenantId,
   };
 }
