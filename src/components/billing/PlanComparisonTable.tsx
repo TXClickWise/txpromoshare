@@ -2,7 +2,8 @@ import { Check, ArrowRight, ExternalLink, Loader2, Sparkles } from "lucide-react
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { planPresentation } from "@/lib/planPricing";
+import { getPlanPresentation } from "@/lib/planPricing";
+import { useTranslation } from "@/hooks/useUILanguage";
 import type { PlanId } from "@/lib/plans";
 
 interface PlanComparisonTableProps {
@@ -20,12 +21,14 @@ export function PlanComparisonTable({
   onUpgrade,
   onManage,
 }: PlanComparisonTableProps) {
+  const { t } = useTranslation();
+  const plans = getPlanPresentation(t);
   const currentRank = planOrder.indexOf(currentPlanId);
 
   return (
     <div className="grid md:grid-cols-3 gap-4">
       {planOrder.map((id, i) => {
-        const plan = planPresentation[id];
+        const plan = plans[id];
         const rank = i;
         const isCurrent = id === currentPlanId;
         const isUpgrade = rank > currentRank;
@@ -46,12 +49,12 @@ export function PlanComparisonTable({
           >
             {isCurrent && (
               <span className="absolute -top-2.5 left-4 px-2.5 py-0.5 rounded-full gradient-hero text-primary-foreground text-[10px] font-bold uppercase tracking-wide">
-                Huidig plan
+                {t("plans.currentBadge")}
               </span>
             )}
             {!isCurrent && isRecommended && (
               <span className="absolute -top-2.5 left-4 px-2.5 py-0.5 rounded-full gradient-accent text-accent-foreground text-[10px] font-bold uppercase tracking-wide flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> Aanbevolen
+                <Sparkles className="w-3 h-3" /> {t("plans.recommendedBadge")}
               </span>
             )}
 
@@ -87,20 +90,20 @@ export function PlanComparisonTable({
               {isLoading ? (
                 <>
                   <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                  Even geduld…
+                  {t("plans.wait")}
                 </>
               ) : isCurrent ? (
-                "Je huidige plan"
+                t("plans.currentPlan")
               ) : isDowngrade ? (
                 <>
-                  Beheer abonnement
+                  {t("plans.manageSubscription")}
                   <ExternalLink className="w-3 h-3 ml-1" />
                 </>
               ) : id === "free" ? (
-                "Gratis plan"
+                t("plans.freePlan")
               ) : (
                 <>
-                  Kies {plan.name}
+                  {t("plans.choose", { name: plan.name })}
                   <ArrowRight className="w-3 h-3 ml-1" />
                 </>
               )}

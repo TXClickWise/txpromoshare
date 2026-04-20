@@ -1,5 +1,6 @@
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/useUILanguage";
 import type { AddonDefinition } from "@/lib/stripePrices";
 
 interface AddOnCardProps {
@@ -9,6 +10,7 @@ interface AddOnCardProps {
 }
 
 export function AddOnCard({ addon, loading, onAdd }: AddOnCardProps) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-xl border border-border bg-card p-4 flex flex-col h-full hover:border-primary/30 transition-colors">
       <div className="flex items-start justify-between gap-2">
@@ -36,7 +38,7 @@ export function AddOnCard({ addon, loading, onAdd }: AddOnCardProps) {
         ) : (
           <Plus className="w-3 h-3 mr-1" />
         )}
-        Toevoegen
+        {t("addons.add")}
       </Button>
     </div>
   );
