@@ -307,22 +307,36 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         </Select>
       </div>
 
-      {/* Quick share bar */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-        <ChannelBar
-          shareUrl={publicShareUrl}
-          previewShareUrl={ogProxyUrl}
-          whatsappText={getText("whatsapp")}
-          socialText={getText("instagram")}
-          eventTitle={event.title}
-          eventImageUrl={featuredImageUrl || undefined}
-          onChannelClick={trackAction}
-          onShowQR={() => setShowQR(true)}
-        />
-      </motion.div>
+      {/* ─────────── SECTIE 1: LINK & SNEL DELEN ─────────── */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+            <Share2 className="w-3.5 h-3.5 text-primary" />
+          </div>
+          <h2 className="text-sm font-display font-semibold text-foreground">1. Link & snel delen</h2>
+          <span className="text-[11px] text-muted-foreground hidden sm:inline">— Eén klik naar elk kanaal</span>
+        </div>
 
-      {/* Quality Check */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+          <ShareLinkCard url={publicShareUrl} eventId={event.id} />
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <ChannelBar
+            shareUrl={publicShareUrl}
+            previewShareUrl={ogProxyUrl}
+            whatsappText={getText("whatsapp")}
+            socialText={getText("instagram")}
+            eventTitle={event.title}
+            eventImageUrl={featuredImageUrl || undefined}
+            onChannelClick={trackAction}
+            onShowQR={() => setShowQR(true)}
+          />
+        </motion.div>
+      </section>
+
+      {/* ─────────── SECTIE 2: KWALITEITSCHECK ─────────── */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <QualityCheck
           event={event}
           texts={{
@@ -334,10 +348,15 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         />
       </motion.div>
 
-      {/* Event Link & QR */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <ShareLinkCard url={publicShareUrl} eventId={event.id} />
-      </motion.div>
+      {/* ─────────── SECTIE 3: COPY PER KANAAL ─────────── */}
+      <section className="space-y-4 pt-2">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+          </div>
+          <h2 className="text-sm font-display font-semibold text-foreground">2. Copy per kanaal</h2>
+          <span className="text-[11px] text-muted-foreground hidden sm:inline">— Bewerk, sla op, kopieer</span>
+        </div>
 
       {/* WhatsApp — kort & medium variants */}
       <ChannelCopyGroup
@@ -422,59 +441,61 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         aiLoading={!!rewriting}
       />
 
-
-      <div className="space-y-3">
-        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
-          <img src="/images/google-icon.png" alt="Google" className="w-4 h-4" />
-          Google Bedrijfsprofiel
-        </h2>
-        <ShareTextCard
-          icon={<img src="/images/google-icon.png" alt="Google" className="w-4 h-4" />}
-          title="Google Bedrijfsprofiel post"
-          description="Zakelijke post voor lokale vindbaarheid"
-          text={getText("gbp")}
-          onTextChange={(t) => setText("gbp", t)}
-          charLimit={1500}
-          onAiRewrite={handleRewrite}
-          aiLoading={!!rewriting}
-        />
-      </div>
-
-      <div className="space-y-3">
-        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
-          <Globe className="w-4 h-4 text-blue-600" />
-          Website & nieuwsbrief
-        </h2>
-        <div className="grid md:grid-cols-2 gap-3">
+        <div className="space-y-3">
+          <h3 className="text-xs font-display font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+            <img src="/images/google-icon.png" alt="Google" className="w-3.5 h-3.5" />
+            Google Bedrijfsprofiel
+          </h3>
           <ShareTextCard
-            icon={<Globe className="w-4 h-4 text-blue-600" />}
-            title="Website promo snippet"
-            description="HTML-klaar voor je website"
-            text={getText("website")}
-            onTextChange={(t) => setText("website", t)}
-            onAiRewrite={handleRewrite}
-            aiLoading={!!rewriting}
-          />
-          <ShareTextCard
-            icon={<Mail className="w-4 h-4 text-orange-600" />}
-            title="Nieuwsbrief introductie"
-            description="Kopieer en plak in je mailing tool"
-            text={getText("newsletter")}
-            onTextChange={(t) => setText("newsletter", t)}
+            icon={<img src="/images/google-icon.png" alt="Google" className="w-4 h-4" />}
+            title="Google Bedrijfsprofiel post"
+            description="Zakelijke post voor lokale vindbaarheid"
+            text={getText("gbp")}
+            onTextChange={(t) => setText("gbp", t)}
+            charLimit={1500}
             onAiRewrite={handleRewrite}
             aiLoading={!!rewriting}
           />
         </div>
-      </div>
 
+        <div className="space-y-3">
+          <h3 className="text-xs font-display font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+            <Globe className="w-3.5 h-3.5 text-primary" />
+            Website & nieuwsbrief
+          </h3>
+          <div className="grid md:grid-cols-2 gap-3">
+            <ShareTextCard
+              icon={<Globe className="w-4 h-4 text-primary" />}
+              title="Website promo snippet"
+              description="HTML-klaar voor je website"
+              text={getText("website")}
+              onTextChange={(t) => setText("website", t)}
+              onAiRewrite={handleRewrite}
+              aiLoading={!!rewriting}
+            />
+            <ShareTextCard
+              icon={<Mail className="w-4 h-4 text-accent" />}
+              title="Nieuwsbrief introductie"
+              description="Kopieer en plak in je mailing tool"
+              text={getText("newsletter")}
+              onTextChange={(t) => setText("newsletter", t)}
+              onAiRewrite={handleRewrite}
+              aiLoading={!!rewriting}
+            />
+          </div>
+        </div>
+      </section>
 
+      {/* ─────────── SECTIE 3: VERSPREIDEN & METEN ─────────── */}
+      <section className="space-y-4 pt-2">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+            <Code2 className="w-3.5 h-3.5 text-primary" />
+          </div>
+          <h2 className="text-sm font-display font-semibold text-foreground">3. Embeds & resultaten</h2>
+          <span className="text-[11px] text-muted-foreground hidden sm:inline">— Live op je site, meet wat werkt</span>
+        </div>
 
-      {/* Widgets section */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
-          <Code2 className="w-4 h-4 text-primary" />
-          Widgets & embeds
-        </h2>
         <div className="p-5 rounded-xl bg-card border border-border shadow-card flex flex-col sm:flex-row items-center gap-4">
           <div className="flex-1">
             <h3 className="font-display font-semibold text-foreground text-sm mb-1">Embed op je website</h3>
@@ -488,16 +509,15 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
             </Button>
           </Link>
         </div>
-      </div>
 
-      {/* Stats section */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-display font-semibold text-foreground flex items-center gap-2">
-          <BarChart3 className="w-4 h-4 text-primary" />
-          Statistieken
-        </h2>
-        <DistributionStats stats={stats} />
-      </div>
+        <div className="space-y-2">
+          <h3 className="text-xs font-display font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+            <BarChart3 className="w-3.5 h-3.5 text-primary" />
+            Statistieken
+          </h3>
+          <DistributionStats stats={stats} />
+        </div>
+      </section>
 
       {/* QR Dialog */}
       <QRCodeDialog
