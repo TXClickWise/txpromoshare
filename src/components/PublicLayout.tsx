@@ -131,10 +131,11 @@ export default function PublicLayout() {
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" aria-hidden />
               {featuredLink.label}
             </Link>
-            <Link to="/login" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-muted-foreground">{t.auth.login}</Link>
+            <Link to="/login" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-muted-foreground">{t("publicNav.login")}</Link>
             <Link to="/register" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold text-center">
-              Start gratis
+              {t("publicNav.startFree")}
             </Link>
+            <div className="pt-2"><UILanguageSwitcher variant="compact" /></div>
           </div>
         )}
       </header>
