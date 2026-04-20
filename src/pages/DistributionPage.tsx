@@ -307,22 +307,36 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         </Select>
       </div>
 
-      {/* Quick share bar */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-        <ChannelBar
-          shareUrl={publicShareUrl}
-          previewShareUrl={ogProxyUrl}
-          whatsappText={getText("whatsapp")}
-          socialText={getText("instagram")}
-          eventTitle={event.title}
-          eventImageUrl={featuredImageUrl || undefined}
-          onChannelClick={trackAction}
-          onShowQR={() => setShowQR(true)}
-        />
-      </motion.div>
+      {/* ─────────── SECTIE 1: LINK & SNEL DELEN ─────────── */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+            <Share2 className="w-3.5 h-3.5 text-primary" />
+          </div>
+          <h2 className="text-sm font-display font-semibold text-foreground">1. Link & snel delen</h2>
+          <span className="text-[11px] text-muted-foreground hidden sm:inline">— Eén klik naar elk kanaal</span>
+        </div>
 
-      {/* Quality Check */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+          <ShareLinkCard url={publicShareUrl} eventId={event.id} />
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <ChannelBar
+            shareUrl={publicShareUrl}
+            previewShareUrl={ogProxyUrl}
+            whatsappText={getText("whatsapp")}
+            socialText={getText("instagram")}
+            eventTitle={event.title}
+            eventImageUrl={featuredImageUrl || undefined}
+            onChannelClick={trackAction}
+            onShowQR={() => setShowQR(true)}
+          />
+        </motion.div>
+      </section>
+
+      {/* ─────────── SECTIE 2: KWALITEITSCHECK ─────────── */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <QualityCheck
           event={event}
           texts={{
@@ -334,10 +348,15 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         />
       </motion.div>
 
-      {/* Event Link & QR */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <ShareLinkCard url={publicShareUrl} eventId={event.id} />
-      </motion.div>
+      {/* ─────────── SECTIE 3: COPY PER KANAAL ─────────── */}
+      <section className="space-y-4 pt-2">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+          </div>
+          <h2 className="text-sm font-display font-semibold text-foreground">2. Copy per kanaal</h2>
+          <span className="text-[11px] text-muted-foreground hidden sm:inline">— Bewerk, sla op, kopieer</span>
+        </div>
 
       {/* WhatsApp — kort & medium variants */}
       <ChannelCopyGroup
