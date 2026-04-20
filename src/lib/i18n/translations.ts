@@ -616,6 +616,13 @@ export const UI_TRANSLATIONS: Record<UILanguageCode, TranslationDict> = {
     "embed.copyOk": "OK",
     "embed.copy": "Kopieer",
     "embed.codeCopied": "Code gekopieerd",
+    "embed.version.label": "Widget-versie",
+    "embed.version.v1": "Klassiek (v1)",
+    "embed.version.v2": "Compact (v2)",
+    "embed.version.v2Badge": "Nieuw",
+    "embed.version.help": "v2 is compacter, mobile-first en heeft een minder opdringerige share-knop. Bestaande embeds blijven op v1 werken.",
+    "embed.bottomOffset.label": "Onderruimte (px)",
+    "embed.bottomOffset.help": "Verhoog dit als je site een floating WhatsApp- of taalknop heeft die de widget overlapt.",
 
     // Quality check (distribution)
     "qc.title": "Kwaliteitscheck",
@@ -1401,6 +1408,13 @@ export const UI_TRANSLATIONS: Record<UILanguageCode, TranslationDict> = {
     "embed.copyOk": "OK",
     "embed.copy": "Copy",
     "embed.codeCopied": "Code copied",
+    "embed.version.label": "Widget version",
+    "embed.version.v1": "Classic (v1)",
+    "embed.version.v2": "Compact (v2)",
+    "embed.version.v2Badge": "New",
+    "embed.version.help": "v2 is more compact, mobile-first and has a less intrusive share button. Existing embeds keep working on v1.",
+    "embed.bottomOffset.label": "Bottom spacing (px)",
+    "embed.bottomOffset.help": "Increase this if your site has a floating WhatsApp or language button that overlaps the widget.",
 
     // Quality check
     "qc.title": "Quality check",
