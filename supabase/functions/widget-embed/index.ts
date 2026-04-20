@@ -15,6 +15,9 @@ serve(async (req) => {
   const url = new URL(req.url);
   const widgetId = url.searchParams.get("widget_id");
   const format = url.searchParams.get("format") || "js";
+  const langParam = (url.searchParams.get("lang") || "nl").toLowerCase();
+  const SUPPORTED_LANGS = ["nl", "en", "de", "fy"];
+  const lang = SUPPORTED_LANGS.includes(langParam) ? langParam : "nl";
 
   if (!widgetId) {
     return new Response("widget_id required", { status: 400, headers: corsHeaders });
@@ -60,9 +63,39 @@ serve(async (req) => {
     }
 
     const { data: events } = await query;
+    const eventRows = events || [];
+
+    // Bulk-fetch translations if a non-default language was requested
+    let translationMap: Record<string, any> = {};
+    if (lang !== "nl" && eventRows.length > 0) {
+      const ids = eventRows.map((e: any) => e.id);
+      const { data: trans } = await supabase
+        .from("event_translations")
+        .select("event_id, title, subtitle, short_description, cta_button_text")
+        .in("event_id", ids)
+        .eq("language_code", lang);
+      if (trans) for (const t of trans as any[]) translationMap[t.event_id] = t;
+    }
+
+    // Per-field NL fallback when translation is partial / missing
+    const localizedEvents = eventRows.map((e: any) => {
+      const t = translationMap[e.id];
+      if (!t) return e;
+      const pick = (field: string) => {
+        const v = t[field];
+        return typeof v === "string" && v.trim().length > 0 ? v : e[field];
+      };
+      return {
+        ...e,
+        title: pick("title"),
+        subtitle: pick("subtitle"),
+        short_description: pick("short_description"),
+        cta_button_text: pick("cta_button_text"),
+      };
+    });
 
     // Fetch featured images
-    const imageIds = (events || []).map((e: any) => e.featured_image_id).filter(Boolean);
+    const imageIds = localizedEvents.map((e: any) => e.featured_image_id).filter(Boolean);
     let imageMap: Record<string, string> = {};
     if (imageIds.length > 0) {
       const { data: mediaRows } = await supabase.from("media").select("id, original_url").in("id", imageIds);
@@ -73,7 +106,7 @@ serve(async (req) => {
       }
     }
 
-    const eventsWithImages = (events || []).map((e: any) => ({
+    const eventsWithImages = localizedEvents.map((e: any) => ({
       ...e,
       featured_image_url: e.featured_image_id ? imageMap[e.featured_image_id] || null : null,
     }));
