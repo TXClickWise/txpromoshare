@@ -143,9 +143,9 @@ export default function DistributionPage() {
         <h1 className="text-2xl font-display font-bold text-foreground mb-2">{t("distribution.title")}</h1>
         <EmptyState
           icon={Share2}
-          title="Nog geen gepubliceerde evenementen"
-          description="Publiceer eerst een evenement om het te kunnen verspreiden via WhatsApp, je website of social media."
-          actionLabel="Evenement aanmaken"
+          title={t("distribution.noPublishedEvents")}
+          description={t("distribution.noPublishedEventsDesc")}
+          actionLabel={t("distribution.createEventCta")}
           actionTo="/app/events/new"
         />
       </div>
@@ -153,16 +153,16 @@ export default function DistributionPage() {
   }
 
   if (isLoading || !event) {
-    return <div className="text-muted-foreground text-sm">Laden...</div>;
+    return <div className="text-muted-foreground text-sm">{t("distribution.loading")}</div>;
   }
 
   const publicShareUrl = `https://txeventshare.nl/e/${event.slug}`;
   const ogProxyUrl = `https://ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/og-proxy?slug=${encodeURIComponent(event.slug)}`;
   const dateStr = new Date(event.start_date).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" });
   const timeStr = event.start_time?.slice(0, 5) || "";
-  const venueName = venue?.name || "Locatie volgt";
+  const venueName = venue?.name || t("distribution.venueFallback");
   const calendarUrl = buildGoogleCalendarUrl(event, venueName);
-  const ctaText = event.cta_button_text || "Meer info";
+  const ctaText = event.cta_button_text || t("distribution.ctaFallback");
 
   // Default texts per channel — organisator-perspectief
   const defaultTexts = {
@@ -231,10 +231,10 @@ ${tenant?.tagline ? `Tagline: ${tenant.tagline}` : ""}`;
         promo: parsed.promo || getText("promo"),
         gbp: parsed.gbp || getText("gbp"),
       });
-      toast.success("Alle teksten gegenereerd!");
+      toast.success(t("distribution.allGenerated"));
     } catch (err: any) {
       console.error("AI generate error:", err);
-      toast.error("Genereren mislukt. Probeer het opnieuw.");
+      toast.error(t("distribution.generateFailed"));
     } finally {
       setGenerating(false);
     }
@@ -259,10 +259,10 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         body: { prompt, task: "rewrite_channel" },
       });
       if (error) throw error;
-      toast.success("Tekst herschreven");
+      toast.success(t("distribution.rewritten"));
       return data.result;
     } catch {
-      toast.error("Herschrijven mislukt");
+      toast.error(t("distribution.rewriteFailed"));
       return text;
     } finally {
       setRewriting(null);
@@ -277,11 +277,11 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground">{t("distribution.title")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">Bereid je content voor en deel je event overal — in één klik.</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("distribution.subtitle")}</p>
         </div>
         <Button onClick={handleGenerateAll} disabled={generating} className="gap-2 shrink-0 w-full sm:w-auto">
           {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-          {generating ? "Genereren..." : "Genereer alle teksten"}
+          {generating ? t("distribution.generating") : t("distribution.generateAll")}
         </Button>
       </div>
 
@@ -289,7 +289,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-card border border-border shadow-card">
         <div className="flex items-center gap-2 shrink-0">
           <Zap className="w-4 h-4 text-primary shrink-0" />
-          <span className="text-sm font-medium text-foreground">Event:</span>
+          <span className="text-sm font-medium text-foreground">{t("distribution.eventLabel")}</span>
         </div>
         <Select value={selectedEvent} onValueChange={(v) => { setSelectedEvent(v); setChannelTexts({}); }}>
           <SelectTrigger className="w-full sm:max-w-sm">
@@ -316,8 +316,8 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
           <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
             <Share2 className="w-3.5 h-3.5 text-primary" />
           </div>
-          <h2 className="text-sm font-display font-semibold text-foreground">1. Link & snel delen</h2>
-          <span className="text-[11px] text-muted-foreground hidden sm:inline">— Eén klik naar elk kanaal</span>
+          <h2 className="text-sm font-display font-semibold text-foreground">{t("distribution.section1")}</h2>
+          <span className="text-[11px] text-muted-foreground hidden sm:inline">{t("distribution.section1Hint2")}</span>
         </div>
 
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
@@ -361,15 +361,15 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
           <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
             <Sparkles className="w-3.5 h-3.5 text-primary" />
           </div>
-          <h2 className="text-sm font-display font-semibold text-foreground">2. Copy per kanaal</h2>
-          <span className="text-[11px] text-muted-foreground hidden sm:inline">— Bewerk, sla op, kopieer</span>
+          <h2 className="text-sm font-display font-semibold text-foreground">{t("distribution.section2")}</h2>
+          <span className="text-[11px] text-muted-foreground hidden sm:inline">{t("distribution.section2Hint2")}</span>
         </div>
 
       {/* WhatsApp — kort & medium variants */}
       <ChannelCopyGroup
         icon={<img src="/images/whatsapp-icon.png" alt="WhatsApp" className="w-4 h-4 rounded-sm" />}
-        title="WhatsApp"
-        subtitle="Vanuit jou als organisator aan je relaties"
+        title={t("distribution.wa.title")}
+        subtitle={t("distribution.wa.subtitle")}
         saving={saving}
         saved={saved}
         onAiRewrite={handleRewrite}
@@ -378,15 +378,15 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         variants={[
           {
             id: "whatsapp_short",
-            label: "Kort",
-            description: "Eén zin, perfect voor een snelle 1-op-1 chat",
+            label: t("distribution.wa.shortLabel"),
+            description: t("distribution.wa.shortDesc"),
             text: getText("whatsapp_short"),
             charLimit: 160,
           },
           {
             id: "whatsapp",
-            label: "Medium",
-            description: "Met datum, tijd en locatie — ideaal voor groepschats",
+            label: t("distribution.wa.medLabel"),
+            description: t("distribution.wa.medDesc"),
             text: getText("whatsapp"),
             charLimit: 500,
             recommended: true,
@@ -395,7 +395,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         actions={
           <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
             <Button size="sm" className="gap-2 bg-green-600 text-white hover:bg-green-700 border-0 text-xs">
-              <Smartphone className="w-3.5 h-3.5" />WhatsApp
+              <Smartphone className="w-3.5 h-3.5" />{t("distribution.wa.button")}
             </Button>
           </a>
         }
@@ -404,8 +404,8 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
       {/* Social — teaser / Instagram-Facebook / lange promo */}
       <ChannelCopyGroup
         icon={<img src="/images/instagram-icon.png" alt="Instagram" className="w-4 h-4 rounded-sm" />}
-        title="Instagram & Facebook"
-        subtitle="Eén copy, drie lengtes voor verschillende plaatsingen"
+        title={t("distribution.social.title")}
+        subtitle={t("distribution.social.subtitle")}
         saving={saving}
         saved={saved}
         onAiRewrite={handleRewrite}
@@ -414,23 +414,23 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         variants={[
           {
             id: "teaser",
-            label: "Teaser",
-            description: "Voor stories, ads of een korte aankondiging",
+            label: t("distribution.social.teaserLabel"),
+            description: t("distribution.social.teaserDesc"),
             text: getText("teaser"),
             charLimit: 160,
           },
           {
             id: "instagram",
-            label: "Post",
-            description: "Volledige feedpost met hashtags",
+            label: t("distribution.social.postLabel"),
+            description: t("distribution.social.postDesc"),
             text: getText("instagram"),
             charLimit: 2200,
             recommended: true,
           },
           {
             id: "promo",
-            label: "Lang",
-            description: "Uitgebreide promo voor persbericht of uitnodiging",
+            label: t("distribution.social.longLabel"),
+            description: t("distribution.social.longDesc"),
             text: getText("promo"),
           },
         ]}
@@ -439,10 +439,10 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
       {/* TikTok blijft losstaand */}
       <ShareTextCard
         icon={<img src="/images/tiktok-icon.png" alt="TikTok" className="w-4 h-4 rounded-sm" />}
-        title="TikTok caption"
-        description="Korte, pakkende tekst voor TikTok"
+        title={t("distribution.tiktok.title")}
+        description={t("distribution.tiktok.desc")}
         text={getText("tiktok")}
-        onTextChange={(t) => setText("tiktok", t)}
+        onTextChange={(txt) => setText("tiktok", txt)}
         charLimit={2200}
         onAiRewrite={handleRewrite}
         aiLoading={!!rewriting}
@@ -451,14 +451,14 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         <div className="space-y-3">
           <h3 className="text-xs font-display font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
             <img src="/images/google-icon.png" alt="Google" className="w-3.5 h-3.5" />
-            Google Bedrijfsprofiel
+            {t("distribution.gbp.section")}
           </h3>
           <ShareTextCard
             icon={<img src="/images/google-icon.png" alt="Google" className="w-4 h-4" />}
-            title="Google Bedrijfsprofiel post"
-            description="Zakelijke post voor lokale vindbaarheid"
+            title={t("distribution.gbp.title")}
+            description={t("distribution.gbp.desc")}
             text={getText("gbp")}
-            onTextChange={(t) => setText("gbp", t)}
+            onTextChange={(txt) => setText("gbp", txt)}
             charLimit={1500}
             onAiRewrite={handleRewrite}
             aiLoading={!!rewriting}
@@ -468,24 +468,24 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         <div className="space-y-3">
           <h3 className="text-xs font-display font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
             <Globe className="w-3.5 h-3.5 text-primary" />
-            Website & nieuwsbrief
+            {t("distribution.web.section")}
           </h3>
           <div className="grid md:grid-cols-2 gap-3">
             <ShareTextCard
               icon={<Globe className="w-4 h-4 text-primary" />}
-              title="Website promo snippet"
-              description="HTML-klaar voor je website"
+              title={t("distribution.web.title")}
+              description={t("distribution.web.desc")}
               text={getText("website")}
-              onTextChange={(t) => setText("website", t)}
+              onTextChange={(txt) => setText("website", txt)}
               onAiRewrite={handleRewrite}
               aiLoading={!!rewriting}
             />
             <ShareTextCard
               icon={<Mail className="w-4 h-4 text-accent" />}
-              title="Nieuwsbrief introductie"
-              description="Kopieer en plak in je mailing tool"
+              title={t("distribution.nl.title")}
+              description={t("distribution.nl.desc")}
               text={getText("newsletter")}
-              onTextChange={(t) => setText("newsletter", t)}
+              onTextChange={(txt) => setText("newsletter", txt)}
               onAiRewrite={handleRewrite}
               aiLoading={!!rewriting}
             />
@@ -499,20 +499,20 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
           <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
             <Code2 className="w-3.5 h-3.5 text-primary" />
           </div>
-          <h2 className="text-sm font-display font-semibold text-foreground">3. Embeds & resultaten</h2>
-          <span className="text-[11px] text-muted-foreground hidden sm:inline">— Live op je site, meet wat werkt</span>
+          <h2 className="text-sm font-display font-semibold text-foreground">{t("distribution.section3")}</h2>
+          <span className="text-[11px] text-muted-foreground hidden sm:inline">— {t("distribution.section3Hint")}</span>
         </div>
 
         <div className="p-4 sm:p-5 rounded-xl bg-card border border-border shadow-card flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <div className="flex-1 min-w-0">
-            <h3 className="font-display font-semibold text-foreground text-sm mb-1">Embed op je website</h3>
+            <h3 className="font-display font-semibold text-foreground text-sm mb-1">{t("distribution.embedTitle")}</h3>
             <p className="text-xs text-muted-foreground">
-              Plaats een agenda- of eventwidget op je eigen website. Altijd up-to-date, in jouw huisstijl.
+              {t("distribution.embedDesc")}
             </p>
           </div>
           <Link to="/app/widgets" className="shrink-0 w-full sm:w-auto">
             <Button variant="outline" className="gap-2 w-full sm:w-auto justify-center">
-              Widgets beheren <ArrowRight className="w-4 h-4" />
+              {t("distribution.manageWidgets")} <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
         </div>
@@ -520,7 +520,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         <div className="space-y-2">
           <h3 className="text-xs font-display font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
             <BarChart3 className="w-3.5 h-3.5 text-primary" />
-            Statistieken
+            {t("distribution.statsHeader")}
           </h3>
           <DistributionStats stats={stats} />
         </div>
