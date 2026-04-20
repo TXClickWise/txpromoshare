@@ -30,6 +30,7 @@ function buildGoogleCalendarUrl(event: Tables<"events">, venueName: string) {
 export default function DistributionPage() {
   const { tenantId, tenant } = useTenant();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [selectedEvent, setSelectedEvent] = useState("");
   const [showQR, setShowQR] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -52,6 +53,14 @@ export default function DistributionPage() {
     },
     enabled: !!tenantId,
   });
+
+  // Pre-select event from ?event= URL param (e.g. coming from publish-success modal)
+  useEffect(() => {
+    const eventParam = searchParams.get("event");
+    if (eventParam && !selectedEvent && publishedEvents.some((e) => e.id === eventParam)) {
+      setSelectedEvent(eventParam);
+    }
+  }, [searchParams, publishedEvents, selectedEvent]);
 
   // Fetch venue for selected event
   const { data: venue } = useQuery({
