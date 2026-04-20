@@ -26,17 +26,18 @@ export default function PublicLayout() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Scroll to hash target when navigating to /#section from another route
+  // Scroll to hash target when navigating to /#section from another route.
+  // When navigating without a hash, scroll to top.
   useEffect(() => {
     if (location.hash) {
       const id = location.hash.replace("#", "");
-      // Wait for the target route to render
       const timer = setTimeout(() => {
         const el = document.getElementById(id);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
       return () => clearTimeout(timer);
     }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [location.pathname, location.hash]);
 
   const handleHashClick = (e: React.MouseEvent, to: string) => {
@@ -50,6 +51,14 @@ export default function PublicLayout() {
     } else {
       e.preventDefault();
       navigate(to);
+      setMenuOpen(false);
+    }
+  };
+
+  const handleHomeClick = (e: React.MouseEvent) => {
+    if (location.pathname === "/" && !location.hash) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
       setMenuOpen(false);
     }
   };
