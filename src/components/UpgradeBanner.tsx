@@ -13,9 +13,9 @@ interface UpgradeBannerProps {
 export function UpgradeBanner({ feature, plan, compact = false, variant }: UpgradeBannerProps) {
   // Variant-driven copy (preferred). Falls back to legacy feature/plan props.
   const copy = variant ? upgradeCopy[variant] : null;
-  const headline = copy?.title ?? feature ?? "Upgrade je plan";
-  const subline = copy?.subtitle ?? `Beschikbaar in het ${plan ?? "Pro"} plan`;
-  const ctaLabel = copy?.cta ?? "Upgraden";
+  const headline = copy?.title ?? feature ?? "Beschikbaar in een hoger plan";
+  const subline = copy?.subtitle ?? `Onderdeel van ${plan ?? "Pro"} — bekijk wat je krijgt.`;
+  const ctaLabel = copy?.cta ?? "Bekijk plan";
   const planLabel = copy?.targetPlan ?? plan ?? "Pro";
 
   if (compact) {
