@@ -321,7 +321,7 @@ export default function BrandingTab() {
       return;
     }
 
-    const { error } = await supabase.from("tenants").update(updates).eq("id", tenant.id);
+    const { error } = await supabase.from("tenants").update(updates as any).eq("id", tenant.id);
     if (error) {
       toast.error("Toepassen mislukt: " + error.message);
       return;
