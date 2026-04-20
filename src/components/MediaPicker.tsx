@@ -79,11 +79,39 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
     enabled: !!tenantId && open,
   });
 
-  const recentItems = mediaItems.slice(0, 8);
+  const favoriteItems = mediaItems.filter((m) => m.is_favorite);
+  const recentItems = [...mediaItems]
+    .sort((a, b) => {
+      const aTime = a.last_used_at ? new Date(a.last_used_at).getTime() : 0;
+      const bTime = b.last_used_at ? new Date(b.last_used_at).getTime() : 0;
+      return bTime - aTime;
+    })
+    .filter((m) => m.last_used_at)
+    .slice(0, 8);
+  const fallbackRecent = recentItems.length === 0 ? mediaItems.slice(0, 8) : recentItems;
   const filteredItems = mediaItems.filter((m) =>
     m.filename.toLowerCase().includes(search.toLowerCase()) ||
     (m.alt_text || "").toLowerCase().includes(search.toLowerCase())
   );
+
+  const toggleFavorite = async (e: React.MouseEvent, item: Tables<"media">) => {
+    e.stopPropagation();
+    const { error } = await supabase
+      .from("media")
+      .update({ is_favorite: !item.is_favorite })
+      .eq("id", item.id);
+    if (error) {
+      toast.error("Kon favoriet niet bijwerken");
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["media", tenantId] });
+    toast.success(item.is_favorite ? "Verwijderd uit favorieten" : "Toegevoegd aan favorieten");
+  };
+
+  const markAsUsed = async (id: string) => {
+    await supabase.from("media").update({ last_used_at: new Date().toISOString() }).eq("id", id);
+    queryClient.invalidateQueries({ queryKey: ["media", tenantId] });
+  };
 
   const handleUpload = useCallback(async (files: FileList | null) => {
     if (!files || !tenantId) return;
