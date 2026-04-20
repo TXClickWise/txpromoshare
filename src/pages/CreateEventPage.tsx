@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
-import { ArrowLeft, ArrowRight, Save, Send, Trash2, FileText, CalendarDays, Image, Megaphone, Send as SendIcon, Clock, Repeat } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { useBlocker, Link } from "react-router-dom";
+import { ArrowLeft, ArrowRight, Save, Send, Trash2, FileText, CalendarDays, Image, Megaphone, Send as SendIcon, Repeat, Loader2, CheckCircle2, ExternalLink, Share2, LayoutList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WizardProgress } from "@/components/event-wizard/WizardProgress";
 import { StepBasics } from "@/components/event-wizard/StepBasics";
@@ -10,6 +11,12 @@ import { StepPublish } from "@/components/event-wizard/StepPublish";
 import { OccurrencesTab } from "@/components/event-wizard/OccurrencesTab";
 import { useEventForm } from "@/components/event-wizard/useEventForm";
 import { AnimatePresence } from "framer-motion";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 const BASE_STEPS = [
   { id: 1, label: "Basis", icon: FileText },
@@ -21,13 +28,60 @@ const BASE_STEPS = [
 
 const OCCURRENCES_STEP = { id: 6, label: "Datums", icon: Repeat };
 
+function formatRelativeTime(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 5) return "zojuist";
+  if (seconds < 60) return `${seconds}s geleden`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min geleden`;
+  return date.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
+}
+
+function SaveIndicator({ saving, autosaving, isDirty, lastSavedAt }: {
+  saving: boolean; autosaving: boolean; isDirty: boolean; lastSavedAt: Date | null;
+}) {
+  // Force re-render every 15s for relative time updates
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (!lastSavedAt) return;
+    const t = setInterval(() => setTick(x => x + 1), 15000);
+    return () => clearInterval(t);
+  }, [lastSavedAt]);
+
+  if (saving || autosaving) {
+    return (
+      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Loader2 className="w-3 h-3 animate-spin" />
+        Opslaan…
+      </span>
+    );
+  }
+  if (isDirty) {
+    return <span className="text-xs text-highlight">• Niet opgeslagen</span>;
+  }
+  if (lastSavedAt) {
+    return (
+      <span className="flex items-center gap-1.5 text-xs text-accent">
+        <CheckCircle2 className="w-3 h-3" />
+        Concept opgeslagen · {formatRelativeTime(lastSavedAt)}
+      </span>
+    );
+  }
+  return null;
+}
+
 export default function CreateEventPage() {
   const ctx = useEventForm();
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Show occurrences tab only when editing a recurring event
   const showOccurrences = ctx.isEditing && ctx.form.isRecurring;
   const STEPS = showOccurrences ? [...BASE_STEPS, OCCURRENCES_STEP] : BASE_STEPS;
+
+  // In-app navigation guard for unsaved changes
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      ctx.isDirty && !ctx.saving && !ctx.autosaving && currentLocation.pathname !== nextLocation.pathname
+  );
 
   const completedSteps = useMemo(() => {
     const completed: number[] = [];
@@ -42,25 +96,20 @@ export default function CreateEventPage() {
 
   const maxStep = STEPS[STEPS.length - 1].id;
 
-  const canGoNext = () => {
-    const v = ctx.validateStep(currentStep);
-    return v.isValid;
-  };
+  const canGoNext = () => ctx.validateStep(currentStep).isValid;
 
   const goNext = () => {
     if (currentStep < maxStep && canGoNext()) {
-      const nextStepIds = STEPS.map(s => s.id);
-      const currentIdx = nextStepIds.indexOf(currentStep);
-      if (currentIdx < nextStepIds.length - 1) {
-        setCurrentStep(nextStepIds[currentIdx + 1]);
-      }
+      const ids = STEPS.map(s => s.id);
+      const i = ids.indexOf(currentStep);
+      if (i < ids.length - 1) setCurrentStep(ids[i + 1]);
     }
   };
 
   const goPrev = () => {
-    const stepIds = STEPS.map(s => s.id);
-    const currentIdx = stepIds.indexOf(currentStep);
-    if (currentIdx > 0) setCurrentStep(stepIds[currentIdx - 1]);
+    const ids = STEPS.map(s => s.id);
+    const i = ids.indexOf(currentStep);
+    if (i > 0) setCurrentStep(ids[i - 1]);
   };
 
   if (ctx.loading) {
@@ -71,15 +120,18 @@ export default function CreateEventPage() {
     );
   }
 
+  const publicUrl = ctx.form.slug ? `${window.location.origin}/e/${ctx.form.slug}` : "";
+
   return (
     <div className="max-w-3xl mx-auto">
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm -mx-4 lg:-mx-6 px-4 lg:px-6 py-3 border-b border-border mb-6">
         <div className="flex items-center gap-3">
-          <button onClick={() => {
-            if (ctx.isDirty && !confirm("Je hebt onopgeslagen wijzigingen. Weet je zeker dat je wilt teruggaan?")) return;
-            ctx.navigate(-1);
-          }} className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors">
+          <button
+            onClick={() => ctx.navigate(-1)}
+            className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors"
+            aria-label="Terug"
+          >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="flex-1 min-w-0">
@@ -88,26 +140,37 @@ export default function CreateEventPage() {
             </h1>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span>Stap {STEPS.findIndex(s => s.id === currentStep) + 1} van {STEPS.length}</span>
-              {ctx.isDirty && <span className="text-highlight">• Niet opgeslagen</span>}
-              {ctx.lastSavedAt && !ctx.isDirty && (
-                <span className="text-accent flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  Opgeslagen {ctx.lastSavedAt.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}
-                </span>
-              )}
+              <span aria-hidden>·</span>
+              <SaveIndicator
+                saving={ctx.saving}
+                autosaving={ctx.autosaving}
+                isDirty={ctx.isDirty}
+                lastSavedAt={ctx.lastSavedAt}
+              />
             </div>
           </div>
           <div className="flex items-center gap-2">
             {ctx.isEditing && (
-              <Button variant="outline" size="sm" onClick={ctx.handleDelete} className="gap-2 text-destructive hover:text-destructive">
+              <Button variant="outline" size="sm" onClick={ctx.handleDelete} className="gap-2 text-destructive hover:text-destructive" aria-label="Verwijderen">
                 <Trash2 className="w-4 h-4" />
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={ctx.handleSave} disabled={ctx.saving} className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={ctx.handleSave}
+              disabled={ctx.saving || (!ctx.isDirty && !!ctx.lastSavedAt)}
+              className="gap-2"
+            >
               <Save className="w-4 h-4" />
-              <span className="hidden sm:inline">{ctx.saving ? "Opslaan..." : "Concept"}</span>
+              <span className="hidden sm:inline">{ctx.saving ? "Opslaan…" : "Concept"}</span>
             </Button>
-            <Button size="sm" onClick={ctx.handlePublish} disabled={ctx.saving || !completedSteps.includes(5)} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button
+              size="sm"
+              onClick={ctx.handlePublish}
+              disabled={ctx.saving || !completedSteps.includes(5)}
+              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+            >
               <Send className="w-4 h-4" />
               <span className="hidden sm:inline">Publiceren</span>
             </Button>
@@ -178,28 +241,24 @@ export default function CreateEventPage() {
 
       {/* Navigation buttons */}
       <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
-        <Button
-          variant="outline"
-          onClick={goPrev}
-          disabled={currentStep === STEPS[0].id}
-          className="gap-2"
-        >
+        <Button variant="outline" onClick={goPrev} disabled={currentStep === STEPS[0].id} className="gap-2">
           <ArrowLeft className="w-4 h-4" />
           Vorige
         </Button>
 
         {currentStep < maxStep ? (
-          <Button
-            onClick={goNext}
-            disabled={!canGoNext()}
-            className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
-          >
+          <Button onClick={goNext} disabled={!canGoNext()} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
             Volgende
             <ArrowRight className="w-4 h-4" />
           </Button>
         ) : currentStep !== 6 ? (
           <div className="flex gap-2">
-            <Button variant="outline" onClick={ctx.handleSave} disabled={ctx.saving} className="gap-2">
+            <Button
+              variant="outline"
+              onClick={ctx.handleSave}
+              disabled={ctx.saving || (!ctx.isDirty && !!ctx.lastSavedAt)}
+              className="gap-2"
+            >
               <Save className="w-4 h-4" />
               Concept
             </Button>
@@ -210,6 +269,77 @@ export default function CreateEventPage() {
           </div>
         ) : null}
       </div>
+
+      {/* Unsaved-changes guard (in-app navigation) */}
+      <AlertDialog open={blocker.state === "blocked"} onOpenChange={(open) => { if (!open) blocker.reset?.(); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Onopgeslagen wijzigingen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Je hebt nog niet-opgeslagen wijzigingen. Wil je deze pagina verlaten? Je wijzigingen gaan dan verloren.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => blocker.reset?.()}>Op deze pagina blijven</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => blocker.proceed?.()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Verlaten zonder opslaan
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Publish success modal */}
+      <Dialog open={!!ctx.publishedEventId} onOpenChange={(open) => { if (!open) ctx.dismissPublishSuccess(); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className={cn(
+              "w-12 h-12 rounded-full flex items-center justify-center mb-2",
+              ctx.publishedStatus === "scheduled" ? "bg-accent/15" : "bg-primary/15"
+            )}>
+              {ctx.publishedStatus === "scheduled"
+                ? <CalendarDays className="w-6 h-6 text-accent" />
+                : <CheckCircle2 className="w-6 h-6 text-primary" />}
+            </div>
+            <DialogTitle>
+              {ctx.publishedStatus === "scheduled" ? "Evenement ingepland" : "Je event is live"}
+            </DialogTitle>
+            <DialogDescription>
+              {ctx.publishedStatus === "scheduled"
+                ? `Het event wordt automatisch gepubliceerd op ${ctx.form.publishAt ? new Date(ctx.form.publishAt).toLocaleString("nl-NL", { dateStyle: "long", timeStyle: "short" }) : "de ingestelde datum"}.`
+                : "Je event is direct zichtbaar voor bezoekers en kan nu gedeeld worden."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-col gap-2 sm:gap-2 sm:space-x-0">
+            {ctx.publishedStatus === "published" && publicUrl && (
+              <Button asChild className="w-full gap-2">
+                <a href={publicUrl} target="_blank" rel="noreferrer">
+                  <ExternalLink className="w-4 h-4" />
+                  Bekijk publieke pagina
+                </a>
+              </Button>
+            )}
+            {ctx.publishedEventId && (
+              <Button variant="outline" asChild className="w-full gap-2">
+                <Link to={`/app/distribution/${ctx.publishedEventId}`} onClick={() => ctx.dismissPublishSuccess()}>
+                  <Share2 className="w-4 h-4" />
+                  Nu delen
+                </Link>
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              className="w-full gap-2 text-muted-foreground"
+              onClick={() => { ctx.dismissPublishSuccess(); ctx.navigate("/app/events"); }}
+            >
+              <LayoutList className="w-4 h-4" />
+              Naar overzicht
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
