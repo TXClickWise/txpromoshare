@@ -316,13 +316,40 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
               />
             </div>
 
-            {!search && recentItems.length > 0 && (
+            {!search && favoriteItems.length > 0 && (
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-                  <Clock className="w-3 h-3" />Recent
+                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />Favorieten
                 </p>
                 <div className="grid grid-cols-4 sm:grid-cols-4 gap-1.5">
-                  {recentItems.map((item) => (
+                  {favoriteItems.slice(0, 8).map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => selectExisting(item)}
+                      className={`relative rounded-md border-2 overflow-hidden aspect-square transition-all ${
+                        selectedId === item.id ? "border-primary" : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <img src={item.original_url || ""} alt={item.alt_text || item.filename}
+                        className="w-full h-full object-cover" loading="lazy" />
+                      {selectedId === item.id && (
+                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                          <Check className="w-4 h-4 text-primary" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!search && fallbackRecent.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+                  <Clock className="w-3 h-3" />Recent gebruikt
+                </p>
+                <div className="grid grid-cols-4 sm:grid-cols-4 gap-1.5">
+                  {fallbackRecent.map((item) => (
                     <button
                       key={item.id}
                       onClick={() => selectExisting(item)}
