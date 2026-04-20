@@ -16,8 +16,8 @@ import BrandReviewDialog, { type ScrapedBranding as ScrapedBrandingType } from "
 import BrandPreviewGrid from "./BrandPreviewGrid";
 import LogoUploader from "./LogoUploader";
 
-const FONT_OPTIONS = [
-  { value: "system", labelKey: "branding.font.system" },
+const FONT_OPTIONS: Array<{ value: string; label: string; labelKey?: string }> = [
+  { value: "system", label: "System", labelKey: "branding.font.system" },
   { value: "inter", label: "Inter" },
   { value: "poppins", label: "Poppins" },
   { value: "roboto", label: "Roboto" },
@@ -26,13 +26,13 @@ const FONT_OPTIONS = [
   { value: "montserrat", label: "Montserrat" },
   { value: "playfair", label: "Playfair Display" },
   { value: "dm-sans", label: "DM Sans" },
-] as const;
+];
 
-const BUTTON_STYLES = [
-  { value: "rounded", labelKey: "branding.btn.rounded" },
-  { value: "pill", labelKey: "branding.btn.pill" },
-  { value: "square", labelKey: "branding.btn.square" },
-] as const;
+const BUTTON_STYLES: Array<{ value: string; label: string; labelKey: string }> = [
+  { value: "rounded", label: "Rounded", labelKey: "branding.btn.rounded" },
+  { value: "pill", label: "Pill", labelKey: "branding.btn.pill" },
+  { value: "square", label: "Square", labelKey: "branding.btn.square" },
+];
 
 interface BrandingState {
   logoUrl: string | null;
