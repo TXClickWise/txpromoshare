@@ -1,7 +1,8 @@
 import { Sparkles, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { upgradeCopy, type UpgradeVariant } from "@/lib/upgradeCopy";
+import { useTranslation } from "@/hooks/useUILanguage";
+import type { UpgradeVariant } from "@/lib/upgradeCopy";
 
 interface UpgradeBannerProps {
   feature?: string;
@@ -11,11 +12,21 @@ interface UpgradeBannerProps {
 }
 
 export function UpgradeBanner({ feature, plan, compact = false, variant }: UpgradeBannerProps) {
+  const { t } = useTranslation();
+
   // Variant-driven copy (preferred). Falls back to legacy feature/plan props.
-  const copy = variant ? upgradeCopy[variant] : null;
-  const headline = copy?.title ?? feature ?? "Beschikbaar in een hoger plan";
-  const subline = copy?.subtitle ?? `Onderdeel van ${plan ?? "Pro"} — bekijk wat je krijgt.`;
-  const ctaLabel = copy?.cta ?? "Bekijk plan";
+  const copy = variant
+    ? {
+        title: t(`upgrade.copy.${variant === "free-to-basic" ? "freeToBasic" : variant === "basic-to-pro" ? "basicToPro" : "addon"}.title`),
+        subtitle: t(`upgrade.copy.${variant === "free-to-basic" ? "freeToBasic" : variant === "basic-to-pro" ? "basicToPro" : "addon"}.subtitle`),
+        cta: t(`upgrade.copy.${variant === "free-to-basic" ? "freeToBasic" : variant === "basic-to-pro" ? "basicToPro" : "addon"}.cta`),
+        targetPlan: variant === "free-to-basic" ? "Basic" : variant === "basic-to-pro" ? "Pro" : "Add-on",
+      }
+    : null;
+
+  const headline = copy?.title ?? feature ?? t("upgrade.fallbackTitle");
+  const subline = copy?.subtitle ?? t("upgrade.fallbackSubtitle", { plan: plan ?? "Pro" });
+  const ctaLabel = copy?.cta ?? t("upgrade.fallbackCta");
   const planLabel = copy?.targetPlan ?? plan ?? "Pro";
 
   if (compact) {
@@ -26,7 +37,7 @@ export function UpgradeBanner({ feature, plan, compact = false, variant }: Upgra
       >
         <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
         <span className="text-muted-foreground">
-          <span className="font-medium text-foreground">{feature ?? headline}</span> · Upgrade naar {planLabel}
+          <span className="font-medium text-foreground">{feature ?? headline}</span> · {t("upgrade.upgradeTo", { plan: planLabel })}
         </span>
         <ArrowRight className="w-3 h-3 text-primary ml-auto" />
       </Link>

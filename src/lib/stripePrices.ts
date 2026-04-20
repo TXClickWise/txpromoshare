@@ -19,42 +19,76 @@ export interface AddonDefinition {
   badge?: string;
 }
 
+type T = (key: string, vars?: Record<string, string>) => string;
+
+/** Build add-on registry uit de translation layer. Stripe IDs zijn universeel. */
+export function getStripeAddons(t: T): Record<AddonId, AddonDefinition> {
+  const monthlySuffix = t("plans.priceSuffixMonthlyExVat");
+  return {
+    ai_plus: {
+      id: "ai_plus",
+      productId: "prod_UMve0PMVP1jxdi",
+      priceId: "price_1TOBnJL34Z8Db3WQSPHnEmi0",
+      name: t("addons.aiPlus.name"),
+      pitch: t("addons.aiPlus.pitch"),
+      priceLabel: "€15",
+      priceSuffix: monthlySuffix,
+      badge: t("addons.aiPlus.badge"),
+    },
+    extra_member: {
+      id: "extra_member",
+      productId: "prod_UMveavWYexz88F",
+      priceId: "price_1TOBnLL34Z8Db3WQFx5DR1fL",
+      name: t("addons.extraMember.name"),
+      pitch: t("addons.extraMember.pitch"),
+      priceLabel: "€7",
+      priceSuffix: t("addons.extraMember.suffix"),
+    },
+    white_label_basic: {
+      id: "white_label_basic",
+      productId: "prod_UMver5TjPfDdWI",
+      priceId: "price_1TOBnNL34Z8Db3WQTWH2i5V3",
+      name: t("addons.whiteLabel.name"),
+      pitch: t("addons.whiteLabel.pitch"),
+      priceLabel: "€12",
+      priceSuffix: monthlySuffix,
+    },
+    extra_widget: {
+      id: "extra_widget",
+      productId: "prod_UMveDRXPjYGtoN",
+      priceId: "price_1TOBnOL34Z8Db3WQwaPVtsKp",
+      name: t("addons.extraWidget.name"),
+      pitch: t("addons.extraWidget.pitch"),
+      priceLabel: "€7",
+      priceSuffix: monthlySuffix,
+    },
+  };
+}
+
+// LEGACY NL-only constant (backwards-compat)
 export const STRIPE_ADDONS: Record<AddonId, AddonDefinition> = {
   ai_plus: {
-    id: "ai_plus",
-    productId: "prod_UMve0PMVP1jxdi",
-    priceId: "price_1TOBnJL34Z8Db3WQSPHnEmi0",
+    id: "ai_plus", productId: "prod_UMve0PMVP1jxdi", priceId: "price_1TOBnJL34Z8Db3WQSPHnEmi0",
     name: "AI Plus — extra volume",
     pitch: "Bovenop de AI-functies in je plan: extra AI-generaties, herschrijvingen en kanaalvarianten voor teams die intensief met AI werken.",
-    priceLabel: "€15",
-    priceSuffix: "/maand · excl. btw",
-    badge: "Extra volume",
+    priceLabel: "€15", priceSuffix: "/maand · excl. btw", badge: "Extra volume",
   },
   extra_member: {
-    id: "extra_member",
-    productId: "prod_UMveavWYexz88F",
-    priceId: "price_1TOBnLL34Z8Db3WQFx5DR1fL",
+    id: "extra_member", productId: "prod_UMveavWYexz88F", priceId: "price_1TOBnLL34Z8Db3WQFx5DR1fL",
     name: "Extra teamleden",
     pitch: "Voeg extra gebruikers toe aan je organisatie. Per gebruiker, per maand.",
-    priceLabel: "€7",
-    priceSuffix: "per gebruiker / maand · excl. btw",
+    priceLabel: "€7", priceSuffix: "per gebruiker / maand · excl. btw",
   },
   white_label_basic: {
-    id: "white_label_basic",
-    productId: "prod_UMver5TjPfDdWI",
-    priceId: "price_1TOBnNL34Z8Db3WQTWH2i5V3",
+    id: "white_label_basic", productId: "prod_UMver5TjPfDdWI", priceId: "price_1TOBnNL34Z8Db3WQTWH2i5V3",
     name: "White Label voor Basic",
     pitch: "Verberg de TX EventShare branding op je publieke pagina's en widgets — zonder Pro upgrade.",
-    priceLabel: "€12",
-    priceSuffix: "/maand · excl. btw",
+    priceLabel: "€12", priceSuffix: "/maand · excl. btw",
   },
   extra_widget: {
-    id: "extra_widget",
-    productId: "prod_UMveDRXPjYGtoN",
-    priceId: "price_1TOBnOL34Z8Db3WQwaPVtsKp",
+    id: "extra_widget", productId: "prod_UMveDRXPjYGtoN", priceId: "price_1TOBnOL34Z8Db3WQwaPVtsKp",
     name: "Extra widget / website",
     pitch: "Voor organisaties die op meerdere websites of locaties promoten.",
-    priceLabel: "€7",
-    priceSuffix: "/maand · excl. btw",
+    priceLabel: "€7", priceSuffix: "/maand · excl. btw",
   },
 };

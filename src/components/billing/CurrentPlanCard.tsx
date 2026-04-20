@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { CreditCard, ExternalLink, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { planPresentation } from "@/lib/planPricing";
+import { getPlanPresentation } from "@/lib/planPricing";
+import { useTranslation } from "@/hooks/useUILanguage";
 import type { PlanId } from "@/lib/plans";
 
 interface CurrentPlanCardProps {
@@ -21,7 +22,10 @@ export function CurrentPlanCard({
   onManage,
   manageLoading,
 }: CurrentPlanCardProps) {
-  const preset = planPresentation[effectivePlanId];
+  const { t, language } = useTranslation();
+  const plans = getPlanPresentation(t);
+  const preset = plans[effectivePlanId];
+  const dateLocale = language === "en" ? "en-US" : "nl-NL";
 
   return (
     <motion.div
@@ -36,22 +40,22 @@ export function CurrentPlanCard({
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-display font-bold text-foreground text-lg">{preset.name} plan</h3>
+              <h3 className="font-display font-bold text-foreground text-lg">{t("nav.plan", { plan: preset.name })}</h3>
               {hasOverride && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/15 text-accent text-[10px] font-semibold uppercase tracking-wide">
-                  <Sparkles className="w-3 h-3" /> Tijdelijke upgrade
+                  <Sparkles className="w-3 h-3" /> {t("billing.tempUpgrade")}
                 </span>
               )}
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">{preset.tagline}</p>
             <p className="text-xs text-muted-foreground mt-2">
               {hasOverride ? (
-                <>
-                  Actief tot {overrideEndsAt ? new Date(overrideEndsAt).toLocaleDateString("nl-NL") : "—"} ·{" "}
-                  basisplan: {planPresentation[planId].name}
-                </>
+                t("billing.activeUntil", {
+                  date: overrideEndsAt ? new Date(overrideEndsAt).toLocaleDateString(dateLocale) : "—",
+                  plan: plans[planId].name,
+                })
               ) : effectivePlanId === "free" ? (
-                "Geen factuurperiode"
+                t("billing.noBillingPeriod")
               ) : (
                 <>
                   {preset.priceLabel}
@@ -69,7 +73,7 @@ export function CurrentPlanCard({
             ) : (
               <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
             )}
-            Beheer abonnement
+            {t("plans.manageSubscription")}
           </Button>
         )}
       </div>
