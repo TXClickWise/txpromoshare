@@ -482,10 +482,21 @@ export default function EventsPage() {
                     )}
                   </div>
                   <div className="w-32 hidden sm:block">
-                    <p className="text-xs font-medium text-foreground">
-                      {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">{event.start_time?.slice(0, 5)}</p>
+                    {event.is_recurring && event._nextDate ? (
+                      <>
+                        <p className="text-xs font-medium text-foreground">
+                          {new Date(event._nextDate).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}
+                        </p>
+                        <p className="text-[11px] text-accent">volgende · {(event._nextTime || event.start_time)?.slice(0, 5)}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xs font-medium text-foreground">
+                          {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">{event.start_time?.slice(0, 5)}</p>
+                      </>
+                    )}
                   </div>
                   <div className="w-20">
                     <EventStatusBadge status={event.status} />
