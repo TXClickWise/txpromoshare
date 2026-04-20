@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { logAudit } from "@/lib/audit";
 import { useTenant } from "@/hooks/useTenant";
 import BrandReviewDialog, { type ScrapedBranding as ScrapedBrandingType } from "./BrandReviewDialog";
+import BrandPreviewGrid from "./BrandPreviewGrid";
 
 const FONT_OPTIONS = [
   { value: "system", label: "Systeem (standaard)" },
@@ -424,7 +425,7 @@ export default function BrandingTab() {
         >
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <div className="border-b border-border bg-muted/30 px-2 pt-2">
-              <TabsList className="bg-transparent h-auto p-0 gap-1 w-full justify-start">
+              <TabsList className="bg-transparent h-auto p-0 gap-1 w-full justify-start flex-wrap">
                 <TabsTrigger value="identity" className="text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
                   <Building2 className="w-3.5 h-3.5" />Identiteit
                 </TabsTrigger>
@@ -433,6 +434,9 @@ export default function BrandingTab() {
                 </TabsTrigger>
                 <TabsTrigger value="dna" className="text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
                   <Sparkles className="w-3.5 h-3.5" />Merk-DNA
+                </TabsTrigger>
+                <TabsTrigger value="overview" className="text-xs gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                  <ImageIcon className="w-3.5 h-3.5" />Overzicht
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -596,6 +600,21 @@ export default function BrandingTab() {
                   className="text-sm resize-none"
                 />
               </Section>
+            </TabsContent>
+            {/* OVERZICHT — alle previews tegelijk */}
+            <TabsContent value="overview" className="p-5 mt-0">
+              <BrandPreviewGrid
+                state={{
+                  logoUrl: state.logoUrl,
+                  primaryColor: state.primaryColor,
+                  secondaryColor: state.secondaryColor,
+                  fontFamily: state.fontFamily,
+                  buttonStyle: state.buttonStyle,
+                  defaultCtaText: state.defaultCtaText,
+                  tagline: state.tagline,
+                  organizationName: tenant?.name,
+                }}
+              />
             </TabsContent>
           </Tabs>
 
