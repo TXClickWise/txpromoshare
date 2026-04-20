@@ -1,4 +1,4 @@
-import { CalendarDays, MapPin, Repeat, Globe } from "lucide-react";
+import { CalendarDays, MapPin, Repeat, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,6 +6,21 @@ import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
 import type { EventFormState } from "./useEventForm";
 import type { Tables } from "@/integrations/supabase/types";
+import { generateDates as libGenerateDates, summarizeRecurrence, type RecurrenceInput } from "@/lib/recurrence";
+
+function toRecurrenceInput(form: EventFormState): RecurrenceInput {
+  return {
+    startDate: form.startDate,
+    isRecurring: form.isRecurring,
+    recurringFreq: form.recurringFreq,
+    recurringCustomFreq: form.recurringCustomFreq,
+    recurringInterval: form.recurringInterval,
+    recurringDays: form.recurringDays,
+    recurringEndType: form.recurringEndType,
+    recurringEndDate: form.recurringEndDate,
+    recurringEndCount: form.recurringEndCount,
+  };
+}
 
 interface StepDateTimeProps {
   form: EventFormState;
@@ -280,19 +295,30 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
               )}
             </div>
 
+            {/* Human-readable summary */}
+            {form.startDate && (
+              <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 flex items-start gap-2">
+                <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <div className="space-y-0.5">
+                  <p className="text-xs font-semibold text-primary">Samenvatting herhaling</p>
+                  <p className="text-sm text-foreground">{summarizeRecurrence(toRecurrenceInput(form)) || "—"}</p>
+                </div>
+              </div>
+            )}
+
             {/* Preview of generated dates */}
             {form.startDate && (
               <div className="bg-secondary/30 rounded-lg p-3 space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">Voorbeeld datums die gegenereerd worden:</p>
+                <p className="text-xs font-medium text-muted-foreground">Eerste datums die gegenereerd worden:</p>
                 <div className="flex flex-wrap gap-1.5 mt-1">
-                  {generatePreviewDates(form).slice(0, 8).map((d, i) => (
+                  {libGenerateDates(toRecurrenceInput(form)).slice(0, 8).map((d, i) => (
                     <span key={i} className="text-[11px] bg-background rounded px-2 py-0.5 text-foreground border border-border">
                       {new Date(d).toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short" })}
                     </span>
                   ))}
-                  {generatePreviewDates(form).length > 8 && (
+                  {libGenerateDates(toRecurrenceInput(form)).length > 8 && (
                     <span className="text-[11px] text-muted-foreground px-2 py-0.5">
-                      +{generatePreviewDates(form).length - 8} meer
+                      +{libGenerateDates(toRecurrenceInput(form)).length - 8} meer
                     </span>
                   )}
                 </div>
@@ -305,52 +331,7 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
   );
 }
 
-/** Generate preview dates based on form recurrence settings */
+/** Backward-compat wrapper — gebruikt nu de gedeelde recurrence library */
 export function generatePreviewDates(form: EventFormState): string[] {
-  if (!form.startDate || !form.isRecurring) return [];
-
-  const start = new Date(form.startDate);
-  const dates: string[] = [];
-  const maxDates = form.recurringEndType === "count" ? (form.recurringEndCount || 10) : 52;
-  const endDate = form.recurringEndType === "date" && form.recurringEndDate
-    ? new Date(form.recurringEndDate)
-    : null;
-
-  const freq = form.recurringFreq === "custom"
-    ? (form.recurringCustomFreq || "weekly")
-    : form.recurringFreq;
-  const interval = form.recurringFreq === "custom" || form.recurringFreq === "weekly"
-    ? form.recurringInterval
-    : 1;
-
-  let current = new Date(start);
-  for (let i = 0; i < maxDates * 7 && dates.length < maxDates; i++) {
-    if (endDate && current > endDate) break;
-
-    if (freq === "weekly" && form.recurringDays.length > 0) {
-      // For weekly with specific days
-      const dayOfWeek = current.getDay() === 0 ? 7 : current.getDay(); // 1=Ma, 7=Zo
-      if (form.recurringDays.includes(dayOfWeek) && current >= start) {
-        dates.push(current.toISOString().split("T")[0]);
-      }
-      current.setDate(current.getDate() + 1);
-      // Skip weeks based on interval
-      if (dayOfWeek === 7 && interval > 1) {
-        current.setDate(current.getDate() + (interval - 1) * 7);
-      }
-    } else if (freq === "daily") {
-      if (current >= start) dates.push(current.toISOString().split("T")[0]);
-      current.setDate(current.getDate() + interval);
-    } else if (freq === "weekly") {
-      if (current >= start) dates.push(current.toISOString().split("T")[0]);
-      current.setDate(current.getDate() + 7 * interval);
-    } else if (freq === "monthly") {
-      if (current >= start) dates.push(current.toISOString().split("T")[0]);
-      current.setMonth(current.getMonth() + interval);
-    } else {
-      break;
-    }
-  }
-
-  return dates;
+  return libGenerateDates(toRecurrenceInput(form));
 }
