@@ -1,14 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Layers, ArrowRight, Sparkles, Plus, MoreVertical, Trash2, Copy, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useUILanguage";
 import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { EmptyState } from "@/components/EmptyState";
 
 interface TemplateData {
   id: string;
@@ -31,11 +30,11 @@ const CATEGORY_EMOJI: Record<string, string> = {
 };
 
 export default function TemplatesPage() {
+  const { t, language } = useTranslation();
   const { tenantId } = useTenant();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Fetch system templates + tenant custom templates
   const { data: templates = [], isLoading } = useQuery({
     queryKey: ["event-templates", tenantId],
     queryFn: async () => {
@@ -49,7 +48,6 @@ export default function TemplatesPage() {
     enabled: !!tenantId,
   });
 
-  // Fetch recent events for "save as template"
   const { data: recentEvents = [] } = useQuery({
     queryKey: ["recent-events-for-template", tenantId],
     queryFn: async () => {
@@ -71,14 +69,14 @@ export default function TemplatesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-templates"] });
-      toast.success("Sjabloon verwijderd");
+      toast.success(t("templates.deleted"));
     },
   });
 
   const saveEventAsTemplate = useMutation({
     mutationFn: async (event: typeof recentEvents[0]) => {
       await supabase.from("event_templates").insert({
-        name: `${event.title} (sjabloon)`,
+        name: `${event.title} ${t("templates.fromEventSuffix")}`,
         tenant_id: tenantId!,
         is_system: false,
         category_id: event.category_id,
@@ -94,12 +92,12 @@ export default function TemplatesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-templates"] });
-      toast.success("Event opgeslagen als sjabloon");
+      toast.success(t("templates.savedAs"));
     },
   });
 
-  const systemTemplates = templates.filter((t) => t.is_system);
-  const customTemplates = templates.filter((t) => !t.is_system);
+  const systemTemplates = templates.filter((tp) => tp.is_system);
+  const customTemplates = templates.filter((tp) => !tp.is_system);
 
   const handleUseTemplate = (tmpl: TemplateData & { categories?: { slug: string; name: string } | null }) => {
     const params = new URLSearchParams();
@@ -113,27 +111,27 @@ export default function TemplatesPage() {
     navigate(`/app/events/new?${params.toString()}`);
   };
 
+  const dateLocale = language === "en" ? "en-US" : "nl-NL";
+
   return (
     <div className="space-y-8 max-w-4xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">{t.nav.templates}</h1>
-          <p className="text-sm text-muted-foreground mt-1">Kies een sjabloon om in seconden een evenement aan te maken</p>
+          <h1 className="text-2xl font-display font-bold text-foreground">{t("templates.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("templates.subtitle")}</p>
         </div>
       </div>
 
-      {/* Quick start tip */}
       <div className="rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 p-4 flex items-center gap-3">
         <Sparkles className="w-5 h-5 text-primary shrink-0" />
         <div>
-          <p className="text-sm font-medium text-foreground">Snel starten?</p>
-          <p className="text-xs text-muted-foreground">Kies een sjabloon — alle velden worden slim vooringevuld. Of maak je eigen sjabloon van een bestaand event.</p>
+          <p className="text-sm font-medium text-foreground">{t("templates.quickStartTitle")}</p>
+          <p className="text-xs text-muted-foreground">{t("templates.quickStartDesc")}</p>
         </div>
       </div>
 
-      {/* System templates */}
       <div>
-        <h2 className="text-sm font-display font-semibold text-foreground mb-3">Standaard sjablonen</h2>
+        <h2 className="text-sm font-display font-semibold text-foreground mb-3">{t("templates.systemHeader")}</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {systemTemplates.map((tmpl, i) => {
             const emoji = CATEGORY_EMOJI[tmpl.categories?.slug || ""] || "📋";
@@ -146,17 +144,16 @@ export default function TemplatesPage() {
                   <div className="text-2xl mb-2">{emoji}</div>
                   <h3 className="font-display font-semibold text-foreground text-sm mb-1 group-hover:text-primary transition-colors">{tmpl.name}</h3>
                   {tmpl.categories && (
-                    <p className="text-[11px] text-muted-foreground">Categorie: {tmpl.categories.name}</p>
+                    <p className="text-[11px] text-muted-foreground">{t("templates.category")}: {tmpl.categories.name}</p>
                   )}
                   <div className="flex items-center gap-1 text-xs text-primary font-medium mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Gebruik sjabloon <ArrowRight className="w-3 h-3" />
+                    {t("templates.useTemplate")} <ArrowRight className="w-3 h-3" />
                   </div>
                 </button>
               </motion.div>
             );
           })}
 
-          {/* Blank template */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: systemTemplates.length * 0.04 }}>
             <Link
               to="/app/events/new"
@@ -164,24 +161,23 @@ export default function TemplatesPage() {
             >
               <div className="flex flex-col items-center justify-center text-center h-full min-h-[100px]">
                 <Layers className="w-7 h-7 text-muted-foreground/30 mb-2" />
-                <h3 className="font-display font-semibold text-foreground text-sm mb-0.5 group-hover:text-primary transition-colors">Blanco event</h3>
-                <p className="text-[11px] text-muted-foreground">Begin helemaal leeg</p>
+                <h3 className="font-display font-semibold text-foreground text-sm mb-0.5 group-hover:text-primary transition-colors">{t("templates.blankTitle")}</h3>
+                <p className="text-[11px] text-muted-foreground">{t("templates.blankDesc")}</p>
               </div>
             </Link>
           </motion.div>
         </div>
       </div>
 
-      {/* Custom templates */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-display font-semibold text-foreground">Mijn sjablonen</h2>
+          <h2 className="text-sm font-display font-semibold text-foreground">{t("templates.customHeader")}</h2>
           {recentEvents.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2 text-xs">
                   <Plus className="w-3.5 h-3.5" />
-                  Maak van event
+                  {t("templates.makeFromEvent")}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -199,7 +195,7 @@ export default function TemplatesPage() {
         {customTemplates.length === 0 ? (
           <div className="p-6 rounded-xl border border-dashed border-border text-center">
             <Copy className="w-6 h-6 text-muted-foreground/30 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">Nog geen eigen sjablonen. Maak er een van een bestaand event via de knop hierboven.</p>
+            <p className="text-xs text-muted-foreground">{t("templates.noCustom")}</p>
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -216,7 +212,7 @@ export default function TemplatesPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem className="text-destructive" onClick={() => deleteTemplate.mutate(tmpl.id)}>
                           <Trash2 className="w-3.5 h-3.5 mr-2" />
-                          Verwijderen
+                          {t("common.delete")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -225,10 +221,10 @@ export default function TemplatesPage() {
                     <div className="text-2xl mb-2">📋</div>
                     <h3 className="font-display font-semibold text-foreground text-sm mb-1 group-hover:text-primary transition-colors pr-6">{tmpl.name}</h3>
                     <p className="text-[11px] text-muted-foreground">
-                      Aangemaakt {new Date(tmpl.created_at).toLocaleDateString("nl-NL")}
+                      {t("templates.created", { date: new Date(tmpl.created_at).toLocaleDateString(dateLocale) })}
                     </p>
                     <div className="flex items-center gap-1 text-xs text-primary font-medium mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      Gebruik sjabloon <ArrowRight className="w-3 h-3" />
+                      {t("templates.useTemplate")} <ArrowRight className="w-3 h-3" />
                     </div>
                   </button>
                 </div>
