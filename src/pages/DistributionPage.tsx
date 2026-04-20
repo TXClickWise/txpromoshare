@@ -1,7 +1,7 @@
 import { Share2, Smartphone, Zap, BarChart3, ArrowRight, Sparkles, Loader2, Globe, Mail, QrCode, Code2, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useUILanguage";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState } from "@/components/EmptyState";
