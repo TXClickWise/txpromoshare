@@ -614,6 +614,41 @@ export default function PublicEventPage() {
         </div>
       </main>
 
+      {/* Mobile sticky CTA bar — respects safe area */}
+      <div
+        className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-md shadow-elevated"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        <div className="max-w-5xl mx-auto px-3 py-2.5 flex items-center gap-2">
+          {event.cta_link ? (
+            <Button asChild className="flex-1 h-11 text-sm font-semibold gap-1.5">
+              <a href={event.cta_link} target="_blank" rel="noopener noreferrer">
+                {ctaText}<ExternalLink className="w-4 h-4" />
+              </a>
+            </Button>
+          ) : (
+            <div className="flex-1 text-center text-xs text-muted-foreground py-2">
+              Vrije toegang — geen aanmelding nodig
+            </div>
+          )}
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-11 w-11 shrink-0"
+            aria-label="Delen"
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({ title: event.title, text: shareText, url: previewShareUrl }).catch(() => {});
+              } else {
+                copyLink();
+              }
+            }}
+          >
+            <Share2 className="w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+
       {/* Lightbox */}
       <Dialog open={lightboxIndex !== null} onOpenChange={(open) => { if (!open) closeLightbox(); }}>
         <DialogContent
