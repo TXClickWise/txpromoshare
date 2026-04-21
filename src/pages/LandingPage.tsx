@@ -10,6 +10,7 @@ import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useSEO, organizationSchema, websiteSchema, softwareSchema, faqSchema } from "@/lib/seo";
+import logoTxEventShare from "@/assets/logo-tx-eventshare.png";
 
 /* ────────────────────────── Data ────────────────────────── */
 
@@ -712,12 +713,7 @@ export default function LandingPage() {
         <div className="container px-4">
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg gradient-hero flex items-center justify-center">
-                  <span className="text-primary-foreground font-display font-bold text-sm">TX</span>
-                </div>
-                <span className="font-display font-bold text-lg text-foreground">EventShare</span>
-              </div>
+              <img src={logoTxEventShare} alt="TX EventShare" className="h-9 w-auto mb-3" />
               <p className="text-sm text-muted-foreground leading-relaxed mb-3">
                 Het slimste event promotie platform voor horeca en organisatoren in Nederland.
               </p>
