@@ -64,7 +64,7 @@ export default function AppLayout() {
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center gap-2 px-5 py-4 border-b border-border">
-          <img src={logoTxEventShare} alt="TX EventShare" className="h-8 w-auto" />
+          <img src={logoTxEventShare} alt="TX EventShare" className="h-14 w-auto" />
           <button onClick={() => setSidebarOpen(false)} className="ml-auto lg:hidden text-muted-foreground">
             <X className="w-5 h-5" />
           </button>
