@@ -73,9 +73,9 @@ export default function PublicLayout() {
         "sticky top-0 z-50 transition-all duration-200",
         scrolled ? "bg-background/90 backdrop-blur-md border-b border-border shadow-card" : "bg-transparent"
       )}>
-        <div className="container flex items-center justify-between h-16 px-4">
+        <div className="container flex items-center justify-between h-20 px-4">
           <Link to="/" onClick={handleHomeClick} className="flex items-center gap-2">
-            <img src={logoTxEventShare} alt="TX EventShare" className="h-8 w-auto" />
+            <img src={logoTxEventShare} alt="TX EventShare" className="h-16 w-auto" />
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
