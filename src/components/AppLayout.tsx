@@ -10,6 +10,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { usePlan } from "@/hooks/usePlan";
 import { UILanguageSwitcher } from "@/components/i18n/UILanguageSwitcher";
 import { useTranslation } from "@/hooks/useUILanguage";
+import logoTxEventShare from "@/assets/logo-tx-eventshare.png";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -63,10 +64,7 @@ export default function AppLayout() {
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center gap-2 px-5 py-4 border-b border-border">
-          <div className="w-8 h-8 rounded-lg gradient-hero flex items-center justify-center">
-            <span className="text-primary-foreground font-display font-bold text-sm">TX</span>
-          </div>
-          <span className="font-display font-bold text-lg text-foreground">EventShare</span>
+          <img src={logoTxEventShare} alt="TX EventShare" className="h-8 w-auto" />
           <button onClick={() => setSidebarOpen(false)} className="ml-auto lg:hidden text-muted-foreground">
             <X className="w-5 h-5" />
           </button>
