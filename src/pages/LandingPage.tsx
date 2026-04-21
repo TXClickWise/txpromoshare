@@ -713,7 +713,7 @@ export default function LandingPage() {
         <div className="container px-4">
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
             <div>
-              <img src={logoTxEventShare} alt="TX EventShare" className="w-auto mb-3" style={{ height: '4.5rem' }} />
+              <img src={logoTxEventShare} alt="TX EventShare" className="w-auto mb-3" style={{ height: '6.75rem' }} />
               <p className="text-sm text-muted-foreground leading-relaxed mb-3">
                 Het slimste event promotie platform voor horeca en organisatoren in Nederland.
               </p>
