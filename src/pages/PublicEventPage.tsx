@@ -572,55 +572,57 @@ export default function PublicEventPage() {
                 </span>
                 <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${shareOpen ? "rotate-180" : ""}`} />
               </button>
-              <div className={`grid grid-cols-4 gap-1.5 mt-3 ${shareOpen ? "" : "hidden"}`}>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
-                  <a href={`https://wa.me/?text=${encodeURIComponent(visitorWhatsappText)}`} target="_blank" rel="noopener noreferrer">
-                    <MessageCircle className="w-3.5 h-3.5" />WhatsApp
+              <div className={`grid grid-cols-4 gap-1 mt-3 ${shareOpen ? "" : "hidden"}`}>
+                <Button variant="outline" size="sm" className="flex-col gap-1 text-[10px] h-auto py-2 px-1" asChild>
+                  <a
+                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(visitorWhatsappText)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-action="share/whatsapp/share"
+                  >
+                    <MessageCircle className="w-4 h-4" /><span>WhatsApp</span>
                   </a>
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
+                <Button variant="outline" size="sm" className="flex-col gap-1 text-[10px] h-auto py-2 px-1" asChild>
                   <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewShareUrl)}`} target="_blank" rel="noopener noreferrer">
-                    <Facebook className="w-3.5 h-3.5" />Facebook
+                    <Facebook className="w-4 h-4" /><span>Facebook</span>
                   </a>
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => {
-                  const text = shareText;
+                <Button variant="outline" size="sm" className="flex-col gap-1 text-[10px] h-auto py-2 px-1" onClick={() => {
                   if (navigator.share) {
-                    navigator.share({ title: event.title, text, url: previewShareUrl }).catch(() => {});
+                    navigator.share({ title: event.title, text: shareText, url: previewShareUrl }).catch(() => {});
                   } else {
                     navigator.clipboard.writeText(previewShareUrl);
                   }
                 }}>
-                  <Instagram className="w-3.5 h-3.5" />Instagram
+                  <Instagram className="w-4 h-4" /><span>Instagram</span>
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => {
-                  const text = shareText;
+                <Button variant="outline" size="sm" className="flex-col gap-1 text-[10px] h-auto py-2 px-1" onClick={() => {
                   if (navigator.share) {
-                    navigator.share({ title: event.title, text, url: previewShareUrl }).catch(() => {});
+                    navigator.share({ title: event.title, text: shareText, url: previewShareUrl }).catch(() => {});
                   } else {
                     navigator.clipboard.writeText(previewShareUrl);
                   }
                 }}>
-                  <Music className="w-3.5 h-3.5" />TikTok
+                  <Music className="w-4 h-4" /><span>TikTok</span>
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => {
-                  const text = shareText;
+                <Button variant="outline" size="sm" className="flex-col gap-1 text-[10px] h-auto py-2 px-1" onClick={() => {
                   if (navigator.share) {
-                    navigator.share({ title: event.title, text, url: previewShareUrl }).catch(() => {});
+                    navigator.share({ title: event.title, text: shareText, url: previewShareUrl }).catch(() => {});
                   } else {
                     navigator.clipboard.writeText(previewShareUrl);
                   }
                 }}>
-                  <Building2 className="w-3.5 h-3.5" />Google
+                  <Building2 className="w-4 h-4" /><span>Google</span>
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" asChild>
+                <Button variant="outline" size="sm" className="flex-col gap-1 text-[10px] h-auto py-2 px-1" asChild>
                   <a href={`mailto:?subject=${encodeURIComponent(event.title)}&body=${encodeURIComponent(shareText + "\n\n" + publicEventUrl)}`}>
-                    <Mail className="w-3.5 h-3.5" />E-mail
+                    <Mail className="w-4 h-4" /><span>E-mail</span>
                   </a>
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={copyLink}>
-                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copied ? "Gekopieerd!" : "Kopieer link"}
+                <Button variant="outline" size="sm" className="flex-col gap-1 text-[10px] h-auto py-2 px-1 col-span-2" onClick={copyLink}>
+                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  <span>{copied ? "Gekopieerd!" : "Kopieer link"}</span>
                 </Button>
               </div>
             </motion.div>
