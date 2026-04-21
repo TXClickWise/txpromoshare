@@ -255,7 +255,7 @@ export default function PublicEventPage() {
     <div className="min-h-screen bg-background">
       {/* HERO — calm, premium: image + back + title only */}
       <section className="relative w-full overflow-hidden" style={{ minHeight: "min(48vh, 380px)" }}>
-        <img src={heroImg} alt={localized.title} className="absolute inset-0 w-full h-full object-cover" loading="eager" />
+        <img src={heroImg} alt={localized.title} className="absolute inset-0 w-full h-full object-cover object-top" loading="eager" />
         {/* Subtle gradient: only enough for legibility of top controls and bottom title */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/55" />
         <div className="relative z-10 max-w-5xl mx-auto px-4 pt-4 flex items-center justify-between gap-2">
