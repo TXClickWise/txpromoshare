@@ -51,7 +51,17 @@ export function ChannelBar({ shareUrl, previewShareUrl, whatsappText, socialText
         break;
       }
       case "facebook":
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(resolvedPreviewUrl)}&quote=${encodeURIComponent(socialText)}`, "_blank");
+        // Facebook negeert sinds 2017 de quote-parameter, dus kopieer tekst naar klembord
+        // zodat de gebruiker hem kan plakken bij "Schrijf iets...".
+        // Gebruik de canonical /e/[slug] URL (niet de og-proxy) — Facebook's scraper volgt
+        // meta-refresh redirects en zou anders de homepage OG-tags ophalen.
+        try {
+          navigator.clipboard.writeText(socialText);
+          toast.success("Tekst gekopieerd — plak hem bij 'Schrijf iets...'");
+        } catch {
+          // ignore clipboard errors
+        }
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, "_blank");
         break;
       case "instagram":
         nativeShareWithImage(socialText, eventImageUrl);
