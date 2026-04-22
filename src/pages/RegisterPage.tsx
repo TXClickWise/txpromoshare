@@ -59,7 +59,7 @@ export default function RegisterPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src={logoTxEventShare} alt="TX EventShare" className="h-12 w-auto mx-auto mb-4" />
+          <img src={logoTxEventShare} alt="TX EventShare" className="h-[2.7rem] w-auto mx-auto mb-4" />
           <h1 className="text-2xl font-display font-bold text-foreground">{t.auth.register}</h1>
           <p className="text-sm text-muted-foreground mt-1">Start gratis met TX EventShare</p>
         </div>

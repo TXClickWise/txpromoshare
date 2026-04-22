@@ -44,7 +44,7 @@ export default function LoginPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src={logoTxEventShare} alt="TX EventShare" className="h-24 w-auto mx-auto mb-4" />
+          <img src={logoTxEventShare} alt="TX EventShare" className="h-[5.4rem] w-auto mx-auto mb-4" />
           <h1 className="text-2xl font-display font-bold text-foreground">{t("auth.login")}</h1>
           <p className="text-sm text-muted-foreground mt-1">{t("auth.welcomeBack")}</p>
         </div>

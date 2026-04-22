@@ -32,7 +32,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src={logoTxEventShare} alt="TX EventShare" className="h-12 w-auto mx-auto mb-4" />
+          <img src={logoTxEventShare} alt="TX EventShare" className="h-[2.7rem] w-auto mx-auto mb-4" />
           <h1 className="text-2xl font-display font-bold text-foreground">Wachtwoord vergeten</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {sent ? "Check je inbox voor een reset link." : "Voer je e-mailadres in om je wachtwoord te herstellen."}

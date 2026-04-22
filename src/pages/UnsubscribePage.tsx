@@ -50,7 +50,7 @@ export default function UnsubscribePage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-background">
       <div className="w-full max-w-md text-center space-y-6">
-        <img src={logoTxEventShare} alt="TX EventShare" className="h-12 w-auto mx-auto" />
+        <img src={logoTxEventShare} alt="TX EventShare" className="h-[2.7rem] w-auto mx-auto" />
 
         {status === "loading" && (
           <>
