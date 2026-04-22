@@ -12,10 +12,22 @@ interface ChannelBarProps {
   onShowQR?: () => void;
 }
 
-async function nativeShareWithImage(text: string, imageUrl?: string) {
-  if (!imageUrl || !navigator.canShare) {
-    navigator.clipboard.writeText(text);
-    toast.success("Tekst gekopieerd — plak in de app");
+async function nativeShareWithImage(text: string, shareUrl: string, imageUrl?: string, platformLabel?: string) {
+  // Combineer tekst + link zodat gebruiker beide kan plakken in de doel-app
+  const fullText = `${text}\n\n${shareUrl}`;
+
+  // Kopieer altijd vooraf naar klembord — apps zoals TikTok plakken niet automatisch
+  // de gedeelde tekst in titel/omschrijving, dus de gebruiker moet zelf kunnen plakken.
+  try {
+    await navigator.clipboard.writeText(fullText);
+  } catch {
+    // ignore
+  }
+
+  const platform = platformLabel || "de app";
+
+  if (!imageUrl || typeof navigator.canShare !== "function" || typeof navigator.share !== "function") {
+    toast.success(`Tekst gekopieerd — open ${platform} en plak in titel/omschrijving`);
     return;
   }
   try {
@@ -23,15 +35,20 @@ async function nativeShareWithImage(text: string, imageUrl?: string) {
     const blob = await res.blob();
     const ext = blob.type.includes("png") ? "png" : "jpg";
     const file = new File([blob], `event.${ext}`, { type: blob.type });
+    if (navigator.canShare({ files: [file], text: fullText })) {
+      await navigator.share({ text: fullText, files: [file] });
+      toast.success(`Tekst staat in je klembord — plak hem in ${platform} bij titel/omschrijving`);
+      return;
+    }
     if (navigator.canShare({ files: [file] })) {
-      await navigator.share({ text, files: [file] });
+      await navigator.share({ files: [file] });
+      toast.success(`Tekst staat in je klembord — plak hem in ${platform} bij titel/omschrijving`);
       return;
     }
   } catch {
     // fallback
   }
-  navigator.clipboard.writeText(text);
-  toast.success("Tekst gekopieerd — plak in de app");
+  toast.success(`Tekst gekopieerd — open ${platform} en plak in titel/omschrijving`);
 }
 
 export function ChannelBar({ shareUrl, previewShareUrl, whatsappText, socialText, eventTitle, eventImageUrl, onChannelClick, onShowQR }: ChannelBarProps) {
@@ -64,13 +81,13 @@ export function ChannelBar({ shareUrl, previewShareUrl, whatsappText, socialText
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, "_blank");
         break;
       case "instagram":
-        nativeShareWithImage(socialText, eventImageUrl);
+        nativeShareWithImage(socialText, shareUrl, eventImageUrl, "Instagram");
         break;
       case "tiktok":
-        nativeShareWithImage(socialText, eventImageUrl);
+        nativeShareWithImage(socialText, shareUrl, eventImageUrl, "TikTok");
         break;
       case "gbp":
-        nativeShareWithImage(socialText, eventImageUrl);
+        nativeShareWithImage(socialText, shareUrl, eventImageUrl, "Google");
         break;
       case "email":
         window.open(`mailto:?subject=${encodeURIComponent(eventTitle)}&body=${encodeURIComponent(`${socialText}\n\n${shareUrl}`)}`, "_blank");
