@@ -17,12 +17,13 @@ export interface FanOutConfig {
 export interface FanOutEventData {
   title: string;
   date: string;
+  startTime?: string;
   location: string;
   description: string;
   url: string;
 }
 
-export type FanOutAction = "published" | "updated" | "ended";
+export type FanOutAction = "published" | "updated" | "ended" | "reminder";
 export type Lang = "nl" | "fy" | "de" | "en";
 export type ChannelType = "SMS" | "WhatsApp";
 
@@ -83,6 +84,12 @@ export function buildSmsMessage(
       de: `❌ Veranstaltung abgesagt im {venueName}:\n\n{title}\n📅 {date}\n\nDiese Veranstaltung findet leider nicht statt.\nWeitere Veranstaltungen: {url}`,
       en: `❌ Event cancelled at {venueName}:\n\n{title}\n📅 {date}\n\nUnfortunately this event has been cancelled.\nCheck the agenda for other events: {url}`,
     },
+    reminder: {
+      nl: `⏰ Reminder!\n\n{title}\n📅 {date} om {startTime}\n📍 {location}\n\nBegint over 2 uur bij {venueName}. Tot straks!\n\nMeer info: {url}`,
+      fy: `⏰ Reminder!\n\n{title}\n📅 {date} om {startTime}\n📍 {location}\n\nBegjint oer 2 oeren by {venueName}. Oant sa!\n\nMear ynfo: {url}`,
+      de: `⏰ Erinnerung!\n\n{title}\n📅 {date} um {startTime}\n📍 {location}\n\nBeginnt in 2 Stunden im {venueName}. Bis gleich!\n\nMehr Infos: {url}`,
+      en: `⏰ Reminder!\n\n{title}\n📅 {date} at {startTime}\n📍 {location}\n\nStarts in 2 hours at {venueName}. See you soon!\n\nMore info: {url}`,
+    },
   };
   void v;
   let tpl = templates[action][lang] ?? templates[action].nl;
@@ -90,6 +97,7 @@ export function buildSmsMessage(
     .replaceAll("{venueName}", event.location ? event.location : "")
     .replaceAll("{title}", event.title || "")
     .replaceAll("{date}", formatDateLocalized(event.date || "", lang))
+    .replaceAll("{startTime}", event.startTime || "")
     .replaceAll("{location}", event.location || "")
     .replaceAll("{description}", event.description || "")
     .replaceAll("{url}", event.url || "");
@@ -132,12 +140,19 @@ export function buildSmsMessageWithVenue(
       de: `❌ Veranstaltung abgesagt im {venueName}:\n\n{title}\n📅 {date}\n\nDiese Veranstaltung findet leider nicht statt.\nWeitere Veranstaltungen: {url}`,
       en: `❌ Event cancelled at {venueName}:\n\n{title}\n📅 {date}\n\nUnfortunately this event has been cancelled.\nCheck the agenda for other events: {url}`,
     },
+    reminder: {
+      nl: `⏰ Reminder!\n\n{title}\n📅 {date} om {startTime}\n📍 {location}\n\nBegint over 2 uur bij {venueName}. Tot straks!\n\nMeer info: {url}`,
+      fy: `⏰ Reminder!\n\n{title}\n📅 {date} om {startTime}\n📍 {location}\n\nBegjint oer 2 oeren by {venueName}. Oant sa!\n\nMear ynfo: {url}`,
+      de: `⏰ Erinnerung!\n\n{title}\n📅 {date} um {startTime}\n📍 {location}\n\nBeginnt in 2 Stunden im {venueName}. Bis gleich!\n\nMehr Infos: {url}`,
+      en: `⏰ Reminder!\n\n{title}\n📅 {date} at {startTime}\n📍 {location}\n\nStarts in 2 hours at {venueName}. See you soon!\n\nMore info: {url}`,
+    },
   };
   let tpl = templates[action][lang] ?? templates[action].nl;
   tpl = tpl
     .replaceAll("{venueName}", venueName || "")
     .replaceAll("{title}", event.title || "")
     .replaceAll("{date}", formatDateLocalized(event.date || "", lang))
+    .replaceAll("{startTime}", event.startTime || "")
     .replaceAll("{location}", event.location || "")
     .replaceAll("{description}", event.description || "")
     .replaceAll("{url}", event.url || "");
