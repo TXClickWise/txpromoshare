@@ -307,8 +307,12 @@ export async function sendMessage(
   contactId: string,
   message: string,
   channelType: ChannelType,
-): Promise<boolean> {
+): Promise<{ ok: boolean; status: number; body: string; errorDetail: string }> {
   try {
+    const requestBody = { type: channelType, contactId, message };
+    console.log(`[fan-out] Sending ${channelType} to contact ${contactId}`);
+    console.log(`[fan-out] Request body:`, JSON.stringify(requestBody));
+
     const res = await fetch(`${CLICKWISE_API_URL}/conversations/messages`, {
       method: "POST",
       headers: {
@@ -316,17 +320,25 @@ export async function sendMessage(
         "Version": "2021-07-28",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ type: channelType, contactId, message }),
+      body: JSON.stringify(requestBody),
     });
+
+    const responseText = await res.text();
+    console.log(`[fan-out] Response for ${contactId}: status=${res.status}, body=${responseText.substring(0, 500)}`);
+
     if (!res.ok) {
-      const t = await res.text();
-      console.error("sendMessage failed:", channelType, res.status, t);
-      return false;
+      return {
+        ok: false,
+        status: res.status,
+        body: responseText,
+        errorDetail: `HTTP ${res.status}: ${responseText.substring(0, 300)}`,
+      };
     }
-    return true;
+    return { ok: true, status: res.status, body: responseText, errorDetail: "" };
   } catch (err) {
-    console.error("sendMessage error:", err);
-    return false;
+    const errMsg = String(err);
+    console.error(`[fan-out] Send error for ${contactId}:`, errMsg);
+    return { ok: false, status: 0, body: errMsg, errorDetail: `Exception: ${errMsg.substring(0, 300)}` };
   }
 }
 
@@ -357,13 +369,13 @@ export async function fanOutNotification(
       const lang = detectLanguage(sub, config.languageFieldKey);
       const channel = detectChannel(sub, config.channelFieldKey);
       const message = buildSmsMessageWithVenue(action, lang, eventData, config.venueName);
-      const ok = await sendMessage(config.apiKey, sub.id, message, channel);
-      if (ok) {
+      const sendResult = await sendMessage(config.apiKey, sub.id, message, channel);
+      if (sendResult.ok) {
         if (channel === "WhatsApp") result.whatsapp_sent++;
         else result.sms_sent++;
       } else {
         result.failed++;
-        result.errors.push(`${sub.id}:${channel}`);
+        result.errors.push(`${sub.id}:${channel}:${sendResult.errorDetail}`);
       }
       await new Promise((r) => setTimeout(r, 100));
     }
@@ -377,9 +389,17 @@ export async function fanOutNotification(
       connection_id: connectionId,
       event_id: eventId,
       event_type: "fan_out.notification",
-      status: result.failed === 0 ? "success" : (result.sms_sent + result.whatsapp_sent > 0 ? "success" : "failed"),
-      payload: { action, ...result } as any,
-      response_status: 200,
+      status: result.failed === 0 ? "success" : (result.sms_sent > 0 || result.whatsapp_sent > 0 ? "partial" : "failed"),
+      payload: {
+        action,
+        enabled: true,
+        subscribers_found: result.subscribers_found,
+        sms_sent: result.sms_sent,
+        whatsapp_sent: result.whatsapp_sent,
+        failed: result.failed,
+        errors: result.errors.slice(0, 10),
+      } as any,
+      response_status: result.failed === 0 ? 200 : 207,
     });
   } catch (err) {
     console.error("fan-out logging error:", err);
