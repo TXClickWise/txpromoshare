@@ -35,6 +35,28 @@ export interface FanOutResult {
   errors: string[];
 }
 
+/**
+ * Format a date string ("YYYY-MM-DD" or "YYYY-MM-DD HH:mm:ss") to
+ * "weekday DD-MM-YYYY" in the given language. Time is omitted.
+ */
+function formatDateLocalized(dateStr: string, lang: Lang): string {
+  if (!dateStr) return "";
+  const datePart = dateStr.split(" ")[0].split("T")[0];
+  const parts = datePart.split("-");
+  if (parts.length !== 3) return datePart;
+  const [year, month, day] = parts;
+  const date = new Date(`${year}-${month}-${day}T12:00:00`);
+  const dayOfWeek = date.getDay();
+  const dayNames: Record<Lang, string[]> = {
+    nl: ["zondag", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag"],
+    fy: ["snein", "moandei", "tiisdei", "woansdei", "tongersdei", "freed", "sneon"],
+    de: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
+    en: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+  };
+  const dayName = dayNames[lang]?.[dayOfWeek] || dayNames.nl[dayOfWeek];
+  return `${dayName} ${day}-${month}-${year}`;
+}
+
 export function buildSmsMessage(
   action: FanOutAction,
   lang: Lang,
@@ -67,7 +89,7 @@ export function buildSmsMessage(
   tpl = tpl
     .replaceAll("{venueName}", event.location ? event.location : "")
     .replaceAll("{title}", event.title || "")
-    .replaceAll("{date}", event.date || "")
+    .replaceAll("{date}", formatDateLocalized(event.date || "", lang))
     .replaceAll("{location}", event.location || "")
     .replaceAll("{description}", event.description || "")
     .replaceAll("{url}", event.url || "");
@@ -115,7 +137,7 @@ export function buildSmsMessageWithVenue(
   tpl = tpl
     .replaceAll("{venueName}", venueName || "")
     .replaceAll("{title}", event.title || "")
-    .replaceAll("{date}", event.date || "")
+    .replaceAll("{date}", formatDateLocalized(event.date || "", lang))
     .replaceAll("{location}", event.location || "")
     .replaceAll("{description}", event.description || "")
     .replaceAll("{url}", event.url || "");
