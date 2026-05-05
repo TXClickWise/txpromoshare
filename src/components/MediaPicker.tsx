@@ -10,7 +10,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
-import { CropHintGuide, RolePresetSwitcher, IMAGE_ROLE_SPECS, type ImageRoleKey } from "@/components/media/CropHintGuide";
+import { RolePresetSwitcher, IMAGE_ROLE_SPECS, type ImageRoleKey } from "@/components/media/CropHintGuide";
 
 interface StockImage {
   id: string;
