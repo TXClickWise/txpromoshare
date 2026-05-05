@@ -48,7 +48,6 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
   const [uploading, setUploading] = useState(false);
   const [multiSelected, setMultiSelected] = useState<{ id: string; url: string }[]>([]);
   const [activeRole, setActiveRole] = useState<ImageRoleKey>(role);
-  const [hoveredItem, setHoveredItem] = useState<Tables<"media"> | null>(null);
 
   const roleInfo = IMAGE_ROLE_SPECS[activeRole];
 
@@ -221,8 +220,6 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
           <button
             key={item.id}
             onClick={() => selectExisting(item)}
-            onMouseEnter={() => setHoveredItem(item)}
-            onMouseLeave={() => setHoveredItem(null)}
             className={`group relative rounded-lg border-2 overflow-hidden aspect-square transition-all ${
               isSelected ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
             }`}
@@ -378,20 +375,6 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
                   Alle media ({filteredItems.length})
                 </p>
                 <MediaGrid items={filteredItems} />
-              </div>
-            )}
-
-            {hoveredItem && (
-              <div className="sticky bottom-0 -mx-1 mt-3 p-3 rounded-xl bg-card border border-border shadow-card">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 font-medium">
-                  Crop preview
-                </p>
-                <CropHintGuide
-                  imageUrl={hoveredItem.original_url || ""}
-                  imageWidth={hoveredItem.width}
-                  imageHeight={hoveredItem.height}
-                  role={activeRole}
-                />
               </div>
             )}
           </TabsContent>
