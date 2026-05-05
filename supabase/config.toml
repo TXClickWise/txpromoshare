@@ -15,3 +15,5 @@ project_id = "ofkyhcrnzdkwypwcyobl"
     verify_jwt = false
   [functions.handle-email-suppression]
     verify_jwt = false
+  [functions.event-reminder-cron]
+    verify_jwt = false
