@@ -136,11 +136,98 @@ export async function fetchSubscribers(
   tag: string,
 ): Promise<any[]> {
   const all: any[] = [];
-  const limit = 100;
-  for (let page = 0; page < 5; page++) {
-    const offset = page * limit;
-    const url = `${CLICKWISE_API_URL}/contacts/?locationId=${encodeURIComponent(locationId)}&limit=${limit}&offset=${offset}&query=&tag=${encodeURIComponent(tag)}`;
+  let page = 1;
+  const pageLimit = 100;
+  const maxPages = 5; // max 500 subscribers
+
+  for (let p = 0; p < maxPages; p++) {
     try {
+      const searchBody = {
+        locationId,
+        page,
+        pageLimit,
+        filters: [
+          {
+            group: "AND",
+            filters: [
+              {
+                field: "tags",
+                operator: "contains",
+                value: tag,
+              },
+            ],
+          },
+        ],
+      };
+
+      console.log(`[fan-out] Searching subscribers page ${page}, tag="${tag}", location=${locationId}`);
+
+      const res = await fetch(`${CLICKWISE_API_URL}/contacts/search`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Version": "2021-07-28",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(searchBody),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`[fan-out] Search failed (page ${page}):`, res.status, errorText);
+
+        // Fallback: probeer GET /contacts/ met handmatige tag-filtering
+        if (page === 1) {
+          console.log("[fan-out] Trying fallback: GET /contacts/ with client-side tag filtering");
+          return await fetchSubscribersFallback(apiKey, locationId, tag);
+        }
+        break;
+      }
+
+      const data = await res.json();
+      const contacts: any[] = data?.contacts || [];
+      console.log(`[fan-out] Page ${page}: found ${contacts.length} contacts`);
+      all.push(...contacts);
+
+      if (contacts.length < pageLimit) break;
+      page++;
+    } catch (err) {
+      console.error(`[fan-out] Search error (page ${page}):`, err);
+
+      if (page === 1) {
+        console.log("[fan-out] Trying fallback after error");
+        return await fetchSubscribersFallback(apiKey, locationId, tag);
+      }
+      break;
+    }
+  }
+
+  return all.filter((c) => !(c?.email || "").includes("@txeventshare.local"));
+}
+
+/**
+ * Fallback: haal alle contacten op via GET en filter op tag in code.
+ * Wordt alleen gebruikt als POST /contacts/search niet werkt.
+ */
+async function fetchSubscribersFallback(
+  apiKey: string,
+  locationId: string,
+  tag: string,
+): Promise<any[]> {
+  const all: any[] = [];
+  let startAfterId = "";
+  const limit = 100;
+  const maxPages = 5;
+
+  for (let page = 0; page < maxPages; page++) {
+    try {
+      let url = `${CLICKWISE_API_URL}/contacts/?locationId=${encodeURIComponent(locationId)}&limit=${limit}`;
+      if (startAfterId) {
+        url += `&startAfterId=${encodeURIComponent(startAfterId)}`;
+      }
+
+      console.log(`[fan-out fallback] Fetching contacts page ${page}`);
+
       const res = await fetch(url, {
         method: "GET",
         headers: {
@@ -148,20 +235,32 @@ export async function fetchSubscribers(
           "Version": "2021-07-28",
         },
       });
+
       if (!res.ok) {
-        console.error("fetchSubscribers failed:", res.status, await res.text());
+        console.error(`[fan-out fallback] Failed (page ${page}):`, res.status);
         break;
       }
-      const json = await res.json();
-      const contacts = json?.contacts || [];
-      if (!Array.isArray(contacts) || contacts.length === 0) break;
-      all.push(...contacts);
+
+      const data = await res.json();
+      const contacts: any[] = data?.contacts || [];
+      console.log(`[fan-out fallback] Page ${page}: fetched ${contacts.length} contacts`);
+
+      const tagged = contacts.filter((c) =>
+        Array.isArray(c?.tags) && c.tags.some((t: any) => String(t).toLowerCase() === tag.toLowerCase())
+      );
+      all.push(...tagged);
+
       if (contacts.length < limit) break;
+
+      const lastContact = contacts[contacts.length - 1];
+      startAfterId = lastContact?.id || "";
+      if (!startAfterId) break;
     } catch (err) {
-      console.error("fetchSubscribers error:", err);
+      console.error(`[fan-out fallback] Error (page ${page}):`, err);
       break;
     }
   }
+
   return all.filter((c) => !(c?.email || "").includes("@txeventshare.local"));
 }
 
