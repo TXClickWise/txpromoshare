@@ -40,7 +40,7 @@ export interface FanOutResult {
  * Format a date string ("YYYY-MM-DD" or "YYYY-MM-DD HH:mm:ss") to
  * "weekday DD-MM-YYYY" in the given language. Time is omitted.
  */
-function formatDateLocalized(dateStr: string, lang: Lang): string {
+export function formatDateLocalized(dateStr: string, lang: Lang): string {
   if (!dateStr) return "";
   const datePart = dateStr.split(" ")[0].split("T")[0];
   const parts = datePart.split("-");
@@ -56,6 +56,71 @@ function formatDateLocalized(dateStr: string, lang: Lang): string {
   };
   const dayName = dayNames[lang]?.[dayOfWeek] || dayNames.nl[dayOfWeek];
   return `${dayName} ${day}-${month}-${year}`;
+}
+
+export interface DigestEvent {
+  title: string;
+  date: string;
+  startTime: string;
+  location: string;
+  url: string;
+}
+
+export function buildDigestMessage(
+  lang: Lang,
+  events: DigestEvent[],
+  venueName: string,
+): string {
+  const headers: Record<Lang, string> = {
+    nl: `📅 Weekoverzicht ${venueName}`,
+    fy: `📅 Wikeoverzicht ${venueName}`,
+    de: `📅 Wochenübersicht ${venueName}`,
+    en: `📅 Weekly overview ${venueName}`,
+  };
+  const intros: Record<Lang, string> = {
+    nl: `Dit zijn de evenementen van de komende week:`,
+    fy: `Dit binne de eveneminten fan de kommende wike:`,
+    de: `Das sind die Veranstaltungen der kommenden Woche:`,
+    en: `Here are the upcoming events for this week:`,
+  };
+  const closings: Record<Lang, string> = {
+    nl: `Tot snel bij ${venueName}! ☕`,
+    fy: `Oant gau by ${venueName}! ☕`,
+    de: `Bis bald im ${venueName}! ☕`,
+    en: `See you soon at ${venueName}! ☕`,
+  };
+  const noEvents: Record<Lang, string> = {
+    nl: `Er zijn deze week geen evenementen gepland bij ${venueName}. Houd je telefoon in de gaten voor nieuwe aankondigingen! ☕`,
+    fy: `Der binne dizze wike gjin eveneminten pland by ${venueName}. Hâld dyn telefoan yn de gaten foar nije oankundigingen! ☕`,
+    de: `Diese Woche sind keine Veranstaltungen im ${venueName} geplant. Bleib dran für neue Ankündigungen! ☕`,
+    en: `No events planned at ${venueName} this week. Stay tuned for new announcements! ☕`,
+  };
+  const atWord: Record<Lang, string> = { nl: "om", fy: "om", de: "um", en: "at" };
+
+  if (!events || events.length === 0) {
+    return noEvents[lang] || noEvents.nl;
+  }
+
+  const eventLines = events.map((ev) => {
+    const datePart = formatDateLocalized(ev.date, lang);
+    const timePart = ev.startTime ? ` ${atWord[lang]} ${ev.startTime}` : "";
+    const locLine = ev.location ? `\n  📍 ${ev.location}` : "";
+    return `▸ ${ev.title}\n  ${datePart}${timePart}${locLine}`;
+  });
+
+  const parts: string[] = [
+    headers[lang] || headers.nl,
+    "",
+    intros[lang] || intros.nl,
+    "",
+    ...eventLines.flatMap((line, i) =>
+      i < eventLines.length - 1 ? [line, ""] : [line],
+    ),
+    "",
+    closings[lang] || closings.nl,
+  ];
+
+  return parts.join("\n");
 }
 
 export function buildSmsMessage(

@@ -1,23 +1,56 @@
-## Status check
+## Wekelijks evenementen-overzicht (dinsdag 10:00 NL)
 
-Gecheckt: in `supabase/functions/clickwise-sync/fan-out-sms.ts` bevatten de templates `updated` en `ended` momenteel GEEN `{description}` placeholder (alleen `published` en `reminder` hebben varianten met extra info). De fix is dus nog niet doorgevoerd.
+### 1. `supabase/functions/clickwise-sync/fan-out-sms.ts`
+- Voeg `export` toe aan `formatDateLocalized` (nu intern).
+- Nieuwe export `interface DigestEvent { title; date; startTime; location; url }`.
+- Nieuwe export `buildDigestMessage(lang, events, venueName)`:
+  - Headers/intro/closing/no-events strings in nl/fy/de/en.
+  - Per event: `▸ {title}\n  {datum}{ om HH:mm}\n  📍 {location}` (taal-specifiek "om/at/um").
+  - Lege events-lijst → korte "geen events deze week" tekst (function returnt deze; caller beslist of die wordt verstuurd).
+- `fetchSubscribers`, `detectLanguage`, `detectChannel`, `sendMessage` zijn al geëxporteerd — niet wijzigen.
+- Bestaande templates en logica niet aanraken.
 
-De bestaande filter-logica onderaan `buildSmsMessage` / `buildSmsMessageWithVenue` verwijdert al lege regels die niet tussen twee gevulde regels staan, dus lege `{description}` levert geen dubbele witregels op.
+### 2. Nieuwe Edge Function `supabase/functions/weekly-event-digest/index.ts`
+Volgt patroon van `event-reminder-cron`:
+- Service-role Supabase client.
+- Tijdvenster: vandaag (Europe/Amsterdam, via `toAmsterdamParts`) t/m +7 dagen.
+- Haal `integration_connections` (provider=clickwise, status=connected); filter op `credentials_encrypted.fan_out_enabled === true` en aanwezige `api_key`.
+- Per tenant:
+  - Skip als er vandaag al een `integration_events` row met `event_type='fan_out.weekly_digest'` bestaat (idempotent bij meerdere triggers).
+  - Query `events` (status=published, is_recurring=false, start_date in venster) + `event_occurrences` (status=active, occurrence_date in venster), join `venues`.
+  - Combineer + sorteer op datum/tijd.
+  - Skip als 0 events (geen bericht versturen).
+  - `fetchSubscribers` met `subaccount_id` + `subscriber_tag` (default "events").
+  - Per subscriber: `detectLanguage` + `detectChannel`, bouw URLs met `credentials.event_page_url_template` (fallback `https://txeventshare.nl/e/{slug}`), `buildDigestMessage`, `sendMessage` (100ms throttle).
+  - Schrijf `integration_events` log rij met counts en errors (max 10).
+- Geen JWT vereist (publieke trigger via cron) → `verify_jwt = false` toevoegen aan `supabase/config.toml` voor `weekly-event-digest`.
+- CORS headers in alle responses.
 
-## Wijzigingen
+### 3. Cron job (database)
+Aanpak gelijk aan bestaande reminder cron — gebruik directe project URL + anon key (geen `current_setting`), via `supabase--read_query`/insert tooling (niet via migrate-tool, want bevat project-specifieke waarden):
 
-Bestand: `supabase/functions/clickwise-sync/fan-out-sms.ts`
+```sql
+select cron.schedule(
+  'weekly-event-digest',
+  '0 8 * * 2',  -- dinsdag 08:00 UTC = 10:00 Amsterdam (zomer)
+  $$
+  select net.http_post(
+    url := 'https://ofkyhcrnzdkwypwcyobl.supabase.co/functions/v1/weekly-event-digest',
+    headers := '{"Content-Type":"application/json","apikey":"<anon>"}'::jsonb,
+    body := '{}'::jsonb
+  );
+  $$
+);
+```
 
-In zowel `buildSmsMessage` als `buildSmsMessageWithVenue` (beide bevatten dezelfde templates-object):
+Opmerking over wintertijd: `0 8 * * 2` = 10:00 NL in zomer, 09:00 NL in winter. Dit accepteren we (zoals in de prompt aangegeven), of als alternatief twee schedules met datumranges. Standaard: één schedule op 08:00 UTC.
 
-1. **`updated` template** — voeg `\n\n{description}` toe na de `📍 {location}` regel, vóór de "Bekijk de details / Details" regel, voor alle 4 talen (nl, fy, de, en).
+### 4. Deploy & verificatie
+- Deploy `weekly-event-digest` (en `clickwise-sync` voor de gewijzigde exports in `fan-out-sms.ts`).
+- Test via `curl_edge_functions` POST `/weekly-event-digest` → controleer JSON-respons en `integration_events` log.
+- Bevestig cron-registratie via `supabase--read_query` op `cron.job`.
 
-2. **`ended` template** — voeg `\n\n{description}` toe na de `📅 {date}` regel, vóór de annuleringszin, voor alle 4 talen (nl, fy, de, en).
-
-3. **Niet aanraken**: `published` template, `reminder` template, `formatDateLocalized`, alle replace/filter-logica, en de rest van het bestand.
-
-4. **Niet aanraken**: `supabase/functions/event-reminder-cron/fan-out-sms.ts` (gebruiker vraagt expliciet alleen clickwise-sync).
-
-## Deploy
-
-Na de wijziging: deploy `clickwise-sync` edge function.
+### Niet-aanraken
+- Bestaande `buildSmsMessage`, `buildSmsMessageWithVenue`, `fanOutNotification` templates.
+- `event-reminder-cron`, `clickwise-sync/index.ts`.
+- `event_page_url_template` per-tenant configuratie blijft zoals deze is.
