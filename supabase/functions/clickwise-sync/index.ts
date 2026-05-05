@@ -541,11 +541,6 @@ Deno.serve(async (req) => {
 
         const imageUrl = buildPublicImageUrl(media?.storage_path || null, media?.original_url || null);
         const eventUrl = `${PUBLIC_APP_URL}/e/${eventRow.slug}`;
-        // OG-proxy URL voor SMS/WhatsApp — toont correcte link preview met event-afbeelding en titel
-        const SUPABASE_URL_FOR_SHARE = Deno.env.get("SUPABASE_URL") || "";
-        const eventShareUrl = SUPABASE_URL_FOR_SHARE
-          ? `${SUPABASE_URL_FOR_SHARE}/functions/v1/og-proxy?slug=${encodeURIComponent(eventRow.slug)}`
-          : eventUrl;
         const locationStr = [venue?.name, venue?.city].filter(Boolean).join(", ");
         const addressStr = [venue?.address, venue?.city].filter(Boolean).join(", ");
         const dateStr = `${eventRow.start_date} ${eventRow.start_time || ""}`.trim();
@@ -728,7 +723,7 @@ Deno.serve(async (req) => {
             startTime: eventRow.start_time ? String(eventRow.start_time).substring(0, 5) : "",
             location: locationStr,
             description: eventRow.whatsapp_share_text || eventRow.short_description || "",
-            url: eventShareUrl,
+            url: eventUrl,
           };
 
           const action = EVENT_ACTION_MAP[event_type];
