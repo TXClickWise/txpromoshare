@@ -715,6 +715,69 @@ export type Database = {
           },
         ]
       }
+      form_submissions: {
+        Row: {
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          data: Json
+          event_id: string | null
+          form_type: string
+          id: string
+          ip_hash: string | null
+          notified_at: string | null
+          source_url: string | null
+          tenant_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          data?: Json
+          event_id?: string | null
+          form_type: string
+          id?: string
+          ip_hash?: string | null
+          notified_at?: string | null
+          source_url?: string | null
+          tenant_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          data?: Json
+          event_id?: string | null
+          form_type?: string
+          id?: string
+          ip_hash?: string | null
+          notified_at?: string | null
+          source_url?: string | null
+          tenant_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_submissions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integration_connections: {
         Row: {
           connected_by: string | null
