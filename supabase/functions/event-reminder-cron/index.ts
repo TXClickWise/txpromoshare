@@ -180,7 +180,10 @@ Deno.serve(async (req) => {
       }
 
       const locationStr = [c.venueName, c.venueCity].filter(Boolean).join(", ");
-      const eventUrl = `${PUBLIC_APP_URL}/e/${c.slug}`;
+      const tenantEventUrlTemplate = credentials?.event_page_url_template;
+      const eventUrl = tenantEventUrlTemplate
+        ? String(tenantEventUrlTemplate).replace("{slug}", c.slug)
+        : `${PUBLIC_APP_URL}/e/${c.slug}`;
 
       const fanOutConfig = {
         apiKey,
