@@ -30,6 +30,21 @@
   <meta name="twitter:title" content="TX EventShare — Event Promotie Software voor Horeca &amp; Organisatoren">
   <meta property="og:description" content="Maak je event één keer aan en verspreid het overal. Event agenda software, embedded widgets, WhatsApp distributie en ClickWise integratie. Het perfecte systeem voor kleinere evenementen.">
   <meta name="twitter:description" content="Maak je event één keer aan en verspreid het overal. Event agenda software, embedded widgets, WhatsApp distributie en ClickWise integratie. Het perfecte systeem voor kleinere evenementen.">
+
+  <!--
+    ClickWise (HighLevel) tracking script — vereist voor External Event Tracking
+    op het demo-formulier (/demo). Vervang YOUR_LOCATION_ID door de location-id
+    uit jouw ClickWise sub-account (Settings → Business Profile of Sites → Tracking).
+    Zonder dit script werkt het demo-formulier nog steeds (inzending wordt opgeslagen
+    en zichtbaar in /admin/form-submissions), maar wordt het ClickWise workflow-event
+    "form_submitted_demo" niet getriggerd.
+  -->
+  <script>
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'lc.start'});
+      var f=d.getElementsByTagName(s)[0],j=d.createElement(s);j.async=true;
+      j.src='https://app.clickwise.app/tracking.js?id='+i;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','leadConnectorDataLayer','YOUR_LOCATION_ID');
+  </script>
 </head>
   <body>
     <div id="root"></div>
