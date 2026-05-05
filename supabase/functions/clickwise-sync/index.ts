@@ -720,6 +720,7 @@ Deno.serve(async (req) => {
           const fanOutEventData = {
             title: eventRow.title,
             date: dateStr,
+            startTime: eventRow.start_time ? String(eventRow.start_time).substring(0, 5) : "",
             location: locationStr,
             description: eventRow.whatsapp_share_text || eventRow.short_description || "",
             url: eventUrl,
