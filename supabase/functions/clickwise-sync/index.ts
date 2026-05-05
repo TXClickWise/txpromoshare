@@ -7,7 +7,7 @@ const CLICKWISE_API_KEY = Deno.env.get("CLICKWISE_API_KEY");
 const GHL_BASE_URL = "https://services.leadconnectorhq.com";
 const rawApiUrl = Deno.env.get("CLICKWISE_API_URL");
 const CLICKWISE_API_URL = (rawApiUrl && rawApiUrl.startsWith("http")) ? rawApiUrl : GHL_BASE_URL;
-const PUBLIC_APP_URL = "https://txpromoshare.lovable.app";
+const PUBLIC_APP_URL = Deno.env.get("PUBLIC_APP_URL") || "https://txeventshare.nl";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

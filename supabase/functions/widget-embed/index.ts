@@ -210,7 +210,7 @@ function buildShareHtml(e: any, t: ThemeTokens): string {
   const visitorText = encodeURIComponent("Hey, ik zag dit event en het lijkt me echt leuk. Ga je mee?\n\n" + eventPageUrl);
   const shareUrl = encodeURIComponent(eventPageUrl);
   const clipboardJs = 'navigator.clipboard.writeText(decodeURIComponent(\\x27' + visitorText + '\\x27)).then(function(){alert(\\x27Tekst gekopieerd! Plak in Instagram, TikTok of Google.\\x27)})';
-  const baseUrl = 'https://txpromoshare.lovable.app/images/';
+  const baseUrl = (Deno.env.get("PUBLIC_APP_URL") || "https://txeventshare.nl") + '/images/';
 
   return [
     '<a href="https://wa.me/?text=' + visitorText + '" target="_blank" rel="noopener" title="WhatsApp" class="txes-share-btn"><img src="' + baseUrl + 'whatsapp-icon.png" alt="WhatsApp" /></a>',
