@@ -180,7 +180,10 @@ Deno.serve(async (req) => {
       }
 
       const locationStr = [c.venueName, c.venueCity].filter(Boolean).join(", ");
-      const eventUrl = `${PUBLIC_APP_URL}/e/${c.slug}`;
+      const SUPABASE_URL_CRON = Deno.env.get("SUPABASE_URL") || "";
+      const eventUrl = SUPABASE_URL_CRON
+        ? `${SUPABASE_URL_CRON}/functions/v1/og-proxy?slug=${encodeURIComponent(c.slug)}`
+        : `${PUBLIC_APP_URL}/e/${c.slug}`;
 
       const fanOutConfig = {
         apiKey,
