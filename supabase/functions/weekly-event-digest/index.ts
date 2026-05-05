@@ -6,7 +6,7 @@ import {
   sendMessage,
   buildDigestMessage,
   type DigestEvent,
-} from "../clickwise-sync/fan-out-sms.ts";
+} from "./fan-out-sms.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
