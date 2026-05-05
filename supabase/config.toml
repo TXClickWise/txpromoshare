@@ -17,3 +17,5 @@ project_id = "ofkyhcrnzdkwypwcyobl"
     verify_jwt = false
   [functions.event-reminder-cron]
     verify_jwt = false
+  [functions.weekly-event-digest]
+    verify_jwt = false
