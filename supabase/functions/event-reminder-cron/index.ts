@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { fanOutNotification } from "../clickwise-sync/fan-out-sms.ts";
+import { fanOutNotification } from "./fan-out-sms.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
