@@ -723,7 +723,9 @@ Deno.serve(async (req) => {
             startTime: eventRow.start_time ? String(eventRow.start_time).substring(0, 5) : "",
             location: locationStr,
             description: eventRow.whatsapp_share_text || eventRow.short_description || "",
-            url: eventUrl,
+            url: (credentials?.event_page_url_template
+              ? String(credentials.event_page_url_template).replace("{slug}", eventRow.slug)
+              : eventUrl),
           };
 
           const action = EVENT_ACTION_MAP[event_type];
