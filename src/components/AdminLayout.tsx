@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, Navigate } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Users, CreditCard, BarChart3, Menu, X, LogOut, Shield,
-  Package, ArrowUpDown, ScrollText, Settings, Search
+  Package, ArrowUpDown, ScrollText, Settings, Search, Inbox
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ const adminNavItems = [
   { to: "/admin/plans", icon: Package, label: "Plannen" },
   { to: "/admin/overrides", icon: ArrowUpDown, label: "Plan Overrides" },
   { to: "/admin/audit", icon: ScrollText, label: "Audit Log" },
+  { to: "/admin/form-submissions", icon: Inbox, label: "Formulier-inzendingen" },
   { to: "/admin/settings", icon: Settings, label: "Instellingen" },
 ];
 
