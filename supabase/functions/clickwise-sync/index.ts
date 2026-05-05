@@ -703,6 +703,41 @@ Deno.serve(async (req) => {
           .update({ last_sync_at: new Date().toISOString() })
           .eq("id", connection_id);
 
+        // === 4. Fan-out notificatie naar subscribers ===
+        let fanOutResult = { enabled: false, subscribers_found: 0, sms_sent: 0, whatsapp_sent: 0, failed: 0, errors: [] as string[] };
+        const fanOutEnabled = credentials?.fan_out_enabled === true;
+
+        if (fanOutEnabled && contactResult.ok && calResult.ok) {
+          const fanOutConfig = {
+            apiKey,
+            locationId: subaccountId!,
+            subscriberTag: credentials?.subscriber_tag || "events",
+            languageFieldKey: credentials?.language_field_key || "voorkeurstaal",
+            channelFieldKey: credentials?.channel_field_key || "notification_channel",
+            venueName: credentials?.venue_name || venue?.name || "Evenement",
+          };
+
+          const fanOutEventData = {
+            title: eventRow.title,
+            date: dateStr,
+            location: locationStr,
+            description: eventRow.whatsapp_share_text || eventRow.short_description || "",
+            url: eventUrl,
+          };
+
+          const action = EVENT_ACTION_MAP[event_type];
+          if (action) {
+            fanOutResult = await fanOutNotification(
+              fanOutConfig,
+              action,
+              fanOutEventData,
+              supabase,
+              connection_id,
+              event_id,
+            );
+          }
+        }
+
         return new Response(JSON.stringify({
           success: contactResult.ok && calResult.ok,
           contact_status: contactResult.ok ? "success" : "failed",
@@ -711,6 +746,13 @@ Deno.serve(async (req) => {
           ghl_contact_status: contactResult.status,
           occurrences_synced: occurrenceSyncCount,
           occurrences_failed: occurrenceFailCount,
+          fan_out: {
+            enabled: fanOutResult.enabled,
+            subscribers_found: fanOutResult.subscribers_found,
+            sms_sent: fanOutResult.sms_sent,
+            whatsapp_sent: fanOutResult.whatsapp_sent,
+            failed: fanOutResult.failed,
+          },
         }), {
           status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
