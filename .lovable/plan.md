@@ -1,19 +1,23 @@
-## Probleem
+## Status check
 
-In `src/components/MediaPicker.tsx` toont de bibliotheek een grote `CropHintGuide` "Crop preview" zodra je met de muis over een thumbnail beweegt (zie `hoveredItem` state, regels 51, 224-225, 384-396). Deze preview verschijnt onderaan binnen de scrollende tab, maar omdat hij groot is duwt hij de grid uit beeld en blijft hij hangen — daardoor lijkt het alsof er een enorme preview "over" de bibliotheek staat en kan de gebruiker geen afbeelding meer kiezen.
+Gecheckt: in `supabase/functions/clickwise-sync/fan-out-sms.ts` bevatten de templates `updated` en `ended` momenteel GEEN `{description}` placeholder (alleen `published` en `reminder` hebben varianten met extra info). De fix is dus nog niet doorgevoerd.
 
-## Oplossing
+De bestaande filter-logica onderaan `buildSmsMessage` / `buildSmsMessageWithVenue` verwijdert al lege regels die niet tussen twee gevulde regels staan, dus lege `{description}` levert geen dubbele witregels op.
 
-Maak de crop preview compact en niet-blokkerend, en alleen zichtbaar wanneer er ook ruimte voor is.
+## Wijzigingen
 
-Concrete wijzigingen in `src/components/MediaPicker.tsx`:
+Bestand: `supabase/functions/clickwise-sync/fan-out-sms.ts`
 
-1. Verwijder de `onMouseEnter` / `onMouseLeave` handlers op de grid-knoppen (regels 224-225) en de bijbehorende `hoveredItem` state (regel 51).
-2. Verwijder het volledige `hoveredItem &&` preview-blok onderaan de Library tab (regels 384-396).
-3. Behoud de bestaande `CropHintGuide` import — die wordt nog gebruikt in de role-info badge en blijft beschikbaar voor toekomstig gebruik (geen verdere code-cleanup nodig als import niet ongebruikt wordt; anders verwijderen we de import).
+In zowel `buildSmsMessage` als `buildSmsMessageWithVenue` (beide bevatten dezelfde templates-object):
 
-Resultaat: hoveren over een afbeelding doet niets meer dan een subtiele border-highlight; klikken selecteert direct de afbeelding zoals voorheen. De bibliotheek-grid blijft volledig zichtbaar en bruikbaar.
+1. **`updated` template** — voeg `\n\n{description}` toe na de `📍 {location}` regel, vóór de "Bekijk de details / Details" regel, voor alle 4 talen (nl, fy, de, en).
 
-## Bestanden
+2. **`ended` template** — voeg `\n\n{description}` toe na de `📅 {date}` regel, vóór de annuleringszin, voor alle 4 talen (nl, fy, de, en).
 
-- `src/components/MediaPicker.tsx` — verwijder hover-preview logica.
+3. **Niet aanraken**: `published` template, `reminder` template, `formatDateLocalized`, alle replace/filter-logica, en de rest van het bestand.
+
+4. **Niet aanraken**: `supabase/functions/event-reminder-cron/fan-out-sms.ts` (gebruiker vraagt expliciet alleen clickwise-sync).
+
+## Deploy
+
+Na de wijziging: deploy `clickwise-sync` edge function.
