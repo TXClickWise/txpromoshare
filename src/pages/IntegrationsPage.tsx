@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Zap, Check, AlertCircle, ArrowRight, Calendar, RefreshCw, Send, Settings2, Link2, Unlink, Activity, Users, XCircle, Code2, Copy, ExternalLink, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -42,6 +42,67 @@ export default function IntegrationsPage() {
 
   const isConnected = status === "connected";
   const activeRuleCount = Object.values(syncRules).filter(Boolean).length;
+
+  // Fan-out / SMS notification settings (stored in credentials_encrypted)
+  const [fanOutEnabled, setFanOutEnabled] = useState(false);
+  const [venueName, setVenueName] = useState("");
+  const [subscriberTag, setSubscriberTag] = useState("events");
+  const [eventPageUrlTemplate, setEventPageUrlTemplate] = useState("");
+  const [languageFieldKey, setLanguageFieldKey] = useState("voorkeurstaal");
+  const [channelFieldKey, setChannelFieldKey] = useState("notification_channel");
+  const [savingNotifications, setSavingNotifications] = useState(false);
+
+  useEffect(() => {
+    if (connection?.credentials_encrypted) {
+      const creds = connection.credentials_encrypted as any;
+      setFanOutEnabled(creds.fan_out_enabled === true);
+      setVenueName(creds.venue_name || "");
+      setSubscriberTag(creds.subscriber_tag || "events");
+      setEventPageUrlTemplate(creds.event_page_url_template || "");
+      setLanguageFieldKey(creds.language_field_key || "voorkeurstaal");
+      setChannelFieldKey(creds.channel_field_key || "notification_channel");
+    }
+  }, [connection]);
+
+  const persistCreds = async (overrides: Record<string, unknown>) => {
+    if (!connection) return { error: new Error("No connection") } as any;
+    const currentCreds = (connection.credentials_encrypted as any) || {};
+    const updatedCreds = { ...currentCreds, ...overrides };
+    return await supabase
+      .from("integration_connections")
+      .update({ credentials_encrypted: updatedCreds })
+      .eq("id", connection.id);
+  };
+
+  const handleToggleFanOut = async (next: boolean) => {
+    setFanOutEnabled(next);
+    const { error } = await persistCreds({ fan_out_enabled: next });
+    if (error) {
+      setFanOutEnabled(!next);
+      toast.error("Kon instellingen niet opslaan");
+      return;
+    }
+    toast.success(next ? "Notificaties ingeschakeld" : "Notificaties uitgeschakeld");
+  };
+
+  const saveNotificationSettings = async () => {
+    if (!connection) return;
+    setSavingNotifications(true);
+    const { error } = await persistCreds({
+      fan_out_enabled: fanOutEnabled,
+      venue_name: venueName,
+      subscriber_tag: subscriberTag || "events",
+      event_page_url_template: eventPageUrlTemplate || null,
+      language_field_key: languageFieldKey || "voorkeurstaal",
+      channel_field_key: channelFieldKey || "notification_channel",
+    });
+    setSavingNotifications(false);
+    if (error) {
+      toast.error("Kon instellingen niet opslaan");
+      return;
+    }
+    toast.success("Notificatie-instellingen opgeslagen");
+  };
 
   // Compute stats from events (last 7 days)
   const stats = useMemo(() => {
@@ -205,6 +266,54 @@ export default function IntegrationsPage() {
                       <p className="text-[10px] text-muted-foreground">{s.label}</p>
                     </div>
                   ))}
+                </div>
+
+                {/* SMS/WhatsApp notification settings */}
+                <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-2.5 min-w-0">
+                      <Send className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                      <div className="min-w-0">
+                        <h3 className="font-display font-semibold text-foreground">SMS/WhatsApp notificaties</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Stuur automatisch berichten naar abonnees bij nieuwe, gewijzigde of geannuleerde events
+                        </p>
+                      </div>
+                    </div>
+                    <Switch checked={fanOutEnabled} onCheckedChange={handleToggleFanOut} />
+                  </div>
+
+                  <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${fanOutEnabled ? "" : "opacity-50 pointer-events-none"}`}>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-foreground">Locatienaam in berichten</label>
+                      <Input value={venueName} onChange={(e) => setVenueName(e.target.value)} placeholder="bijv. Café de Jutter" className="h-9 text-sm" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-foreground">Tag voor abonnees</label>
+                      <Input value={subscriberTag} onChange={(e) => setSubscriberTag(e.target.value)} placeholder="events" className="h-9 text-sm" />
+                    </div>
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <label className="text-xs font-medium text-foreground">URL-template voor eventpagina's</label>
+                      <Input value={eventPageUrlTemplate} onChange={(e) => setEventPageUrlTemplate(e.target.value)} placeholder="https://mijnsite.nl/event/{slug}" className="h-9 text-sm font-mono" />
+                      <p className="text-[11px] text-muted-foreground">
+                        Gebruik {"{slug}"} als placeholder voor de event-slug. Laat leeg om de standaard TX EventShare URL te gebruiken.
+                      </p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-foreground">Custom field key voor taalvoorkeur</label>
+                      <Input value={languageFieldKey} onChange={(e) => setLanguageFieldKey(e.target.value)} placeholder="voorkeurstaal" className="h-9 text-sm font-mono" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-foreground">Custom field key voor kanaalvoorkeur</label>
+                      <Input value={channelFieldKey} onChange={(e) => setChannelFieldKey(e.target.value)} placeholder="notification_channel" className="h-9 text-sm font-mono" />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button onClick={saveNotificationSettings} disabled={savingNotifications || !fanOutEnabled} size="sm" className="gap-1.5">
+                      {savingNotifications ? "Opslaan…" : "Opslaan"}
+                    </Button>
+                  </div>
                 </div>
               </motion.div>
             )}
