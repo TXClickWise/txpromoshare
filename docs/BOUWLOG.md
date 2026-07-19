@@ -4,6 +4,9 @@
 
 Doorlopend genummerd, nieuwste entry bovenaan. Tijden Europe/Amsterdam.
 
+## #003 — 20-07-2026 — Beslissing
+Correctie op #001/#002: custom domein txeventshare.nl blijkt al gekoppeld (DNS A-record wijst naar Lovable custom-domain-IP 185.158.133.1, bevestigd door eigenaar). Het "domeinbesluit" vervalt als blocker en als openstaand punt; de Lovable-API toont custom domeinen niet en rapporteert alleen de lovable.app-URL — daardoor ontstond de verkeerde aanname.
+
 ## #002 — 20-07-2026 — Overig
 Nulmeting: docs/MASTERPLAN.md, docs/BOUWLOG.md en docs/STATUS.json aangemaakt als afgeleide van de Lovable-edit-historie. Geen functionele wijzigingen.
 

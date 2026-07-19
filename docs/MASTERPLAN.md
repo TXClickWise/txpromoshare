@@ -49,5 +49,5 @@ Nulmeting opgesteld 20-07-2026, gereconstrueerd uit de volledige Lovable-edit-hi
 ## Fase 10: Validatie & lancering — todo
 - [ ] End-to-end tenanttest: registratie → publiceren → widget → automatische notificaties
 - [ ] Stripe-betaalflow valideren (echte checkout, portal, add-ons)
-- [ ] Besluit custom domein: code verwijst naar txeventshare.nl, publicatie staat op txeventshare.lovable.app
+- [x] Custom domein txeventshare.nl gekoppeld (gecorrigeerd 20-07-2026, zie BOUWLOG #003)
 - [ ] Onboarding eerste echte tenants
