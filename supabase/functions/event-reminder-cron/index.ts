@@ -228,6 +228,7 @@ Deno.serve(async (req) => {
           sms_sent: fanOutResult.sms_sent,
           whatsapp_sent: fanOutResult.whatsapp_sent,
           failed: fanOutResult.failed,
+          skipped_unsubscribed: fanOutResult.skipped_unsubscribed,
           errors: fanOutResult.errors.slice(0, 10),
         } as any,
         response_status: fanOutResult.failed === 0 ? 200 : 207,

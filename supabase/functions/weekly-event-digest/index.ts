@@ -5,6 +5,7 @@ import {
   detectChannel,
   sendMessage,
   buildDigestMessage,
+  markUnsubscribed,
   type DigestEvent,
 } from "./fan-out-sms.ts";
 
@@ -172,6 +173,7 @@ Deno.serve(async (req) => {
 
       let sent = 0;
       let failed = 0;
+      let skippedUnsubscribed = 0;
       const errors: string[] = [];
 
       for (const subscriber of subscribers) {
@@ -183,6 +185,9 @@ Deno.serve(async (req) => {
         const result = await sendMessage(apiKey, subscriber.id, message, channel);
         if (result.ok) {
           sent++;
+        } else if (result.unsubscribed) {
+          skippedUnsubscribed++;
+          await markUnsubscribed(apiKey, subscriber.id);
         } else {
           failed++;
           errors.push(`${subscriber.id}:${channel}:${result.errorDetail || String(result.body).substring(0, 200)}`);
@@ -201,6 +206,7 @@ Deno.serve(async (req) => {
           subscribers_found: subscribers.length,
           sent,
           failed,
+          skipped_unsubscribed: skippedUnsubscribed,
           errors: errors.slice(0, 10),
         } as any,
         response_status: failed === 0 ? 200 : 207,
@@ -209,7 +215,7 @@ Deno.serve(async (req) => {
       results.push({
         tenant_id: tenantId,
         status: "sent",
-        detail: `${items.length} events, ${sent} messages sent, ${failed} failed`,
+        detail: `${items.length} events, ${sent} sent, ${failed} failed, ${skippedUnsubscribed} unsubscribed`,
       });
     }
 

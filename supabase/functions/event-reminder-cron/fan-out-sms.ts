@@ -34,6 +34,7 @@ export interface FanOutResult {
   whatsapp_sent: number;
   failed: number;
   errors: string[];
+  skipped_unsubscribed: number;
 }
 
 /**
@@ -167,6 +168,37 @@ export function buildSmsMessageWithVenue(
     .join("\n");
 }
 
+/**
+ * Return true if this contact should be included in the fan-out.
+ * Skips: internal placeholder emails, contacts tagged sms-unsubscribed,
+ * contacts on Do Not Disturb globally, and contacts on DND for SMS.
+ */
+function keepContact(c: any): boolean {
+  const email = String(c?.email || "").toLowerCase();
+  if (email.includes("@txeventshare.local")) return false;
+
+  const tags: string[] = Array.isArray(c?.tags)
+    ? c.tags.map((t: any) => String(t).toLowerCase())
+    : [];
+  if (tags.includes("sms-unsubscribed")) {
+    console.log(`[fan-out] Skipping contact ${c?.id} — tag sms-unsubscribed`);
+    return false;
+  }
+
+  if (c?.dnd === true) {
+    console.log(`[fan-out] Skipping contact ${c?.id} — dnd=true`);
+    return false;
+  }
+
+  const smsDndStatus = c?.dndSettings?.SMS?.status;
+  if (typeof smsDndStatus === "string" && smsDndStatus.toLowerCase() === "active") {
+    console.log(`[fan-out] Skipping contact ${c?.id} — dndSettings.SMS.status=active`);
+    return false;
+  }
+
+  return true;
+}
+
 export async function fetchSubscribers(
   apiKey: string,
   locationId: string,
@@ -239,14 +271,14 @@ export async function fetchSubscribers(
     }
   }
 
-  return all.filter((c) => !(c?.email || "").includes("@txeventshare.local"));
+  return all.filter(keepContact);
 }
 
 /**
  * Fallback: haal alle contacten op via GET en filter op tag in code.
  * Wordt alleen gebruikt als POST /contacts/search niet werkt.
  */
-async function fetchSubscribersFallback(
+export async function fetchSubscribersFallback(
   apiKey: string,
   locationId: string,
   tag: string,
@@ -298,7 +330,7 @@ async function fetchSubscribersFallback(
     }
   }
 
-  return all.filter((c) => !(c?.email || "").includes("@txeventshare.local"));
+  return all.filter(keepContact);
 }
 
 function getCustomFieldValue(contact: any, key: string): string | null {
@@ -344,7 +376,7 @@ export async function sendMessage(
   contactId: string,
   message: string,
   channelType: ChannelType,
-): Promise<{ ok: boolean; status: number; body: string; errorDetail: string }> {
+): Promise<{ ok: boolean; status: number; body: string; errorDetail: string; unsubscribed: boolean }> {
   try {
     const requestBody = { type: channelType, contactId, message };
     console.log(`[fan-out] Sending ${channelType} to contact ${contactId}`);
@@ -364,18 +396,47 @@ export async function sendMessage(
     console.log(`[fan-out] Response for ${contactId}: status=${res.status}, body=${responseText.substring(0, 500)}`);
 
     if (!res.ok) {
+      const bodyLower = responseText.toLowerCase();
+      const unsubscribed = bodyLower.includes("unsubscribed") || bodyLower.includes("has unsubscribed");
       return {
         ok: false,
         status: res.status,
         body: responseText,
         errorDetail: `HTTP ${res.status}: ${responseText.substring(0, 300)}`,
+        unsubscribed,
       };
     }
-    return { ok: true, status: res.status, body: responseText, errorDetail: "" };
+    return { ok: true, status: res.status, body: responseText, errorDetail: "", unsubscribed: false };
   } catch (err) {
     const errMsg = String(err);
     console.error(`[fan-out] Send error for ${contactId}:`, errMsg);
-    return { ok: false, status: 0, body: errMsg, errorDetail: `Exception: ${errMsg.substring(0, 300)}` };
+    return { ok: false, status: 0, body: errMsg, errorDetail: `Exception: ${errMsg.substring(0, 300)}`, unsubscribed: false };
+  }
+}
+
+/**
+ * Tag a contact as "sms-unsubscribed" in HighLevel so it is filtered out of
+ * future fan-out runs. Errors are swallowed — this must never crash fan-out.
+ */
+export async function markUnsubscribed(apiKey: string, contactId: string): Promise<void> {
+  try {
+    const res = await fetch(`${CLICKWISE_API_URL}/contacts/${contactId}/tags`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Version": "2021-07-28",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ tags: ["sms-unsubscribed"] }),
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      console.error(`[fan-out] markUnsubscribed failed for ${contactId}: ${res.status} ${t.substring(0, 200)}`);
+    } else {
+      console.log(`[fan-out] Marked ${contactId} as sms-unsubscribed`);
+    }
+  } catch (err) {
+    console.error(`[fan-out] markUnsubscribed error for ${contactId}:`, String(err));
   }
 }
 
@@ -394,6 +455,7 @@ export async function fanOutNotification(
     whatsapp_sent: 0,
     failed: 0,
     errors: [],
+    skipped_unsubscribed: 0,
   };
 
   try {
@@ -410,6 +472,9 @@ export async function fanOutNotification(
       if (sendResult.ok) {
         if (channel === "WhatsApp") result.whatsapp_sent++;
         else result.sms_sent++;
+      } else if (sendResult.unsubscribed) {
+        result.skipped_unsubscribed++;
+        await markUnsubscribed(config.apiKey, sub.id);
       } else {
         result.failed++;
         result.errors.push(`${sub.id}:${channel}:${sendResult.errorDetail}`);
@@ -434,6 +499,7 @@ export async function fanOutNotification(
         sms_sent: result.sms_sent,
         whatsapp_sent: result.whatsapp_sent,
         failed: result.failed,
+        skipped_unsubscribed: result.skipped_unsubscribed,
         errors: result.errors.slice(0, 10),
       } as any,
       response_status: result.failed === 0 ? 200 : 207,
