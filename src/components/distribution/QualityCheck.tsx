@@ -128,7 +128,7 @@ export function QualityCheck({ event, texts }: QualityCheckProps) {
   const failCount = allItems.filter((c) => c.status === "fail").length;
   const score = Math.round((passCount / allItems.length) * 100);
 
-  const scoreColor = score >= 80 ? "text-accent" : score >= 50 ? "text-[hsl(38_92%_50%)]" : "text-destructive";
+  const scoreColor = score >= 80 ? "text-accent-strong" : score >= 50 ? "text-[hsl(38_92%_50%)]" : "text-destructive";
   const scoreBar = score >= 80 ? "bg-accent" : score >= 50 ? "bg-[hsl(38_92%_50%)]" : "bg-destructive";
   const scoreLabel = score >= 80 ? t("qc.scoreExcellent") : score >= 50 ? t("qc.scoreOk") : t("qc.scoreWeak");
 
