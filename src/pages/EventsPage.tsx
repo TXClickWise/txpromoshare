@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Copy, Check, Trash2, Archive } from "lucide-react";
+import { Trash2, Archive, CheckSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Plus, Search, LayoutGrid, List, Calendar, Filter, Clock, MapPin, ArrowUpDown, RefreshCw, X } from "lucide-react";
 import { motion } from "framer-motion";
@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import { EventsTabs } from "@/components/EventsTabs";
 
-type StatusTab = "all" | "draft" | "scheduled" | "published" | "ended_archived" | "recurring";
+type StatusTab = "all" | "draft" | "scheduled" | "published" | "ended_archived";
 
 function formatDateLong(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
@@ -32,6 +32,8 @@ export default function EventsPage() {
   const [activeTab, setActiveTab] = useState<StatusTab>("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date_desc");
+  const [recurringOnly, setRecurringOnly] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
 
   const statusTabs: { value: StatusTab; label: string }[] = [
     { value: "all", label: t("events.tab.all") },
@@ -39,7 +41,6 @@ export default function EventsPage() {
     { value: "scheduled", label: t("events.tab.scheduled") },
     { value: "published", label: t("events.tab.published") },
     { value: "ended_archived", label: t("events.tab.archived") },
-    { value: "recurring", label: t("events.tab.recurring") },
   ];
 
   const sortOptions = [
@@ -52,17 +53,8 @@ export default function EventsPage() {
   const [events, setEvents] = useState<any[]>([]);
   const [categories, setCategories] = useState<Tables<"categories">[]>([]);
   const [loading, setLoading] = useState(true);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const { tenantId } = useTenant();
-
-  const copyEventId = (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    navigator.clipboard.writeText(id);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
 
   const toggleSelect = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
@@ -88,13 +80,14 @@ export default function EventsPage() {
     if (action === "archive") {
       const { error } = await supabase.from("events").update({ status: "archived" }).in("id", ids);
       if (error) { toast.error(error.message); return; }
-      toast.success(`${ids.length} evenement(en) gearchiveerd`);
+      toast.success(t("events.bulk.archivedToast", { count: String(ids.length) }));
     } else {
       const { error } = await supabase.from("events").delete().in("id", ids);
       if (error) { toast.error(error.message); return; }
-      toast.success(`${ids.length} evenement(en) verwijderd`);
+      toast.success(t("events.bulk.deletedToast", { count: String(ids.length) }));
     }
     setSelected(new Set());
+    setSelectMode(false);
     fetchEvents();
   }
 
@@ -158,15 +151,15 @@ export default function EventsPage() {
   // Counts per tab (independent of active tab so they always show totals)
   const tabCounts = useMemo(() => {
     const base = events.filter(e => categoryFilter === "all" || e.category_id === categoryFilter);
+    const scoped = recurringOnly ? base.filter(e => e.is_recurring) : base;
     return {
-      all: base.length,
-      draft: base.filter(e => e.status === "draft").length,
-      scheduled: base.filter(e => e.status === "scheduled").length,
-      published: base.filter(e => e.status === "published").length,
-      ended_archived: base.filter(e => e.status === "ended" || e.status === "archived").length,
-      recurring: base.filter(e => e.is_recurring).length,
+      all: scoped.length,
+      draft: scoped.filter(e => e.status === "draft").length,
+      scheduled: scoped.filter(e => e.status === "scheduled").length,
+      published: scoped.filter(e => e.status === "published").length,
+      ended_archived: scoped.filter(e => e.status === "ended" || e.status === "archived").length,
     };
-  }, [events, categoryFilter]);
+  }, [events, categoryFilter, recurringOnly]);
 
   const filtered = events
     .filter((e) => {
@@ -185,11 +178,11 @@ export default function EventsPage() {
     })
     .filter((e) => {
       if (activeTab === "all") return true;
-      if (activeTab === "recurring") return e.is_recurring;
       if (activeTab === "ended_archived") return e.status === "ended" || e.status === "archived";
       return e.status === activeTab;
     })
     .filter((e) => categoryFilter === "all" || e.category_id === categoryFilter)
+    .filter((e) => (recurringOnly ? e.is_recurring : true))
     .sort((a, b) => {
       const aDate = a._nextDate || a.start_date;
       const bDate = b._nextDate || b.start_date;
@@ -221,7 +214,7 @@ export default function EventsPage() {
             {events.length} {events.length === 1 ? t("events.totalSingular") : t("events.totalPlural")}
           </p>
         </div>
-        <Link to="/app/events/new" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold hover:opacity-90 shadow-glow">
+        <Link to="/app/events/new" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity min-h-11 sm:min-h-0">
           <Plus className="w-4 h-4" />
           {t("events.create")}
         </Link>
@@ -244,7 +237,6 @@ export default function EventsPage() {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {tab.value === "recurring" && <RefreshCw className="w-3.5 h-3.5" />}
                 <span>{tab.label}</span>
                 <span className={cn(
                   "text-xs font-semibold px-1.5 py-0.5 rounded-full min-w-[20px] text-center",
@@ -265,8 +257,8 @@ export default function EventsPage() {
       </div>
 
       {/* Filters bar */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[220px]">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <div className="relative w-full sm:flex-1 sm:min-w-[220px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             value={search}
@@ -278,14 +270,15 @@ export default function EventsPage() {
             <button
               onClick={() => setSearch("")}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-secondary"
-              aria-label="Wis zoekopdracht"
+              aria-label={t("events.search.clear")}
             >
               <X className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
           )}
         </div>
+        <div className="flex items-center gap-2 overflow-x-auto sm:overflow-visible -mx-1 px-1 sm:mx-0 sm:px-0">
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-[150px] h-9 text-xs">
+          <SelectTrigger className="w-[150px] h-9 text-xs shrink-0">
             <Filter className="w-3 h-3 mr-1 text-muted-foreground" />
             <SelectValue placeholder={t("nav.categories")} />
           </SelectTrigger>
@@ -301,8 +294,22 @@ export default function EventsPage() {
             ))}
           </SelectContent>
         </Select>
+        <button
+          type="button"
+          onClick={() => setRecurringOnly((v) => !v)}
+          className={cn(
+            "shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-md border text-xs font-medium transition-colors",
+            recurringOnly
+              ? "bg-primary/10 border-primary/30 text-primary"
+              : "bg-card border-border text-muted-foreground hover:text-foreground",
+          )}
+          aria-pressed={recurringOnly}
+        >
+          <RefreshCw className="w-3 h-3" />
+          {t("events.filter.recurringOnly")}
+        </button>
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-[150px] h-9 text-xs">
+          <SelectTrigger className="w-[150px] h-9 text-xs shrink-0">
             <ArrowUpDown className="w-3 h-3 mr-1 text-muted-foreground" />
             <SelectValue />
           </SelectTrigger>
@@ -312,13 +319,26 @@ export default function EventsPage() {
             ))}
           </SelectContent>
         </Select>
-        <div className="flex border border-border rounded-lg overflow-hidden">
-          <button onClick={() => setView("grid")} className={cn("p-2 transition-colors", view === "grid" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-secondary")} aria-label="Rasterweergave">
+        <div className="flex border border-border rounded-lg overflow-hidden shrink-0">
+          <button onClick={() => setView("grid")} className={cn("p-2 transition-colors", view === "grid" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-secondary")} aria-label={t("events.view.grid")}>
             <LayoutGrid className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => setView("list")} className={cn("p-2 transition-colors", view === "list" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-secondary")} aria-label="Lijstweergave">
+          <button onClick={() => setView("list")} className={cn("p-2 transition-colors", view === "list" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-secondary")} aria-label={t("events.view.list")}>
             <List className="w-3.5 h-3.5" />
           </button>
+        </div>
+        <button
+          type="button"
+          onClick={() => { setSelectMode((v) => !v); if (selectMode) setSelected(new Set()); }}
+          className={cn(
+            "sm:hidden shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-md border text-xs font-medium transition-colors",
+            selectMode ? "bg-primary/10 border-primary/30 text-primary" : "bg-card border-border text-muted-foreground",
+          )}
+          aria-pressed={selectMode}
+        >
+          <CheckSquare className="w-3 h-3" />
+          {selectMode ? t("events.selectModeDone") : t("events.selectMode")}
+        </button>
         </div>
       </div>
 
@@ -328,13 +348,13 @@ export default function EventsPage() {
           <Checkbox checked={selected.size === filtered.length} onCheckedChange={selectAll} />
           <span className="text-sm font-medium text-foreground">{selected.size} {t("events.bulk.selected")}</span>
           <div className="flex-1" />
-          <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => bulkAction("archive")}>
+          <Button variant="outline" size="sm" className="min-h-11 sm:min-h-0 sm:h-7 text-xs gap-1.5" onClick={() => bulkAction("archive")}>
             <Archive className="w-3 h-3" />{t("events.bulk.archive")}
           </Button>
-          <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => bulkAction("delete")}>
+          <Button variant="outline" size="sm" className="min-h-11 sm:min-h-0 sm:h-7 text-xs gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => bulkAction("delete")}>
             <Trash2 className="w-3 h-3" />{t("events.bulk.delete")}
           </Button>
-          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelected(new Set())}>{t("events.bulk.deselect")}</Button>
+          <Button variant="ghost" size="sm" className="min-h-11 sm:min-h-0 sm:h-7 text-xs" onClick={() => { setSelected(new Set()); setSelectMode(false); }}>{t("events.bulk.deselect")}</Button>
         </motion.div>
       )}
 
@@ -356,13 +376,20 @@ export default function EventsPage() {
         />
       ) : view === "grid" ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((event, i) => {
+          {filtered.map((event) => {
             const cat = categories.find(c => c.id === event.category_id);
+            const showCheckbox = selectMode || selected.size > 0;
             return (
-              <motion.div key={event.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+              <div key={event.id}>
                 <Link to={`/app/events/${event.id}`} className="block rounded-xl bg-card border border-border shadow-card hover:shadow-elevated hover:border-primary/20 transition-all overflow-hidden group relative">
                   {/* Select checkbox */}
-                  <div className="absolute top-3 left-3 z-10" onClick={(e) => toggleSelect(e, event.id)}>
+                  <div
+                    className={cn(
+                      "absolute top-3 left-3 z-10 transition-opacity",
+                      showCheckbox ? "opacity-100" : "opacity-0 sm:group-hover:opacity-100",
+                    )}
+                    onClick={(e) => toggleSelect(e, event.id)}
+                  >
                     <Checkbox checked={selected.has(event.id)} className="bg-background/80 backdrop-blur-sm" />
                   </div>
                   <div className="h-32 bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center relative overflow-hidden">
@@ -391,7 +418,7 @@ export default function EventsPage() {
                   <div className="p-4">
                     <div className="flex items-center gap-2 mb-1.5">
                       <EventStatusBadge status={event.status} />
-                      {event.is_recurring && <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full flex items-center gap-0.5"><RefreshCw className="w-2.5 h-2.5" />Terugkerend</span>}
+                      {event.is_recurring && <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full flex items-center gap-0.5"><RefreshCw className="w-2.5 h-2.5" />{t("events.recurring")}</span>}
                     </div>
                     <h3 className="font-display font-semibold text-foreground mb-1 truncate group-hover:text-primary transition-colors text-sm">{event.title}</h3>
                     {event.short_description && (
@@ -403,7 +430,7 @@ export default function EventsPage() {
                         {event.is_recurring && event._nextDate ? (
                           <>
                             {new Date(event._nextDate).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {(event._nextTime || event.start_time)?.slice(0, 5)}
-                            <span className="text-muted-foreground ml-1">(volgende)</span>
+                            <span className="text-muted-foreground ml-1">{t("events.recurringNext")}</span>
                           </>
                         ) : (
                           <>{new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.start_time?.slice(0, 5)}</>
@@ -416,15 +443,9 @@ export default function EventsPage() {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border">
-                      <code className="text-xs bg-secondary px-1.5 py-0.5 rounded font-mono text-muted-foreground truncate flex-1">{event.id.slice(0, 8)}…</code>
-                      <button onClick={(e) => copyEventId(e, event.id)} className="shrink-0 p-1 rounded hover:bg-secondary transition-colors" title="Kopieer Event ID">
-                        {copiedId === event.id ? <Check className="w-3 h-3 text-accent" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
-                      </button>
-                    </div>
                   </div>
                 </Link>
-              </motion.div>
+              </div>
             );
           })}
         </div>
@@ -434,18 +455,29 @@ export default function EventsPage() {
           <div className="flex items-center gap-3 px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
             <div className="w-5"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={selectAll} /></div>
             <div className="w-9" />
-            <div className="flex-1">Evenement</div>
-            <div className="w-28 hidden sm:block">Categorie</div>
-            <div className="w-32 hidden sm:block">Datum</div>
-            <div className="w-20">Status</div>
+            <div className="flex-1">{t("events.col.event")}</div>
+            <div className="w-28 hidden sm:block">{t("events.col.category")}</div>
+            <div className="w-32 hidden sm:block">{t("events.col.date")}</div>
+            <div className="w-20">{t("events.col.status")}</div>
             <div className="w-8" />
           </div>
-          {filtered.map((event, i) => {
+          {filtered.map((event) => {
             const cat = categories.find(c => c.id === event.category_id);
+            const showCheckbox = selectMode || selected.size > 0;
+            const dateShort = event.is_recurring && event._nextDate
+              ? new Date(event._nextDate).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })
+              : new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
+            const timeShort = ((event.is_recurring ? (event._nextTime || event.start_time) : event.start_time) || "").slice(0, 5);
             return (
-              <motion.div key={event.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.02 }}>
+              <div key={event.id}>
                 <Link to={`/app/events/${event.id}`} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-card border border-border hover:shadow-elevated hover:border-primary/20 transition-all group">
-                  <div className="w-5" onClick={(e) => toggleSelect(e, event.id)}>
+                  <div
+                    className={cn(
+                      "w-5 transition-opacity",
+                      showCheckbox ? "opacity-100" : "opacity-0 sm:group-hover:opacity-100",
+                    )}
+                    onClick={(e) => toggleSelect(e, event.id)}
+                  >
                     <Checkbox checked={selected.has(event.id)} />
                   </div>
                   {(() => {
@@ -468,14 +500,17 @@ export default function EventsPage() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground text-sm truncate group-hover:text-primary transition-colors">{event.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className="sm:hidden flex items-center gap-1">
+                        <Clock className="w-3 h-3" />{dateShort}{timeShort && ` · ${timeShort}`}
+                      </span>
                       {event.venue?.name && (
-                        <span className="flex items-center gap-1 truncate">
+                        <span className="hidden sm:flex items-center gap-1 truncate">
                           <MapPin className="w-3 h-3" />{event.venue.name}
                         </span>
                       )}
                       {event.is_recurring && (
                         <span className="flex items-center gap-0.5 text-primary">
-                          <RefreshCw className="w-2.5 h-2.5" />Terugkerend
+                          <RefreshCw className="w-2.5 h-2.5" />{t("events.recurring")}
                         </span>
                       )}
                     </div>
@@ -493,7 +528,7 @@ export default function EventsPage() {
                         <p className="text-xs font-medium text-foreground">
                           {new Date(event._nextDate).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}
                         </p>
-                        <p className="text-xs text-muted-foreground">volgende · {(event._nextTime || event.start_time)?.slice(0, 5)}</p>
+                        <p className="text-xs text-muted-foreground">{t("events.nextPrefix")} {(event._nextTime || event.start_time)?.slice(0, 5)}</p>
                       </>
                     ) : (
                       <>
@@ -511,7 +546,7 @@ export default function EventsPage() {
                     <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status} onRefresh={fetchEvents} />
                   </div>
                 </Link>
-              </motion.div>
+              </div>
             );
           })}
         </div>
@@ -520,7 +555,7 @@ export default function EventsPage() {
       {/* Results count */}
       {filtered.length > 0 && filtered.length !== events.length && (
         <p className="text-xs text-muted-foreground text-center pt-2">
-          {filtered.length} van {events.length} evenementen getoond
+          {t("events.showingCount", { filtered: String(filtered.length), total: String(events.length) })}
         </p>
       )}
     </div>

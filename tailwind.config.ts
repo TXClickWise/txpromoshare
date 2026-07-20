@@ -53,6 +53,10 @@ export default {
           foreground: "hsl(var(--accent-foreground))",
         },
         "accent-strong": "hsl(var(--accent-strong))",
+        whatsapp: {
+          DEFAULT: "hsl(var(--whatsapp))",
+          foreground: "hsl(var(--whatsapp-foreground))",
+        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",

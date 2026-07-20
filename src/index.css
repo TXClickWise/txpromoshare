@@ -32,6 +32,9 @@
 
     --accent-strong: 40 60% 32%;
 
+    --whatsapp: 142 70% 40%;
+    --whatsapp-foreground: 0 0% 100%;
+
     --destructive: 0 65% 45%;
     --destructive-foreground: 0 0% 100%;
 
@@ -91,6 +94,8 @@
     --accent: 40 49% 55%;
     --accent-foreground: 225 54% 19%;
     --accent-strong: 40 55% 62%;
+    --whatsapp: 142 65% 45%;
+    --whatsapp-foreground: 0 0% 100%;
     --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 100%;
     --success: 150 45% 45%;
