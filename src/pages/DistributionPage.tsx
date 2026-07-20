@@ -1,4 +1,4 @@
-import { Share2, Smartphone, Zap, BarChart3, ArrowRight, Sparkles, Loader2, Globe, Mail, QrCode, Code2, Shield } from "lucide-react";
+import { Share2, Smartphone, Zap, BarChart3, ArrowRight, Sparkles, Loader2, Globe, Mail, Code2, ChevronDown, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/useUILanguage";
 import { Button } from "@/components/ui/button";
@@ -77,6 +77,13 @@ export default function DistributionPage() {
     }
   }, [searchParams, publishedEvents, selectedEvent]);
 
+  // Auto-select first event once the list loads (previously ran during render — anti-pattern)
+  useEffect(() => {
+    if (publishedEvents.length > 0 && !selectedEvent) {
+      setSelectedEvent(publishedEvents[0].id);
+    }
+  }, [publishedEvents, selectedEvent]);
+
   // Hydrate channel texts from saved DB columns when the selected event changes
   useEffect(() => {
     const ev = publishedEvents.find((e) => e.id === selectedEvent);
@@ -129,10 +136,6 @@ export default function DistributionPage() {
     },
     enabled: !!tenantId && !!selectedEvent,
   });
-
-  if (publishedEvents.length > 0 && !selectedEvent) {
-    setSelectedEvent(publishedEvents[0].id);
-  }
 
   const event = publishedEvents.find((e) => e.id === selectedEvent) || publishedEvents[0];
 
