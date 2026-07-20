@@ -364,7 +364,7 @@ export default function BrandingTab() {
     if (!level) return null;
     const colors = { high: "text-green-600 bg-green-50", medium: "text-amber-600 bg-amber-50", low: "text-red-600 bg-red-50" };
     const labels = { high: t("branding.confidence.high"), medium: t("branding.confidence.medium"), low: t("branding.confidence.low") };
-    return <span className={`text-[10px] px-1.5 py-0.5 rounded ${colors[level]}`}>{labels[level]}</span>;
+    return <span className={`text-xs px-1.5 py-0.5 rounded ${colors[level]}`}>{labels[level]}</span>;
   }
 
   return (
@@ -430,7 +430,7 @@ export default function BrandingTab() {
             <div className="bg-white rounded-md border border-gray-200 overflow-hidden" style={{ fontFamily: state.fontFamily === "system" ? undefined : state.fontFamily }}>
               <div className="h-16 bg-gradient-to-br from-gray-200 to-gray-300" />
               <div className="p-2 space-y-1.5">
-                <p className="text-[10px] font-bold text-gray-900 truncate">{t("branding.preview.sampleEvent")}</p>
+                <p className="text-xs font-bold text-gray-900 truncate">{t("branding.preview.sampleEvent")}</p>
                 <button className="w-full text-[9px] font-semibold text-white py-1.5" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
                   {state.defaultCtaText}
                 </button>
@@ -460,10 +460,10 @@ export default function BrandingTab() {
           </div>
           {/* Mini knop preview */}
           <div className="snap-start shrink-0 w-[180px] rounded-lg bg-secondary/30 border border-border p-2 flex flex-col justify-center">
-            <button className="w-full text-[10px] font-semibold text-white py-2.5" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
+            <button className="w-full text-xs font-semibold text-white py-2.5" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
               {state.defaultCtaText}
             </button>
-            <button className="w-full text-[10px] font-semibold py-2.5 mt-1.5 border" style={{ color: state.secondaryColor, borderColor: state.secondaryColor, borderRadius: btnRadius }}>
+            <button className="w-full text-xs font-semibold py-2.5 mt-1.5 border" style={{ color: state.secondaryColor, borderColor: state.secondaryColor, borderRadius: btnRadius }}>
               {t("branding.preview.secondary")}
             </button>
             <p className="text-[9px] text-muted-foreground text-center mt-1">{t("branding.preview.buttons")}</p>
@@ -654,15 +654,15 @@ export default function BrandingTab() {
         >
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">{t("branding.preview.live")}</p>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{t("branding.preview.realtime")}</span>
+            <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">{t("branding.preview.realtime")}</span>
           </div>
 
           <Tabs value={previewTab} onValueChange={setPreviewTab}>
             <TabsList className="grid grid-cols-4 h-auto bg-muted/50 p-0.5">
-              <TabsTrigger value="card" className="text-[10px] py-1.5 px-1">{t("branding.preview.card")}</TabsTrigger>
-              <TabsTrigger value="widget" className="text-[10px] py-1.5 px-1">{t("branding.preview.widget")}</TabsTrigger>
-              <TabsTrigger value="single" className="text-[10px] py-1.5 px-1">{t("branding.preview.single")}</TabsTrigger>
-              <TabsTrigger value="page" className="text-[10px] py-1.5 px-1">{t("branding.preview.page")}</TabsTrigger>
+              <TabsTrigger value="card" className="text-xs py-1.5 px-1">{t("branding.preview.card")}</TabsTrigger>
+              <TabsTrigger value="widget" className="text-xs py-1.5 px-1">{t("branding.preview.widget")}</TabsTrigger>
+              <TabsTrigger value="single" className="text-xs py-1.5 px-1">{t("branding.preview.single")}</TabsTrigger>
+              <TabsTrigger value="page" className="text-xs py-1.5 px-1">{t("branding.preview.page")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="card" className="mt-3">
@@ -674,7 +674,7 @@ export default function BrandingTab() {
                   <div className="p-3 space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="text-center rounded-md px-2 py-1" style={{ backgroundColor: state.primaryColor + "15" }}>
-                        <p className="text-[10px] font-bold" style={{ color: state.primaryColor }}>25 apr</p>
+                        <p className="text-xs font-bold" style={{ color: state.primaryColor }}>25 apr</p>
                         <p className="text-[9px] text-gray-500">20:00</p>
                       </div>
                       <div>
@@ -708,7 +708,7 @@ export default function BrandingTab() {
                         <p className="text-[9px] text-gray-500">{i === 1 ? "20:00" : "14:00"}</p>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-semibold text-gray-900 truncate">{i === 1 ? t("branding.preview.sampleEventShort") : t("branding.preview.sampleWine")}</p>
+                        <p className="text-xs font-semibold text-gray-900 truncate">{i === 1 ? t("branding.preview.sampleEventShort") : t("branding.preview.sampleWine")}</p>
                         <div className="mt-1 inline-block text-[9px] font-medium text-white px-2 py-0.5" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
                           {state.defaultCtaText}
                         </div>
@@ -726,7 +726,7 @@ export default function BrandingTab() {
                     <span className="text-gray-400 text-xs">{t("branding.preview.image")}</span>
                   </div>
                   <p className="text-sm font-bold text-gray-900">{t("branding.preview.sampleEvent")}</p>
-                  <p className="text-[11px] text-gray-500 mt-0.5">{t("branding.preview.sampleDate")}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{t("branding.preview.sampleDate")}</p>
                   <div className="flex gap-2 mt-2">
                     <button className="flex-1 text-center text-xs font-semibold text-white py-1.5" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
                       {state.defaultCtaText}
@@ -749,7 +749,7 @@ export default function BrandingTab() {
                   </div>
                   <div className="p-3 space-y-2">
                     <p className="text-sm font-bold text-gray-900">{t("branding.preview.sampleEvent")}</p>
-                    {state.tagline && <p className="text-[10px] italic text-gray-500">{state.tagline}</p>}
+                    {state.tagline && <p className="text-xs italic text-gray-500">{state.tagline}</p>}
                     <button className="w-full text-center text-xs font-semibold text-white py-2" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
                       {state.defaultCtaText}
                     </button>

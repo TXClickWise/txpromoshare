@@ -66,7 +66,7 @@ export function ChannelCopyGroup({
           {icon}
           <h2 className="text-sm font-display font-semibold text-foreground truncate">{title}</h2>
           {subtitle && (
-            <span className="text-[11px] text-muted-foreground truncate hidden sm:inline">— {subtitle}</span>
+            <span className="text-xs text-muted-foreground truncate hidden sm:inline">— {subtitle}</span>
           )}
         </div>
 
@@ -78,7 +78,7 @@ export function ChannelCopyGroup({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex items-center gap-1 text-[10px] text-muted-foreground"
+                className="flex items-center gap-1 text-xs text-muted-foreground"
               >
                 <Loader2 className="w-3 h-3 animate-spin" /> {t("ccg.savingLabel")}
               </motion.span>
@@ -88,7 +88,7 @@ export function ChannelCopyGroup({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex items-center gap-1 text-[10px] text-accent"
+                className="flex items-center gap-1 text-xs text-accent"
               >
                 <Check className="w-3 h-3" /> {t("ccg.savedLabel")}
               </motion.span>
@@ -105,7 +105,7 @@ export function ChannelCopyGroup({
                     key={v.id}
                     type="button"
                     onClick={() => setActiveId(v.id)}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                       isActive
                         ? "bg-background text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground"

@@ -122,7 +122,7 @@ export function AiPublishCheck({ form }: AiPublishCheckProps) {
         </div>
         <div className="flex items-center gap-2">
           <span className={`text-lg font-display font-bold ${scoreColor}`}>{result.score}%</span>
-          <Badge variant={result.score >= 80 ? "default" : "outline"} className="text-[10px]">
+          <Badge variant={result.score >= 80 ? "default" : "outline"} className="text-xs">
             {verdictLabels[result.verdict] || result.verdict}
           </Badge>
         </div>
@@ -145,7 +145,7 @@ export function AiPublishCheck({ form }: AiPublishCheckProps) {
       <div className="space-y-3">
         {Object.entries(grouped).map(([category, checks]) => (
           <div key={category} className="space-y-1">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               {CATEGORY_LABELS[category] || category}
             </p>
             {checks.map((check, i) => (
@@ -155,7 +155,7 @@ export function AiPublishCheck({ form }: AiPublishCheckProps) {
                   {check.item}
                 </span>
                 {check.status !== "pass" && check.tip && (
-                  <span className="text-[10px] text-muted-foreground ml-auto text-right max-w-[50%] hidden sm:block">
+                  <span className="text-xs text-muted-foreground ml-auto text-right max-w-[50%] hidden sm:block">
                     {check.tip}
                   </span>
                 )}

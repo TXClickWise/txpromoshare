@@ -316,7 +316,7 @@ export default function MediaPage() {
               </div>
 
               <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                <p className="text-[10px] text-white truncate">{item.filename}</p>
+                <p className="text-xs text-white truncate">{item.filename}</p>
                 <p className="text-[9px] text-white/60 flex items-center gap-2">
                   <span>{formatBytes(item.file_size)}</span>
                   {item.width && item.height && <span>{item.width}×{item.height}</span>}
@@ -371,7 +371,7 @@ export default function MediaPage() {
                 className="w-12 h-12 rounded-lg object-cover shrink-0" loading="lazy" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{item.filename}</p>
-                <p className="text-[11px] text-muted-foreground flex items-center gap-2 flex-wrap">
+                <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
                   <span>{formatBytes(item.file_size)}</span>
                   {item.width && item.height && <span>{item.width}×{item.height}</span>}
                   <Badge variant="outline" className="text-[9px] h-4">{item.source}</Badge>

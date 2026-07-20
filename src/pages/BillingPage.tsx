@@ -156,7 +156,7 @@ export default function BillingPage() {
         <Sparkles className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
         <div>
           <p className="text-xs font-semibold text-foreground">Ticketing module · binnenkort</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Verkoop tickets vanaf je eigen pagina, met QR-scanning en bezoekersbeheer. Pro gebruikers krijgen als eerste toegang.
           </p>
         </div>
@@ -165,7 +165,7 @@ export default function BillingPage() {
       {/* 6. Trust */}
       <div className="rounded-xl border border-dashed border-border p-3 flex items-start gap-2">
         <Shield className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Betalingen verlopen veilig via Stripe. Je betaalgegevens worden nooit op TX EventShare opgeslagen.
         </p>
       </div>

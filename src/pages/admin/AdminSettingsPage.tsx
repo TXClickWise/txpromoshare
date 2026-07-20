@@ -109,7 +109,7 @@ export default function AdminSettingsPage() {
                   Test
                 </Button>
               </div>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Secret naam: <code className="bg-muted px-1 rounded">{field.secretName}</code> — 
                 wijzig via Lovable Cloud → Secrets
               </p>

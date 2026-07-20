@@ -269,10 +269,10 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
           <DialogTitle className="text-base sm:text-lg font-display">Afbeelding kiezen</DialogTitle>
           <div className="flex items-start sm:items-center justify-between gap-2 flex-col sm:flex-row">
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="outline" className="text-[10px]">
+              <Badge variant="outline" className="text-xs">
                 {roleInfo.label}
               </Badge>
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {roleInfo.ratio} • min. {roleInfo.minWidth}×{roleInfo.minHeight}px
               </span>
             </div>
@@ -282,13 +282,13 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
 
         <Tabs value={tab} onValueChange={setTab} className="flex-1 flex flex-col min-h-0">
           <TabsList className="w-full grid grid-cols-3 mb-3">
-            <TabsTrigger value="library" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5">
+            <TabsTrigger value="library" className="text-xs sm:text-xs gap-1 sm:gap-1.5">
               <Image className="w-3.5 h-3.5" /><span className="hidden xs:inline">Bibliotheek</span><span className="xs:hidden">Mijn</span>
             </TabsTrigger>
-            <TabsTrigger value="stock" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5">
+            <TabsTrigger value="stock" className="text-xs sm:text-xs gap-1 sm:gap-1.5">
               <ImagePlus className="w-3.5 h-3.5" /><span className="hidden xs:inline">Stockfoto's</span><span className="xs:hidden">Stock</span>
             </TabsTrigger>
-            <TabsTrigger value="upload" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5">
+            <TabsTrigger value="upload" className="text-xs sm:text-xs gap-1 sm:gap-1.5">
               <Upload className="w-3.5 h-3.5" />Upload
             </TabsTrigger>
           </TabsList>
@@ -418,7 +418,7 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
                       </div>
                     )}
                     <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="text-[10px] text-white truncate">
+                      <p className="text-xs text-white truncate">
                         📷 {img.photographer} • {img.source === "unsplash" ? "Unsplash" : "Pexels"}
                       </p>
                       <p className="text-[9px] text-white/60">{img.width}×{img.height}</p>
@@ -427,7 +427,7 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
                 ))}
               </div>
             )}
-            <p className="text-[10px] text-muted-foreground text-center pt-1">
+            <p className="text-xs text-muted-foreground text-center pt-1">
               Gratis voor commercieel gebruik via Unsplash & Pexels
             </p>
           </TabsContent>
@@ -454,16 +454,16 @@ export default function MediaPicker({ open, onOpenChange, onSelect, onSelectMult
                   <p className="text-xs text-muted-foreground mb-3">
                     Of sleep een bestand hierheen
                   </p>
-                  <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground">
-                    <Badge variant="outline" className="text-[10px]">JPG, PNG, WebP</Badge>
-                    <Badge variant="outline" className="text-[10px]">Max 10MB</Badge>
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                    <Badge variant="outline" className="text-xs">JPG, PNG, WebP</Badge>
+                    <Badge variant="outline" className="text-xs">Max 10MB</Badge>
                   </div>
                 </>
               )}
             </div>
             <div className="mt-4 p-3 rounded-lg bg-secondary/30 border border-border">
               <p className="text-xs font-medium text-foreground mb-1">💡 Tips voor {roleInfo.label}</p>
-              <ul className="text-[11px] text-muted-foreground space-y-0.5">
+              <ul className="text-xs text-muted-foreground space-y-0.5">
                 <li>• Aanbevolen verhouding: <strong>{roleInfo.ratio}</strong></li>
                 <li>• Minimaal: <strong>{roleInfo.minWidth}×{roleInfo.minHeight}px</strong></li>
                 <li>• Gebruik hoge kwaliteit voor de beste weergave</li>

@@ -348,7 +348,7 @@ export default function PricingPage() {
               <div className="flex-1">
                 <div className="flex items-baseline gap-2 mb-1 flex-wrap">
                   <h3 className="font-display font-semibold text-foreground text-sm">Ticketing module</h3>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-primary px-2 py-0.5 rounded-full bg-primary/10">
+                  <span className="text-xs font-bold uppercase tracking-wider text-primary px-2 py-0.5 rounded-full bg-primary/10">
                     Binnenkort beschikbaar
                   </span>
                 </div>

@@ -144,13 +144,13 @@ export function QualityCheck({ event, texts }: QualityCheckProps) {
         <div className="flex items-center gap-2 min-w-0">
           <Shield className="w-4 h-4 text-primary shrink-0" />
           <h3 className="font-display font-semibold text-foreground text-sm truncate">{t("qc.title")}</h3>
-          <span className="text-[11px] text-muted-foreground hidden sm:inline">
+          <span className="text-xs text-muted-foreground hidden sm:inline">
             {t("qc.summary", { pass: String(passCount), warn: String(warnCount), fail: String(failCount) })}
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className={`text-lg font-display font-bold ${scoreColor}`}>{score}%</span>
-          <Badge variant={score >= 80 ? "default" : "outline"} className="text-[10px]">
+          <Badge variant={score >= 80 ? "default" : "outline"} className="text-xs">
             {scoreLabel}
           </Badge>
         </div>
@@ -171,7 +171,7 @@ export function QualityCheck({ event, texts }: QualityCheckProps) {
                   <GIcon className="w-3.5 h-3.5 text-primary" />
                   <span className="text-xs font-semibold text-foreground">{group.title}</span>
                 </div>
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {groupPass}/{group.items.length}
                 </span>
               </div>
@@ -180,11 +180,11 @@ export function QualityCheck({ event, texts }: QualityCheckProps) {
                   <li key={c.label} className="flex items-start gap-1.5">
                     <StatusIcon status={c.status} />
                     <div className="min-w-0 flex-1">
-                      <span className={`text-[11px] leading-tight block ${c.status === "pass" ? "text-foreground" : "text-muted-foreground"}`}>
+                      <span className={`text-xs leading-tight block ${c.status === "pass" ? "text-foreground" : "text-muted-foreground"}`}>
                         {c.label}
                       </span>
                       {c.status !== "pass" && c.hint && (
-                        <span className="text-[10px] text-muted-foreground/80 leading-tight block">{c.hint}</span>
+                        <span className="text-xs text-muted-foreground/80 leading-tight block">{c.hint}</span>
                       )}
                     </div>
                   </li>

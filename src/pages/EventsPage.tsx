@@ -245,7 +245,7 @@ export default function EventsPage() {
                 {tab.value === "recurring" && <RefreshCw className="w-3.5 h-3.5" />}
                 <span>{tab.label}</span>
                 <span className={cn(
-                  "text-[11px] font-semibold px-1.5 py-0.5 rounded-full min-w-[20px] text-center",
+                  "text-xs font-semibold px-1.5 py-0.5 rounded-full min-w-[20px] text-center",
                   isActive ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground"
                 )}>
                   {count}
@@ -380,7 +380,7 @@ export default function EventsPage() {
                     </div>
                     {cat && (
                       <div className="absolute bottom-2 left-3">
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: cat.color || 'hsl(var(--primary))' }}>
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: cat.color || 'hsl(var(--primary))' }}>
                           {cat.name}
                         </span>
                       </div>
@@ -389,7 +389,7 @@ export default function EventsPage() {
                   <div className="p-4">
                     <div className="flex items-center gap-2 mb-1.5">
                       <EventStatusBadge status={event.status} />
-                      {event.is_recurring && <span className="text-[10px] font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full flex items-center gap-0.5"><RefreshCw className="w-2.5 h-2.5" />Terugkerend</span>}
+                      {event.is_recurring && <span className="text-xs font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full flex items-center gap-0.5"><RefreshCw className="w-2.5 h-2.5" />Terugkerend</span>}
                     </div>
                     <h3 className="font-display font-semibold text-foreground mb-1 truncate group-hover:text-primary transition-colors text-sm">{event.title}</h3>
                     {event.short_description && (
@@ -415,7 +415,7 @@ export default function EventsPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border">
-                      <code className="text-[10px] bg-secondary px-1.5 py-0.5 rounded font-mono text-muted-foreground truncate flex-1">{event.id.slice(0, 8)}…</code>
+                      <code className="text-xs bg-secondary px-1.5 py-0.5 rounded font-mono text-muted-foreground truncate flex-1">{event.id.slice(0, 8)}…</code>
                       <button onClick={(e) => copyEventId(e, event.id)} className="shrink-0 p-1 rounded hover:bg-secondary transition-colors" title="Kopieer Event ID">
                         {copiedId === event.id ? <Check className="w-3 h-3 text-accent" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
                       </button>
@@ -465,7 +465,7 @@ export default function EventsPage() {
                   })()}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground text-sm truncate group-hover:text-primary transition-colors">{event.title}</p>
-                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       {event.venue?.name && (
                         <span className="flex items-center gap-1 truncate">
                           <MapPin className="w-3 h-3" />{event.venue.name}
@@ -480,7 +480,7 @@ export default function EventsPage() {
                   </div>
                   <div className="w-28 hidden sm:block">
                     {cat && (
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: cat.color || 'hsl(var(--primary))' }}>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: cat.color || 'hsl(var(--primary))' }}>
                         {cat.name}
                       </span>
                     )}
@@ -491,14 +491,14 @@ export default function EventsPage() {
                         <p className="text-xs font-medium text-foreground">
                           {new Date(event._nextDate).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}
                         </p>
-                        <p className="text-[11px] text-accent">volgende · {(event._nextTime || event.start_time)?.slice(0, 5)}</p>
+                        <p className="text-xs text-accent">volgende · {(event._nextTime || event.start_time)?.slice(0, 5)}</p>
                       </>
                     ) : (
                       <>
                         <p className="text-xs font-medium text-foreground">
                           {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}
                         </p>
-                        <p className="text-[11px] text-muted-foreground">{event.start_time?.slice(0, 5)}</p>
+                        <p className="text-xs text-muted-foreground">{event.start_time?.slice(0, 5)}</p>
                       </>
                     )}
                   </div>

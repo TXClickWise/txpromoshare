@@ -41,7 +41,7 @@ export function StepBasics({ form, updateForm, categories }: StepBasicsProps) {
             autoFocus
             maxLength={100}
           />
-          <p className="text-[11px] text-muted-foreground">{form.title.length}/100 tekens</p>
+          <p className="text-xs text-muted-foreground">{form.title.length}/100 tekens</p>
         </div>
 
         <div className="space-y-2">
@@ -72,7 +72,7 @@ export function StepBasics({ form, updateForm, categories }: StepBasicsProps) {
           <div className="space-y-2">
             <Label className="text-sm font-medium">Organisator</Label>
             <Input value={form.organizer} onChange={(e) => updateForm({ organizer: e.target.value })} placeholder="Naam organisator" />
-            <p className="text-[11px] text-muted-foreground">Wordt getoond op de evenementpagina</p>
+            <p className="text-xs text-muted-foreground">Wordt getoond op de evenementpagina</p>
           </div>
         </div>
 
@@ -93,7 +93,7 @@ export function StepBasics({ form, updateForm, categories }: StepBasicsProps) {
             rows={2}
             maxLength={160}
           />
-          <p className="text-[11px] text-muted-foreground">{form.shortDescription.length}/160 — wordt getoond in overzichten en deelberichten</p>
+          <p className="text-xs text-muted-foreground">{form.shortDescription.length}/160 — wordt getoond in overzichten en deelberichten</p>
         </div>
       </div>
     </motion.div>

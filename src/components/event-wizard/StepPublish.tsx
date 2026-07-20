@@ -99,7 +99,7 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
               </div>
             )}
             {!previewUrl && (
-              <p className="text-[11px] text-muted-foreground pt-2 border-t border-border">
+              <p className="text-xs text-muted-foreground pt-2 border-t border-border">
                 💡 Sla eerst op als concept om de live voorbeeld te activeren.
               </p>
             )}
@@ -118,7 +118,7 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
                   />
                 )}
                 <div className="flex items-center justify-between gap-2 px-3 py-2 bg-secondary/50 border-t border-border">
-                  <span className="text-[11px] text-muted-foreground truncate">{previewUrl}</span>
+                  <span className="text-xs text-muted-foreground truncate">{previewUrl}</span>
                   <Button asChild variant="ghost" size="sm" className="h-7 text-xs gap-1.5">
                     <a href={previewUrl} target="_blank" rel="noreferrer">
                       Open in tab
@@ -257,7 +257,7 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center"><span className="text-lg">🎟️</span></div>
           <div>
-            <p className="text-sm font-medium text-foreground flex items-center gap-2">Ticketing<span className="text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">Binnenkort</span></p>
+            <p className="text-sm font-medium text-foreground flex items-center gap-2">Ticketing<span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">Binnenkort</span></p>
             <p className="text-xs text-muted-foreground">Ticketverkoop, QR-scanning & betalingen</p>
           </div>
         </div>

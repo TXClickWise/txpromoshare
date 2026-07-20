@@ -299,7 +299,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
               <SelectItem key={e.id} value={e.id}>
                 <div className="flex items-center gap-2">
                   <span className="truncate">{e.title}</span>
-                  <span className="text-[10px] text-muted-foreground shrink-0">
+                  <span className="text-xs text-muted-foreground shrink-0">
                     {new Date(e.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })}
                   </span>
                 </div>
@@ -316,7 +316,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
             <Share2 className="w-3.5 h-3.5 text-primary" />
           </div>
           <h2 className="text-sm font-display font-semibold text-foreground">{t("distribution.section1")}</h2>
-          <span className="text-[11px] text-muted-foreground hidden sm:inline">{t("distribution.section1Hint2")}</span>
+          <span className="text-xs text-muted-foreground hidden sm:inline">{t("distribution.section1Hint2")}</span>
         </div>
 
         <ShareLinkCard url={publicShareUrl} eventId={event.id} />
@@ -355,7 +355,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
             <Sparkles className="w-3.5 h-3.5 text-primary" />
           </div>
           <h2 className="text-sm font-display font-semibold text-foreground">{t("distribution.section2")}</h2>
-          <span className="text-[11px] text-muted-foreground hidden sm:inline">{t("distribution.section2Hint2")}</span>
+          <span className="text-xs text-muted-foreground hidden sm:inline">{t("distribution.section2Hint2")}</span>
         </div>
 
       {/* WhatsApp — kort & medium variants */}
@@ -493,7 +493,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
             <Code2 className="w-3.5 h-3.5 text-primary" />
           </div>
           <h2 className="text-sm font-display font-semibold text-foreground">{t("distribution.section3")}</h2>
-          <span className="text-[11px] text-muted-foreground hidden sm:inline">— {t("distribution.section3Hint")}</span>
+          <span className="text-xs text-muted-foreground hidden sm:inline">— {t("distribution.section3Hint")}</span>
         </div>
 
         <div className="p-4 sm:p-5 rounded-xl bg-card border border-border shadow-card flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">

@@ -170,7 +170,7 @@ export function WidgetQualityCheck({ widget }: Props) {
           <ShieldCheck className="w-3.5 h-3.5 text-primary" />
           <span className="text-xs font-semibold text-foreground">Kwaliteitscheck</span>
         </div>
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-xs text-muted-foreground">
           {loading
             ? "Controleren..."
             : allOk
@@ -194,13 +194,13 @@ export function WidgetQualityCheck({ widget }: Props) {
                   {c.fix && (
                     <Link
                       to={c.fix.to}
-                      className="text-[11px] text-primary hover:underline shrink-0"
+                      className="text-xs text-primary hover:underline shrink-0"
                     >
                       {c.fix.label}
                     </Link>
                   )}
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{c.detail}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{c.detail}</p>
               </div>
             </li>
           ))

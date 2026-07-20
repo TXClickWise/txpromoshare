@@ -37,7 +37,7 @@ export function UILanguageSwitcher({ variant = "icon" }: UILanguageSwitcherProps
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[180px]">
-        <div className="px-2 py-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+        <div className="px-2 py-1.5 text-xs uppercase tracking-wide text-muted-foreground">
           Interface
         </div>
         {UI_LANGUAGES.map((lang) => (

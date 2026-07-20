@@ -144,7 +144,7 @@ export default function TemplatesPage() {
                   <div className="text-2xl mb-2">{emoji}</div>
                   <h3 className="font-display font-semibold text-foreground text-sm mb-1 group-hover:text-primary transition-colors">{tmpl.name}</h3>
                   {tmpl.categories && (
-                    <p className="text-[11px] text-muted-foreground">{t("templates.category")}: {tmpl.categories.name}</p>
+                    <p className="text-xs text-muted-foreground">{t("templates.category")}: {tmpl.categories.name}</p>
                   )}
                   <div className="flex items-center gap-1 text-xs text-primary font-medium mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     {t("templates.useTemplate")} <ArrowRight className="w-3 h-3" />
@@ -162,7 +162,7 @@ export default function TemplatesPage() {
               <div className="flex flex-col items-center justify-center text-center h-full min-h-[100px]">
                 <Layers className="w-7 h-7 text-muted-foreground/30 mb-2" />
                 <h3 className="font-display font-semibold text-foreground text-sm mb-0.5 group-hover:text-primary transition-colors">{t("templates.blankTitle")}</h3>
-                <p className="text-[11px] text-muted-foreground">{t("templates.blankDesc")}</p>
+                <p className="text-xs text-muted-foreground">{t("templates.blankDesc")}</p>
               </div>
             </Link>
           </motion.div>
@@ -220,7 +220,7 @@ export default function TemplatesPage() {
                   <button onClick={() => handleUseTemplate(tmpl)} className="w-full text-left">
                     <div className="text-2xl mb-2">📋</div>
                     <h3 className="font-display font-semibold text-foreground text-sm mb-1 group-hover:text-primary transition-colors pr-6">{tmpl.name}</h3>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {t("templates.created", { date: new Date(tmpl.created_at).toLocaleDateString(dateLocale) })}
                     </p>
                     <div className="flex items-center gap-1 text-xs text-primary font-medium mt-2 opacity-0 group-hover:opacity-100 transition-opacity">

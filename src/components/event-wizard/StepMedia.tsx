@@ -87,14 +87,14 @@ export function StepMedia({
           rows={6}
           className="min-h-[120px]"
         />
-        <p className="text-[11px] text-muted-foreground">Wordt getoond op de volledige evenementpagina</p>
+        <p className="text-xs text-muted-foreground">Wordt getoond op de volledige evenementpagina</p>
       </div>
 
       {/* Featured Image */}
       <div className="space-y-3">
         <div>
           <Label className="text-sm font-medium">Uitgelichte afbeelding</Label>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Aanbevolen: 16:9 verhouding • min. 1200×675px</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Aanbevolen: 16:9 verhouding • min. 1200×675px</p>
         </div>
         {form.featuredImageUrl ? (
           <div className="relative rounded-xl border border-border overflow-hidden bg-secondary/20 max-w-md">
@@ -123,7 +123,7 @@ export function StepMedia({
         <div className="flex items-center justify-between">
           <div>
             <Label className="text-sm font-medium">Galerij (extra foto's)</Label>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Worden onder de beschrijving getoond. Klikbaar om te vergroten. Max {MAX_GALLERY} foto's.
             </p>
           </div>
@@ -177,7 +177,7 @@ export function StepMedia({
                   >
                     <ArrowUp className="w-3 h-3 -rotate-90" />
                   </button>
-                  <span className="text-[10px] font-medium text-white drop-shadow">{i + 1}</span>
+                  <span className="text-xs font-medium text-white drop-shadow">{i + 1}</span>
                   <button
                     type="button"
                     onClick={() => moveGallery(i, 1)}
@@ -193,7 +193,7 @@ export function StepMedia({
           </div>
         )}
         {form.gallery.length >= MAX_GALLERY && (
-          <p className="text-[11px] text-muted-foreground">Maximum van {MAX_GALLERY} foto's bereikt.</p>
+          <p className="text-xs text-muted-foreground">Maximum van {MAX_GALLERY} foto's bereikt.</p>
         )}
       </div>
 

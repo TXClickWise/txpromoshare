@@ -122,7 +122,7 @@ export function RecurringEditScopeDialog({
                       {opt.title}
                     </span>
                     {opt.recommended && (
-                      <span className="text-[10px] uppercase tracking-wide text-primary font-semibold">
+                      <span className="text-xs uppercase tracking-wide text-primary font-semibold">
                         Aanbevolen
                       </span>
                     )}

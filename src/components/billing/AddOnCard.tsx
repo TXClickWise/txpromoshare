@@ -16,7 +16,7 @@ export function AddOnCard({ addon, loading, onAdd }: AddOnCardProps) {
       <div className="flex items-start justify-between gap-2">
         <h4 className="font-display font-semibold text-foreground text-sm">{addon.name}</h4>
         {addon.badge && (
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-accent bg-accent/10 px-1.5 py-0.5 rounded-full">
+          <span className="text-xs font-semibold uppercase tracking-wide text-accent bg-accent/10 px-1.5 py-0.5 rounded-full">
             {addon.badge}
           </span>
         )}
@@ -24,7 +24,7 @@ export function AddOnCard({ addon, loading, onAdd }: AddOnCardProps) {
       <p className="text-xs text-muted-foreground mt-1.5 flex-1">{addon.pitch}</p>
       <div className="mt-3 flex items-baseline gap-1">
         <span className="text-lg font-display font-bold text-foreground">{addon.priceLabel}</span>
-        <span className="text-[11px] text-muted-foreground">{addon.priceSuffix}</span>
+        <span className="text-xs text-muted-foreground">{addon.priceSuffix}</span>
       </div>
       <Button
         variant="outline"

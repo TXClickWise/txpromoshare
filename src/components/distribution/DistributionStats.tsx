@@ -44,7 +44,7 @@ export function DistributionStats({ stats }: DistributionStatsProps) {
               <div key={s.channel} className={`p-3 rounded-xl ${meta.bg} text-center`}>
                 <Icon className={`w-4 h-4 mx-auto mb-1 ${meta.color}`} />
                 <div className="text-lg font-display font-bold text-foreground">{s.count}</div>
-                <div className="text-[10px] text-muted-foreground">{meta.label}</div>
+                <div className="text-xs text-muted-foreground">{meta.label}</div>
               </div>
             );
           })}

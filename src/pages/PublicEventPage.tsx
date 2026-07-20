@@ -390,7 +390,7 @@ export default function PublicEventPage() {
                     return (
                       <li key={i} className="flex items-center gap-3 py-2.5">
                         <div className="w-12 h-12 rounded-lg bg-primary/10 flex flex-col items-center justify-center shrink-0">
-                          <span className="text-[10px] font-semibold uppercase text-primary leading-none">
+                          <span className="text-xs font-semibold uppercase text-primary leading-none">
                             {new Date(o.date).toLocaleDateString("nl-NL", { month: "short" }).replace(".", "")}
                           </span>
                           <span className="text-base font-bold text-foreground leading-none mt-0.5">
@@ -410,7 +410,7 @@ export default function PublicEventPage() {
                   })}
                 </ul>
                 {upcomingOccurrences.length > 6 && (
-                  <p className="text-[11px] text-muted-foreground mt-3">+ nog {upcomingOccurrences.length - 6} data</p>
+                  <p className="text-xs text-muted-foreground mt-3">+ nog {upcomingOccurrences.length - 6} data</p>
                 )}
               </motion.div>
             )}
@@ -518,7 +518,7 @@ export default function PublicEventPage() {
                       {localized.cta_button_text || "Aanmelden"}<ExternalLink className="w-4 h-4" />
                     </a>
                   </Button>
-                  <p className="text-[11px] text-center text-muted-foreground">Direct bevestigd • Geen account nodig</p>
+                  <p className="text-xs text-center text-muted-foreground">Direct bevestigd • Geen account nodig</p>
                 </>
               ) : (
                 <div className="text-center py-2">
@@ -573,7 +573,7 @@ export default function PublicEventPage() {
                 <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${shareOpen ? "rotate-180" : ""}`} />
               </button>
               <div className={`grid grid-cols-4 gap-1 mt-3 ${shareOpen ? "" : "hidden"}`}>
-                <Button variant="outline" size="sm" className="flex-col gap-1 text-[10px] h-auto py-2 px-1" asChild>
+                <Button variant="outline" size="sm" className="flex-col gap-1 text-xs h-auto py-2 px-1" asChild>
                   <a
                     href={`https://api.whatsapp.com/send?text=${encodeURIComponent(visitorWhatsappText)}`}
                     target="_blank"
@@ -583,12 +583,12 @@ export default function PublicEventPage() {
                     <MessageCircle className="w-4 h-4" /><span>WhatsApp</span>
                   </a>
                 </Button>
-                <Button variant="outline" size="sm" className="flex-col gap-1 text-[10px] h-auto py-2 px-1" asChild>
+                <Button variant="outline" size="sm" className="flex-col gap-1 text-xs h-auto py-2 px-1" asChild>
                   <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewShareUrl)}`} target="_blank" rel="noopener noreferrer">
                     <Facebook className="w-4 h-4" /><span>Facebook</span>
                   </a>
                 </Button>
-                <Button variant="outline" size="sm" className="flex-col gap-1 text-[10px] h-auto py-2 px-1" onClick={() => {
+                <Button variant="outline" size="sm" className="flex-col gap-1 text-xs h-auto py-2 px-1" onClick={() => {
                   if (navigator.share) {
                     navigator.share({ title: event.title, text: shareText, url: previewShareUrl }).catch(() => {});
                   } else {
@@ -597,7 +597,7 @@ export default function PublicEventPage() {
                 }}>
                   <Instagram className="w-4 h-4" /><span>Instagram</span>
                 </Button>
-                <Button variant="outline" size="sm" className="flex-col gap-1 text-[10px] h-auto py-2 px-1" onClick={() => {
+                <Button variant="outline" size="sm" className="flex-col gap-1 text-xs h-auto py-2 px-1" onClick={() => {
                   if (navigator.share) {
                     navigator.share({ title: event.title, text: shareText, url: previewShareUrl }).catch(() => {});
                   } else {
@@ -606,7 +606,7 @@ export default function PublicEventPage() {
                 }}>
                   <Music className="w-4 h-4" /><span>TikTok</span>
                 </Button>
-                <Button variant="outline" size="sm" className="flex-col gap-1 text-[10px] h-auto py-2 px-1" onClick={() => {
+                <Button variant="outline" size="sm" className="flex-col gap-1 text-xs h-auto py-2 px-1" onClick={() => {
                   if (navigator.share) {
                     navigator.share({ title: event.title, text: shareText, url: previewShareUrl }).catch(() => {});
                   } else {
@@ -615,12 +615,12 @@ export default function PublicEventPage() {
                 }}>
                   <Building2 className="w-4 h-4" /><span>Google</span>
                 </Button>
-                <Button variant="outline" size="sm" className="flex-col gap-1 text-[10px] h-auto py-2 px-1" asChild>
+                <Button variant="outline" size="sm" className="flex-col gap-1 text-xs h-auto py-2 px-1" asChild>
                   <a href={`mailto:?subject=${encodeURIComponent(event.title)}&body=${encodeURIComponent(shareText + "\n\n" + publicEventUrl)}`}>
                     <Mail className="w-4 h-4" /><span>E-mail</span>
                   </a>
                 </Button>
-                <Button variant="outline" size="sm" className="flex-col gap-1 text-[10px] h-auto py-2 px-1 col-span-2" onClick={copyLink}>
+                <Button variant="outline" size="sm" className="flex-col gap-1 text-xs h-auto py-2 px-1 col-span-2" onClick={copyLink}>
                   {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   <span>{copied ? "Gekopieerd!" : "Kopieer link"}</span>
                 </Button>
@@ -628,7 +628,7 @@ export default function PublicEventPage() {
             </motion.div>
 
             <div className="text-center pt-2">
-              <Link to="/" className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+              <Link to="/" className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">
                 Gepresenteerd via <span className="font-semibold">TX EventShare</span>
               </Link>
             </div>

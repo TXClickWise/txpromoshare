@@ -182,7 +182,7 @@ export default function LandingPage() {
               <div className="rounded-2xl border border-border bg-card shadow-elevated overflow-hidden">
                 <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-secondary/30">
                   <div className="flex gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-destructive/40" /><div className="w-2.5 h-2.5 rounded-full bg-highlight/40" /><div className="w-2.5 h-2.5 rounded-full bg-accent/40" /></div>
-                  <div className="flex-1 text-center"><span className="text-[10px] text-muted-foreground font-mono">app.txeventshare.nl</span></div>
+                  <div className="flex-1 text-center"><span className="text-xs text-muted-foreground font-mono">app.txeventshare.nl</span></div>
                 </div>
                 <div className="p-5 bg-gradient-to-br from-surface-cool to-card">
                   {/* Mini dashboard mockup */}
@@ -197,7 +197,7 @@ export default function LandingPage() {
                           <m.icon className="w-4 h-4 text-primary-foreground" />
                         </div>
                         <p className="font-display font-bold text-foreground text-xs">{m.label}</p>
-                        <p className="text-[10px] text-muted-foreground">{m.sub}</p>
+                        <p className="text-xs text-muted-foreground">{m.sub}</p>
                       </motion.div>
                     ))}
                   </div>
@@ -210,7 +210,7 @@ export default function LandingPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium text-foreground truncate">{title}</p>
-                          <p className="text-[10px] text-muted-foreground">18 apr · 20:00</p>
+                          <p className="text-xs text-muted-foreground">18 apr · 20:00</p>
                         </div>
                         <div className="px-1.5 py-0.5 rounded-full bg-accent/10 text-accent text-[9px] font-semibold">Live</div>
                       </motion.div>
@@ -234,7 +234,7 @@ export default function LandingPage() {
                     <m.icon className="w-4 h-4 text-primary-foreground" />
                   </div>
                   <p className="font-display font-bold text-foreground text-xs">{m.label}</p>
-                  <p className="text-[10px] text-muted-foreground">{m.sub}</p>
+                  <p className="text-xs text-muted-foreground">{m.sub}</p>
                 </div>
               ))}
             </div>
@@ -343,7 +343,7 @@ export default function LandingPage() {
             {features.map((f, i) => (
               <motion.div key={i} {...stagger(i)} className={cn("p-5 rounded-xl border shadow-card transition-shadow hover:shadow-elevated relative", f.upcoming ? "bg-card/60 border-dashed border-primary/20" : "bg-card border-border")}>
                 {f.upcoming && (
-                  <span className="absolute top-3 right-3 text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Uitbreidbaar</span>
+                  <span className="absolute top-3 right-3 text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Uitbreidbaar</span>
                 )}
                 <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center mb-4", f.upcoming ? "bg-primary/10" : "gradient-hero")}>
                   <f.icon className={cn("w-5 h-5", f.upcoming ? "text-primary" : "text-primary-foreground")} />
@@ -371,7 +371,7 @@ export default function LandingPage() {
                   <step.icon className="w-6 h-6 text-primary-foreground" />
                 </div>
                 <div className="absolute -top-1 -right-1 md:right-auto md:left-1/2 md:ml-5 md:-top-1 w-6 h-6 rounded-full bg-card border-2 border-primary flex items-center justify-center">
-                  <span className="text-[10px] font-bold text-primary">{step.num}</span>
+                  <span className="text-xs font-bold text-primary">{step.num}</span>
                 </div>
                 <h3 className="font-display font-bold text-foreground mb-2">{step.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
