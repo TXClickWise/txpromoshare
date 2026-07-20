@@ -389,7 +389,7 @@ export default function EventsPage() {
                   <div className="p-4">
                     <div className="flex items-center gap-2 mb-1.5">
                       <EventStatusBadge status={event.status} />
-                      {event.is_recurring && <span className="text-xs font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full flex items-center gap-0.5"><RefreshCw className="w-2.5 h-2.5" />Terugkerend</span>}
+                      {event.is_recurring && <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full flex items-center gap-0.5"><RefreshCw className="w-2.5 h-2.5" />Terugkerend</span>}
                     </div>
                     <h3 className="font-display font-semibold text-foreground mb-1 truncate group-hover:text-primary transition-colors text-sm">{event.title}</h3>
                     {event.short_description && (
@@ -401,7 +401,7 @@ export default function EventsPage() {
                         {event.is_recurring && event._nextDate ? (
                           <>
                             {new Date(event._nextDate).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {(event._nextTime || event.start_time)?.slice(0, 5)}
-                            <span className="text-accent ml-1">(volgende)</span>
+                            <span className="text-muted-foreground ml-1">(volgende)</span>
                           </>
                         ) : (
                           <>{new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.start_time?.slice(0, 5)}</>
@@ -472,7 +472,7 @@ export default function EventsPage() {
                         </span>
                       )}
                       {event.is_recurring && (
-                        <span className="flex items-center gap-0.5 text-accent">
+                        <span className="flex items-center gap-0.5 text-primary">
                           <RefreshCw className="w-2.5 h-2.5" />Terugkerend
                         </span>
                       )}
@@ -491,7 +491,7 @@ export default function EventsPage() {
                         <p className="text-xs font-medium text-foreground">
                           {new Date(event._nextDate).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}
                         </p>
-                        <p className="text-xs text-accent">volgende · {(event._nextTime || event.start_time)?.slice(0, 5)}</p>
+                        <p className="text-xs text-muted-foreground">volgende · {(event._nextTime || event.start_time)?.slice(0, 5)}</p>
                       </>
                     ) : (
                       <>
