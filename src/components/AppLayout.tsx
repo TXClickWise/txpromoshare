@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate, Navigate } from "react-router-dom";
 import {
-  LayoutDashboard, Calendar, Share2, Code2, Settings, Shield, Menu, X, LogOut
+  LayoutDashboard, Calendar, Share2, Settings, Shield, Menu, X, LogOut
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
@@ -24,7 +24,6 @@ export default function AppLayout() {
     { to: "/app", icon: LayoutDashboard, label: t("nav.dashboard"), end: true },
     { to: "/app/events", icon: Calendar, label: t("nav.events") },
     { to: "/app/distribution", icon: Share2, label: t("nav.distribution") },
-    { to: "/app/widgets", icon: Code2, label: t("nav.widgets") },
     { to: "/app/settings", icon: Settings, label: t("nav.settings") },
   ], [t]);
 
