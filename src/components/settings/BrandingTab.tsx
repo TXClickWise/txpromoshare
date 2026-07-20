@@ -87,8 +87,8 @@ export default function BrandingTab() {
 
   const [state, setState] = useState<BrandingState>({
     logoUrl: null,
-    primaryColor: "#E86C2C",
-    secondaryColor: "#2A9D8F",
+    primaryColor: "#16264D",
+    secondaryColor: "#C8A24E",
     fontFamily: "system",
     buttonStyle: "rounded",
     defaultCtaText: "Meer info",
