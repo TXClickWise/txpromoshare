@@ -59,7 +59,7 @@ export default function AdminDashboardPage() {
 
   const statCards = [
     { label: "Organisaties", value: stats.totalTenants, icon: Building2, color: "text-primary", link: "/admin/tenants" },
-    { label: "Gebruikers", value: stats.totalUsers, icon: Users, color: "text-accent", link: "/admin/users" },
+    { label: "Gebruikers", value: stats.totalUsers, icon: Users, color: "text-primary", link: "/admin/users" },
     { label: "Evenementen", value: stats.totalEvents, icon: Calendar, color: "text-highlight", link: null },
     { label: "Actieve Overrides", value: stats.activeOverrides, icon: ArrowUpDown, color: "text-destructive", link: "/admin/overrides" },
   ];

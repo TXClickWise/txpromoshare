@@ -33,7 +33,7 @@ export function WidgetCard({ widget, isSelected, copied, onSelect, onCopy, onTog
           </p>
         </div>
         <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
-          widget.is_active ? "bg-accent/20 text-accent" : "bg-muted text-muted-foreground"
+          widget.is_active ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
         }`}>
           {widget.is_active ? t("common.active") : t("common.inactive")}
         </span>

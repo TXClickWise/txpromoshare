@@ -43,15 +43,15 @@ export default function AdminLayout() {
       )}
 
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border flex flex-col transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto",
+        "fixed inset-y-0 left-0 z-50 w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="flex items-center gap-2 px-5 py-4 border-b border-border">
+        <div className="flex items-center gap-2 px-5 py-4 border-b border-sidebar-border">
           <div className="w-8 h-8 rounded-lg bg-destructive flex items-center justify-center">
             <Shield className="w-4 h-4 text-destructive-foreground" />
           </div>
-          <span className="font-display font-bold text-lg text-foreground">Admin Panel</span>
-          <button onClick={() => setSidebarOpen(false)} className="ml-auto lg:hidden text-muted-foreground">
+          <span className="font-display font-bold text-lg text-sidebar-accent-foreground">Admin Panel</span>
+          <button onClick={() => setSidebarOpen(false)} className="ml-auto lg:hidden text-sidebar-foreground hover:text-sidebar-accent-foreground">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -67,10 +67,10 @@ export default function AdminLayout() {
                 to={item.to}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    ? "bg-sidebar-primary/15 text-sidebar-primary before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-1 before:rounded-r-full before:bg-sidebar-primary"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
                 <item.icon className="w-4 h-4 shrink-0" />
@@ -80,17 +80,17 @@ export default function AdminLayout() {
           })}
         </nav>
 
-        <div className="px-3 py-4 border-t border-border space-y-1">
+        <div className="px-3 py-4 border-t border-sidebar-border space-y-1">
           <Link
             to="/app"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
             <LayoutDashboard className="w-4 h-4" />
             Naar app
           </Link>
           <button
             onClick={signOut}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
             <LogOut className="w-4 h-4" />
             Uitloggen

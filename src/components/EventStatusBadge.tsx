@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const statusConfig: Record<EventStatus, { label: string; className: string }> = {
   draft: { label: t.events.status.draft, className: "bg-muted text-muted-foreground" },
-  published: { label: t.events.status.published, className: "bg-accent/15 text-accent" },
+  published: { label: t.events.status.published, className: "bg-success/15 text-success" },
   scheduled: { label: t.events.status.scheduled, className: "bg-primary/15 text-primary" },
   archived: { label: t.events.status.archived, className: "bg-secondary text-secondary-foreground" },
   ended: { label: t.events.status.ended, className: "bg-destructive/15 text-destructive" },
