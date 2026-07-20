@@ -23,7 +23,7 @@ export function Logo({ variant = "light", size = "md", showTagline = false, clas
   const markBg = isDark ? "bg-accent" : "bg-primary";
   const markFg = isDark ? "text-accent-foreground" : "text-accent";
   const wordFg = isDark ? "text-white" : "text-primary";
-  const taglineFg = isDark ? "text-on-dark-muted" : "text-muted-foreground";
+  const taglineFg = isDark ? "text-white/70" : "text-muted-foreground";
 
   return (
     <span
