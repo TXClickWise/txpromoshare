@@ -1,4 +1,4 @@
-import { Calendar, TrendingUp, Plus, ArrowRight, Share2, Code2, Zap, Clock } from "lucide-react";
+import { Calendar, TrendingUp, Plus, ArrowRight, Share2, Code2, Zap, Clock, FileText, CalendarClock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/hooks/useUILanguage";
@@ -11,6 +11,7 @@ import { usePlan } from "@/hooks/usePlan";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { supabase } from "@/integrations/supabase/client";
+import { formatTime } from "@/lib/utils";
 
 
 interface DashboardEvent {
@@ -41,7 +42,7 @@ export default function DashboardPage() {
   ];
 
   const [events, setEvents] = useState<DashboardEvent[]>([]);
-  const [stats, setStats] = useState({ active: 0, upcoming: 0, widgets: 0, team: 1 });
+  const [stats, setStats] = useState({ published: 0, scheduled: 0, drafts: 0, widgets: 0, team: 1 });
 
   useEffect(() => {
     if (!tenantId) return;
@@ -56,17 +57,23 @@ export default function DashboardPage() {
       setEvents((evts as DashboardEvent[]) || []);
 
       // Stats
-      const { count: activeCount } = await supabase
+      const { count: publishedCount } = await supabase
         .from("events")
         .select("id", { count: "exact", head: true })
         .eq("tenant_id", tenantId!)
         .eq("status", "published");
 
-      const { count: upcomingCount } = await supabase
+      const { count: scheduledCount } = await supabase
         .from("events")
         .select("id", { count: "exact", head: true })
         .eq("tenant_id", tenantId!)
-        .in("status", ["scheduled", "draft"]);
+        .eq("status", "scheduled");
+
+      const { count: draftCount } = await supabase
+        .from("events")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenantId!)
+        .eq("status", "draft");
 
       const { count: widgetCount } = await supabase
         .from("widgets")
@@ -79,8 +86,9 @@ export default function DashboardPage() {
         .eq("tenant_id", tenantId!);
 
       setStats({
-        active: activeCount || 0,
-        upcoming: upcomingCount || 0,
+        published: publishedCount || 0,
+        scheduled: scheduledCount || 0,
+        drafts: draftCount || 0,
         widgets: widgetCount || 0,
         team: teamCount || 1,
       });
@@ -89,9 +97,9 @@ export default function DashboardPage() {
   }, [tenantId]);
 
   const statCards = [
-    { label: t("dashboard.activeEvents"), value: String(stats.active), icon: Calendar },
-    { label: t("dashboard.upcomingEvents"), value: String(stats.upcoming), icon: TrendingUp },
-    { label: t("dashboard.widgets"), value: String(stats.widgets), icon: Code2 },
+    { label: t("dashboard.stats.published"), sub: t("dashboard.stats.publishedDesc"), value: String(stats.published), icon: TrendingUp },
+    { label: t("dashboard.stats.scheduled"), sub: t("dashboard.stats.scheduledDesc"), value: String(stats.scheduled), icon: CalendarClock },
+    { label: t("dashboard.stats.drafts"), sub: t("dashboard.stats.draftsDesc"), value: String(stats.drafts), icon: FileText },
   ];
 
   return (
@@ -112,19 +120,20 @@ export default function DashboardPage() {
       <OnboardingChecklist />
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {statCards.map((s) => (
           <div
             key={s.label}
-            className="p-5 rounded-xl bg-card border border-border"
+            className="p-3 sm:p-5 rounded-xl bg-card border border-border"
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center">
-                <s.icon className="w-4 h-4 text-primary" />
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-secondary flex items-center justify-center">
+                <s.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
               </div>
             </div>
-            <div className="text-2xl font-display font-bold text-foreground">{s.value}</div>
-            <div className="text-xs text-muted-foreground mt-1">{s.label}</div>
+            <div className="text-xl sm:text-2xl font-display font-bold text-foreground tabular-nums">{s.value}</div>
+            <div className="text-xs text-foreground mt-0.5 sm:mt-1 font-medium">{s.label}</div>
+            <div className="hidden sm:block text-xs text-muted-foreground mt-0.5">{s.sub}</div>
           </div>
         ))}
       </div>
@@ -156,21 +165,23 @@ export default function DashboardPage() {
                 <p className="text-sm text-muted-foreground">{t("dashboard.noEvents")}</p>
               </div>
             ) : events.map((event) => (
-              <Link key={event.id} to={`/app/events/${event.id}`} className="flex items-center gap-3 p-3.5 rounded-xl bg-card border border-border shadow-card hover:shadow-elevated transition-all group">
+              <Link key={event.id} to={`/app/events/${event.id}`} className="flex items-start gap-3 p-3.5 rounded-xl bg-card border border-border shadow-card hover:shadow-elevated transition-all group">
                 <div className="w-11 h-11 rounded-lg bg-secondary flex items-center justify-center shrink-0">
                   <Calendar className="w-5 h-5 text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-foreground text-sm truncate">{event.title}</p>
-                    {event.is_recurring && <span className="text-xs font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0">Wekelijks</span>}
-                  </div>
+                  <p className="font-medium text-foreground text-sm truncate">{event.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                    <Clock className="w-3 h-3" />
-                    {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {event.start_time}
+                    <Clock className="w-3 h-3 shrink-0" />
+                    <span className="truncate">
+                      {new Date(event.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {formatTime(event.start_time)}
+                    </span>
                   </p>
+                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                    <EventStatusBadge status={event.status as any} />
+                    {event.is_recurring && <span className="text-xs font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">Wekelijks</span>}
+                  </div>
                 </div>
-                <EventStatusBadge status={event.status as any} />
                 <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status as any} />
               </Link>
             ))}
@@ -182,7 +193,7 @@ export default function DashboardPage() {
           {/* Usage meters */}
           <div className="rounded-xl bg-card border border-border shadow-card p-4 space-y-4">
             <h3 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider">{t("dashboard.usage")}</h3>
-            <UsageMeter metric="events" current={stats.active} label={t("dashboard.activeEvents")} />
+            <UsageMeter metric="events" current={stats.published} label={t("dashboard.activeEvents")} />
             <UsageMeter metric="widgets" current={stats.widgets} label={t("dashboard.widgets")} />
             <UsageMeter metric="team" current={stats.team} label={t("billing.teamMembers")} />
           </div>
@@ -192,7 +203,7 @@ export default function DashboardPage() {
             const limits = (effectivePlanId === "free")
               ? { events: 3, widgets: 1 }
               : { events: 15, widgets: 3 };
-            const eventsPercent = limits.events === Infinity ? 0 : Math.round((stats.active / limits.events) * 100);
+            const eventsPercent = limits.events === Infinity ? 0 : Math.round((stats.published / limits.events) * 100);
             const widgetsPercent = limits.widgets === Infinity ? 0 : Math.round((stats.widgets / limits.widgets) * 100);
             const showSmart = eventsPercent >= 70 || widgetsPercent >= 70 || effectivePlanId === "free";
             if (!showSmart) return null;
