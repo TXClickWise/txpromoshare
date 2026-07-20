@@ -127,8 +127,8 @@ export default function BrandingTab() {
     if (tenant) {
       setState({
         logoUrl: tenant.logo_url || null,
-        primaryColor: tenant.primary_color || "#E86C2C",
-        secondaryColor: tenant.secondary_color || "#2A9D8F",
+        primaryColor: tenant.primary_color || "#16264D",
+        secondaryColor: tenant.secondary_color || "#C8A24E",
         fontFamily: (tenant as any).font_family || "system",
         buttonStyle: (tenant as any).button_style || "rounded",
         defaultCtaText: (tenant as any).default_cta_text || "Meer info",
