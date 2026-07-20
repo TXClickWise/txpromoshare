@@ -51,7 +51,7 @@ export function OnboardingChecklist() {
         { id: "branding", label: "Logo & huisstijl toevoegen", description: "Upload je logo en kies je kleuren", done: hasBranding, to: "/app/settings/merk" },
         { id: "event", label: "Eerste evenement aanmaken", description: "Gebruik een sjabloon of begin blanco", done: (eventCount || 0) > 0, to: "/app/events/new" },
         { id: "distribution", label: "Evenement delen", description: "Verspreid via WhatsApp, link of embed", done: (distCount || 0) > 0, to: "/app/distribution" },
-        { id: "widget", label: "Widget op je website plaatsen", description: "Toon je agenda automatisch op je site", done: (widgetCount || 0) > 0, to: "/app/widgets" },
+        { id: "widget", label: "Widget op je website plaatsen", description: "Toon je agenda automatisch op je site", done: (widgetCount || 0) > 0, to: "/app/settings/website/widgets" },
       ]);
       setLoading(false);
     }
