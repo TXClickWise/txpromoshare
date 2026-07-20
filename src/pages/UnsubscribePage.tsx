@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { MailX, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
-import logoTxEventShare from "@/assets/logo-tx-eventshare.png";
+import { Logo } from "@/components/brand/Logo";
 
 type Status = "loading" | "valid" | "already" | "invalid" | "success" | "error";
 
@@ -50,7 +50,7 @@ export default function UnsubscribePage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-background">
       <div className="w-full max-w-md text-center space-y-6">
-        <img src={logoTxEventShare} alt="TX EventShare" className="h-[2.7rem] w-auto mx-auto" />
+        <div className="flex justify-center"><Logo variant="light" size="md" /></div>
 
         {status === "loading" && (
           <>
