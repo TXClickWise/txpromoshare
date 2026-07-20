@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AiPublishCheck } from "./AiPublishCheck";
 import type { EventFormState, StepValidation } from "./useEventForm";
+import { useTranslation } from "@/hooks/useUILanguage";
 
 interface StepPublishProps {
   form: EventFormState;
@@ -22,15 +23,17 @@ interface StepPublishProps {
 }
 
 export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSave, onPublish, validation }: StepPublishProps) {
+  const { t, language } = useTranslation();
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const [previewLoaded, setPreviewLoaded] = useState(false);
+  const dateLocale = language === "en" ? "en-US" : "nl-NL";
 
   const summary = [
-    { label: "Titel", value: form.title, required: true },
-    { label: "Datum", value: form.startDate ? new Date(form.startDate).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : "", required: true },
-    { label: "Tijd", value: [form.startTime?.slice(0, 5), form.endTime?.slice(0, 5)].filter(Boolean).join(" — "), required: true },
-    { label: "Locatie", value: form.venue },
-    { label: "Beschrijving", value: form.shortDescription ? `${form.shortDescription.slice(0, 80)}${form.shortDescription.length > 80 ? "..." : ""}` : "" },
+    { label: t("wizard.publish.summary.title"), value: form.title, required: true },
+    { label: t("wizard.publish.summary.date"), value: form.startDate ? new Date(form.startDate).toLocaleDateString(dateLocale, { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : "", required: true },
+    { label: t("wizard.publish.summary.time"), value: [form.startTime?.slice(0, 5), form.endTime?.slice(0, 5)].filter(Boolean).join(" — "), required: true },
+    { label: t("wizard.publish.summary.venue"), value: form.venue },
+    { label: t("wizard.publish.summary.description"), value: form.shortDescription ? `${form.shortDescription.slice(0, 80)}${form.shortDescription.length > 80 ? "..." : ""}` : "" },
   ];
 
   const isReady = validation.isValid;
@@ -39,8 +42,8 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-xl font-display font-bold text-foreground">Publiceren</h2>
-        <p className="text-sm text-muted-foreground">Controleer je evenement en kies hoe je het wilt publiceren.</p>
+        <h2 className="text-xl font-display font-bold text-foreground">{t("wizard.publish.title")}</h2>
+        <p className="text-sm text-muted-foreground">{t("wizard.publish.subtitle")}</p>
       </div>
 
       {/* AI Publish Check */}
@@ -53,11 +56,11 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
             <TabsList className="h-9">
               <TabsTrigger value="summary" className="text-xs gap-1.5">
                 <Eye className="w-3.5 h-3.5" />
-                Samenvatting
+                {t("wizard.publish.summaryTab")}
               </TabsTrigger>
               <TabsTrigger value="live" className="text-xs gap-1.5" disabled={!previewUrl}>
                 <ExternalLink className="w-3.5 h-3.5" />
-                Live voorbeeld
+                {t("wizard.publish.liveTab")}
               </TabsTrigger>
             </TabsList>
             {previewUrl && (
@@ -66,7 +69,7 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
                   type="button"
                   onClick={() => setPreviewDevice("desktop")}
                   className={`p-1.5 rounded-md transition-colors ${previewDevice === "desktop" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                  aria-label="Desktop weergave"
+                  aria-label={t("wizard.publish.deviceDesktop")}
                 >
                   <Monitor className="w-3.5 h-3.5" />
                 </button>
@@ -74,7 +77,7 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
                   type="button"
                   onClick={() => setPreviewDevice("mobile")}
                   className={`p-1.5 rounded-md transition-colors ${previewDevice === "mobile" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                  aria-label="Mobiele weergave"
+                  aria-label={t("wizard.publish.deviceMobile")}
                 >
                   <Smartphone className="w-3.5 h-3.5" />
                 </button>
@@ -88,7 +91,7 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
                 <div key={item.label} className="flex items-start gap-3 text-sm">
                   <span className="text-xs text-muted-foreground w-20 shrink-0 pt-0.5">{item.label}</span>
                   <span className={`${item.value ? "text-foreground" : item.required ? "text-destructive" : "text-muted-foreground"}`}>
-                    {item.value || (item.required ? "⚠️ Niet ingevuld" : "—")}
+                    {item.value || (item.required ? t("wizard.publish.summary.missing") : "—")}
                   </span>
                 </div>
               ))}
@@ -100,7 +103,7 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
             )}
             {!previewUrl && (
               <p className="text-xs text-muted-foreground pt-2 border-t border-border">
-                💡 Sla eerst op als concept om de live voorbeeld te activeren.
+                {t("wizard.publish.saveDraftFirst")}
               </p>
             )}
           </TabsContent>
@@ -111,7 +114,7 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
                 {previewLoaded && (
                   <iframe
                     src={previewUrl}
-                    title="Live voorbeeld"
+                    title={t("wizard.publish.liveTab")}
                     className="w-full bg-background"
                     style={{ height: "560px" }}
                     loading="lazy"
@@ -121,14 +124,14 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
                   <span className="text-xs text-muted-foreground truncate">{previewUrl}</span>
                   <Button asChild variant="ghost" size="sm" className="h-7 text-xs gap-1.5">
                     <a href={previewUrl} target="_blank" rel="noreferrer">
-                      Open in tab
+                      {t("wizard.publish.openTab")}
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </Button>
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground text-center py-8">Sla eerst op als concept om de live voorbeeld te activeren.</p>
+              <p className="text-xs text-muted-foreground text-center py-8">{t("wizard.publish.saveDraftFirstShort")}</p>
             )}
           </TabsContent>
         </Tabs>
@@ -139,7 +142,7 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
         <div className="rounded-xl bg-destructive/5 border border-destructive/20 p-4 space-y-2">
           <p className="text-sm font-semibold text-destructive flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
-            Nog niet klaar om te publiceren
+            {t("wizard.publish.notReady")}
           </p>
           <ul className="space-y-1">
             {validation.errors.map((err, i) => (
@@ -156,14 +159,14 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
             <CalendarClock className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">Ingepland publiceren</p>
-            <p className="text-xs text-muted-foreground">Optioneel: kies een datum en tijd waarop het event automatisch live gaat</p>
+            <p className="text-sm font-semibold text-foreground">{t("wizard.publish.schedule")}</p>
+            <p className="text-xs text-muted-foreground">{t("wizard.publish.scheduleHelp")}</p>
           </div>
         </div>
         <Input type="datetime-local" value={form.publishAt} onChange={(e) => updateForm({ publishAt: e.target.value })} className="max-w-xs" />
         {form.publishAt && (
           <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => updateForm({ publishAt: "" })}>
-            Wis datum — publiceer direct
+            {t("wizard.publish.clearSchedule")}
           </Button>
         )}
       </div>
@@ -175,16 +178,16 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
             <Globe className="w-4 h-4 text-accent" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">Zichtbaarheid publieke lijst</p>
-            <p className="text-xs text-muted-foreground">Bepaal of dit event zichtbaar is op de publieke ontdekkingspagina</p>
+            <p className="text-sm font-semibold text-foreground">{t("wizard.publish.visibility")}</p>
+            <p className="text-xs text-muted-foreground">{t("wizard.publish.visibilityHelp")}</p>
           </div>
         </div>
         <Select value={form.showOnDiscovery} onValueChange={(v) => updateForm({ showOnDiscovery: v })}>
           <SelectTrigger className="max-w-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="inherit">Volg organisatie-instelling</SelectItem>
-            <SelectItem value="show">Altijd tonen</SelectItem>
-            <SelectItem value="hide">Altijd verbergen</SelectItem>
+            <SelectItem value="inherit">{t("wizard.publish.visibility.inherit")}</SelectItem>
+            <SelectItem value="show">{t("wizard.publish.visibility.show")}</SelectItem>
+            <SelectItem value="hide">{t("wizard.publish.visibility.hide")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -197,8 +200,8 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
               <Star className="w-4 h-4 text-highlight fill-highlight" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">Evenement uitlichten</p>
-              <p className="text-xs text-muted-foreground">Laat dit event opvallen op de ontdekkingspagina</p>
+              <p className="text-sm font-semibold text-foreground">{t("wizard.publish.boost")}</p>
+              <p className="text-xs text-muted-foreground">{t("wizard.publish.boostHelp")}</p>
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -206,19 +209,19 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
               onClick={async () => {
                 const { data } = await supabase.functions.invoke("create-boost-checkout", { body: { eventId, boostDays: 7 } });
                 if (data?.url) window.open(data.url, "_blank");
-                else if (data?.success) toast.success("Boost geactiveerd met gratis credit! ⭐");
-                else toast.error("Boost niet gelukt");
+                else if (data?.success) toast.success(t("wizard.publish.boostSuccess"));
+                else toast.error(t("wizard.publish.boostFail"));
               }}>
-              <Star className="w-3.5 h-3.5" />7 dagen — €6,95
+              <Star className="w-3.5 h-3.5" />{t("wizard.publish.boostDays", { days: "7", price: "6,95" })}
             </Button>
             <Button size="sm" variant="outline" className="gap-2 border-highlight/50 hover:bg-highlight/10"
               onClick={async () => {
                 const { data } = await supabase.functions.invoke("create-boost-checkout", { body: { eventId, boostDays: 14 } });
                 if (data?.url) window.open(data.url, "_blank");
-                else if (data?.success) toast.success("Boost geactiveerd met gratis credit! ⭐");
-                else toast.error("Boost niet gelukt");
+                else if (data?.success) toast.success(t("wizard.publish.boostSuccess"));
+                else toast.error(t("wizard.publish.boostFail"));
               }}>
-              <Star className="w-3.5 h-3.5" />14 dagen — €12,95
+              <Star className="w-3.5 h-3.5" />{t("wizard.publish.boostDays", { days: "14", price: "12,95" })}
             </Button>
           </div>
         </div>
@@ -227,26 +230,26 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
       {/* Publish actions */}
       <div className="rounded-xl bg-primary/5 border border-primary/20 p-5 space-y-4">
         <p className="text-sm font-semibold text-foreground">
-          {isReady ? "✅ Klaar om te publiceren" : "Sla eerst op als concept"}
+          {isReady ? t("wizard.publish.readyYes") : t("wizard.publish.readyNo")}
         </p>
         <p className="text-xs text-muted-foreground">
           {form.publishAt
-            ? "Je evenement wordt ingepland en automatisch gepubliceerd op de ingestelde datum."
-            : "Je evenement gaat direct live na publicatie."
+            ? t("wizard.publish.willScheduled")
+            : t("wizard.publish.willImmediate")
           }
         </p>
         <div className="flex gap-3 flex-wrap">
           <Button variant="outline" onClick={onSave} disabled={saving} className="gap-2">
             <Save className="w-4 h-4" />
-            {saving ? "Opslaan..." : "Opslaan als concept"}
+            {saving ? t("wizard.publish.savingDraft") : t("wizard.publish.saveAsDraft")}
           </Button>
           <Button onClick={onPublish} disabled={saving || !isReady} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
             <Send className="w-4 h-4" />
-            {form.publishAt ? "Inplannen" : "Publiceren"}
+            {form.publishAt ? t("wizard.publish.schedulePublish") : t("wizard.publish.publishNow")}
           </Button>
           {isEditing && eventId && (
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={() => window.open(`/e/${form.slug}`, "_blank")}>
-              <ExternalLink className="w-3.5 h-3.5" />Preview
+              <ExternalLink className="w-3.5 h-3.5" />{t("wizard.publish.preview")}
             </Button>
           )}
         </div>
@@ -257,8 +260,8 @@ export function StepPublish({ form, updateForm, isEditing, eventId, saving, onSa
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center"><span className="text-lg">🎟️</span></div>
           <div>
-            <p className="text-sm font-medium text-foreground flex items-center gap-2">Ticketing<span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">Binnenkort</span></p>
-            <p className="text-xs text-muted-foreground">Ticketverkoop, QR-scanning & betalingen</p>
+            <p className="text-sm font-medium text-foreground flex items-center gap-2">Ticketing<span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">{t("wizard.publish.ticketingSoon")}</span></p>
+            <p className="text-xs text-muted-foreground">{t("wizard.publish.ticketingDesc")}</p>
           </div>
         </div>
       </div>
