@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useClickWiseIntegration } from "@/hooks/useClickWiseIntegration";
 import { useTenant } from "@/hooks/useTenant";
+import { WebsiteSettingsTabs } from "@/components/WebsiteSettingsTabs";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 
@@ -122,6 +123,7 @@ export default function IntegrationsPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
+      <WebsiteSettingsTabs active="koppelingen" />
       {/* Header */}
       <div>
         <h1 className="text-2xl font-display font-bold text-foreground">{t("integrations.title")}</h1>
