@@ -223,7 +223,7 @@ export default function IntegrationsPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                     <div>
                       <span className="text-xs text-muted-foreground">Status</span>
-                      <p className="flex items-center gap-1.5 text-accent font-medium"><span className="w-2 h-2 rounded-full bg-accent" />Actief</p>
+                      <p className="flex items-center gap-1.5 text-success font-medium"><span className="w-2 h-2 rounded-full bg-success" />Actief</p>
                     </div>
                     <div>
                       <span className="text-xs text-muted-foreground">Subaccount</span>
@@ -256,7 +256,7 @@ export default function IntegrationsPage() {
                 <div className="grid grid-cols-4 gap-3">
                   {[
                     { label: "Totaal (7d)", value: String(stats.total), icon: Send, color: "" },
-                    { label: "Succesvol", value: String(stats.success), icon: Check, color: "text-accent" },
+                    { label: "Succesvol", value: String(stats.success), icon: Check, color: "text-success" },
                     { label: "Mislukt", value: String(stats.failed), icon: XCircle, color: stats.failed > 0 ? "text-destructive" : "" },
                     { label: "Actieve regels", value: String(activeRuleCount), icon: RefreshCw, color: "" },
                   ].map((s) => (
