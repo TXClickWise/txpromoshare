@@ -1043,6 +1043,8 @@ export const UI_TRANSLATIONS: Record<UILanguageCode, TranslationDict> = {
     "landing.how.step1Body": "Titel, datum, foto. Meer heb je niet nodig. Terugkerende avonden zoals een wekelijkse quiz voer je één keer in.",
     "landing.how.step2Title": "Zet het op je site",
     "landing.how.step2Body": "Je agenda staat automatisch op je eigen website. Nieuw evenement erbij? Die verschijnt er vanzelf. Op WordPress installeer je onze plugin in vijf minuten; op elke andere site plak je één regel code. Je hoeft nooit meer je webbouwer te bellen.",
+    "landing.how.step2LiveCaption": "Dit is de echte agenda van Café De Jutter, live op deze pagina.",
+    "landing.how.step2LiveLoading": "Agenda laden…",
     "landing.how.step3Title": "Laat het rondgaan",
     "landing.how.step3Body": "Klaarstaande teksten voor WhatsApp, Instagram en je nieuwsbrief. Kopiëren, plakken, klaar. Je vaste gasten krijgen automatisch bericht.",
 
@@ -2118,6 +2120,8 @@ export const UI_TRANSLATIONS: Record<UILanguageCode, TranslationDict> = {
     "landing.how.step1Body": "Title, date, photo. That's all you need. Recurring nights like a weekly quiz you enter just once.",
     "landing.how.step2Title": "Put it on your site",
     "landing.how.step2Body": "Your agenda appears automatically on your own website. New event? It shows up on its own. On WordPress you install our plugin in five minutes; on any other site you paste one line of code. You never have to call your web builder again.",
+    "landing.how.step2LiveCaption": "This is the real agenda of Café De Jutter, live on this page.",
+    "landing.how.step2LiveLoading": "Loading agenda…",
     "landing.how.step3Title": "Let it spread",
     "landing.how.step3Body": "Ready-made copy for WhatsApp, Instagram and your newsletter. Copy, paste, done. Your regulars are notified automatically.",
 
