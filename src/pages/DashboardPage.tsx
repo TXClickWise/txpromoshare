@@ -1,4 +1,4 @@
-import { Calendar, Eye, TrendingUp, Plus, ArrowRight, Share2, Code2, Zap, Clock } from "lucide-react";
+import { Calendar, TrendingUp, Plus, ArrowRight, Share2, Code2, Zap, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/hooks/useUILanguage";
