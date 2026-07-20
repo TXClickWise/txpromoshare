@@ -1,4 +1,4 @@
-import { MoreHorizontal, Copy, Share2, Archive, Trash2, Eye, EyeOff, Pencil, ExternalLink, RotateCcw } from "lucide-react";
+import { MoreHorizontal, Copy, Share2, Archive, Trash2, Eye, EyeOff, Pencil, ExternalLink, RotateCcw, Hash } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { logAudit } from "@/lib/audit";
 import { triggerClickWiseSync } from "@/lib/clickwise-sync";
 import { useTenant } from "@/hooks/useTenant";
+import { useTranslation } from "@/hooks/useUILanguage";
 
 interface EventActionMenuProps {
   eventId: string;
@@ -25,6 +26,12 @@ interface EventActionMenuProps {
 export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefresh }: EventActionMenuProps) {
   const navigate = useNavigate();
   const { tenantId } = useTenant();
+  const { t } = useTranslation();
+
+  function copyEventIdToClipboard() {
+    navigator.clipboard.writeText(eventId);
+    toast.success(t("events.copyIdDone"));
+  }
 
   async function duplicateEvent() {
     const { data: original, error: fetchErr } = await supabase
@@ -147,6 +154,9 @@ export function EventActionMenu({ eventId, eventTitle, eventSlug, status, onRefr
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={(e) => { e.preventDefault(); duplicateEvent(); }}>
           <Copy className="w-4 h-4 mr-2" />Dupliceren
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={(e) => { e.preventDefault(); copyEventIdToClipboard(); }}>
+          <Hash className="w-4 h-4 mr-2" />{t("events.copyId")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={(e) => { e.preventDefault(); navigate("/app/distribution"); }}>
           <Share2 className="w-4 h-4 mr-2" />Delen & Posten
