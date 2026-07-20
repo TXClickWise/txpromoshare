@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
+import { useTranslation } from "@/hooks/useUILanguage";
 
 interface ChecklistItem {
   id: string;
@@ -15,6 +16,7 @@ interface ChecklistItem {
 }
 
 export function OnboardingChecklist() {
+  const { t } = useTranslation();
   const [dismissed, setDismissed] = useState(() => {
     return localStorage.getItem("onboarding_dismissed") === "true";
   });
@@ -47,16 +49,16 @@ export function OnboardingChecklist() {
         .eq("tenant_id", tenantId!);
 
       setItems([
-        { id: "profile", label: "Organisatie instellen", description: "Naam, locatie en contactgegevens", done: true, to: "/app/settings/organisatie" },
-        { id: "branding", label: "Logo & huisstijl toevoegen", description: "Upload je logo en kies je kleuren", done: hasBranding, to: "/app/settings/merk" },
-        { id: "event", label: "Eerste evenement aanmaken", description: "Gebruik een sjabloon of begin blanco", done: (eventCount || 0) > 0, to: "/app/events/new" },
-        { id: "distribution", label: "Evenement delen", description: "Verspreid via WhatsApp, link of embed", done: (distCount || 0) > 0, to: "/app/distribution" },
-        { id: "widget", label: "Widget op je website plaatsen", description: "Toon je agenda automatisch op je site", done: (widgetCount || 0) > 0, to: "/app/settings/website/widgets" },
+        { id: "profile", label: t("onboarding.item.profile"), description: t("onboarding.item.profile.desc"), done: true, to: "/app/settings/bedrijfsgegevens" },
+        { id: "branding", label: t("onboarding.item.branding"), description: t("onboarding.item.branding.desc"), done: hasBranding, to: "/app/settings/huisstijl" },
+        { id: "event", label: t("onboarding.item.event"), description: t("onboarding.item.event.desc"), done: (eventCount || 0) > 0, to: "/app/events/new" },
+        { id: "distribution", label: t("onboarding.item.distribution"), description: t("onboarding.item.distribution.desc"), done: (distCount || 0) > 0, to: "/app/distribution" },
+        { id: "widget", label: t("onboarding.item.widget"), description: t("onboarding.item.widget.desc"), done: (widgetCount || 0) > 0, to: "/app/settings/widgets" },
       ]);
       setLoading(false);
     }
     check();
-  }, [tenantId, tenant, dismissed]);
+  }, [tenantId, tenant, dismissed, t]);
 
   function handleDismiss() {
     setDismissed(true);
@@ -79,8 +81,8 @@ export function OnboardingChecklist() {
       >
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h3 className="font-display font-bold text-foreground text-sm">Welkom bij TX EventShare! 🎉</h3>
-            <p className="text-xs text-muted-foreground mt-1">Voltooi deze stappen om alles klaar te zetten</p>
+            <h3 className="font-display font-bold text-foreground text-sm">{t("onboarding.welcome")}</h3>
+            <p className="text-xs text-muted-foreground mt-1">{t("onboarding.subtitle")}</p>
           </div>
           <button onClick={handleDismiss} className="p-1 rounded-lg hover:bg-secondary text-muted-foreground">
             <X className="w-4 h-4" />

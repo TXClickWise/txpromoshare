@@ -10,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
-import { ContentSettingsTabs } from "@/components/ContentSettingsTabs";
 
 export default function CategoriesPage() {
   const { t } = useTranslation();
@@ -102,7 +101,6 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <ContentSettingsTabs active="categorieen" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground">{t("categories.title")}</h1>
