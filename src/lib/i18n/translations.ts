@@ -1026,6 +1026,63 @@ export const UI_TRANSLATIONS: Record<UILanguageCode, TranslationDict> = {
     "logo.preview.light": "Licht",
     "logo.preview.dark": "Donker",
     "logo.preview.brand": "Merkkleur",
+
+    // Landing page (public homepage)
+    "landing.hero.kicker": "VOOR HORECA EN EVENTORGANISATOREN",
+    "landing.hero.titleLine1": "Eén keer invoeren.",
+    "landing.hero.titleLine2": "Overal actueel.",
+    "landing.hero.subtitle": "Je zet je evenement één keer klaar. TX EventShare zorgt dat het op je website staat, deelbaar is via WhatsApp en social, en dat je vaste gasten er automatisch bericht van krijgen.",
+    "landing.hero.ctaPrimary": "Gratis beginnen",
+    "landing.hero.ctaSecondary": "Bekijk een voorbeeld",
+    "landing.hero.proof": "In gebruik bij Café De Jutter, Eigeweis en De Retro Brothers. Geen technische kennis nodig.",
+
+    "landing.problem.title": "Hetzelfde evenement, zes keer overtypen",
+    "landing.problem.body": "Je zet het op je website. Dan op Facebook. Dan op Instagram. Dan een appje naar je vaste gasten. En als de datum verschuift, mag je alles opnieuw langs. Meestal vergeet je er één, en die blijft weken verkeerd staan.",
+
+    "landing.how.kicker": "HET WERKT ZO",
+    "landing.how.title": "Van invoeren naar volle zaal in drie stappen",
+    "landing.how.step1Title": "Zet je evenement klaar",
+    "landing.how.step1Body": "Titel, datum, foto. Meer heb je niet nodig. Terugkerende avonden zoals een wekelijkse quiz voer je één keer in.",
+    "landing.how.step2Title": "Zet het op je site",
+    "landing.how.step2Body": "Je agenda staat automatisch op je eigen website. Nieuw evenement erbij? Die verschijnt er vanzelf. Op WordPress installeer je onze plugin in vijf minuten; op elke andere site plak je één regel code. Je hoeft nooit meer je webbouwer te bellen.",
+    "landing.how.step3Title": "Laat het rondgaan",
+    "landing.how.step3Body": "Klaarstaande teksten voor WhatsApp, Instagram en je nieuwsbrief. Kopiëren, plakken, klaar. Je vaste gasten krijgen automatisch bericht.",
+
+    "landing.refs.eyebrow": "Zij zetten hun programma hier al op",
+    "landing.refs.name1": "Café De Jutter",
+    "landing.refs.name2": "Texels Specialiteiten Restaurant Eigeweis",
+    "landing.refs.name3": "De Retro Brothers",
+
+    "landing.results.kicker": "WAT HET OPLEVERT",
+    "landing.results.title": "Minder werk, meer mensen",
+    "landing.results.block1Title": "Je agenda klopt altijd",
+    "landing.results.block1Body": "Eén wijziging werkt overal door. Op je site, in je berichten, in de agenda van je gasten.",
+    "landing.results.block2Title": "Je gasten weten het op tijd",
+    "landing.results.block2Body": "Wie zich heeft aangemeld, krijgt automatisch een herinnering voordat het begint. Geen halflege zaal omdat mensen het vergaten.",
+    "landing.results.block3Title": "Een uur per week in plaats van een middag",
+    "landing.results.block3Body": "Wat nu versnipperd over zes plekken gebeurt, doe je op één plek.",
+
+    "landing.audience.title": "Gemaakt voor kleinere organisatoren",
+    "landing.audience.body1": "Cafés met een vaste quizavond. Strandpaviljoens met livemuziek in het seizoen. Restaurants met proeverijen. Organisatoren die zelf hun programma draaien en geen marketingbureau achter de hand hebben.",
+    "landing.audience.body2": "Geen enterprise-software. Geen implementatietraject. Je bent binnen een kwartier live.",
+
+    "landing.pricingTeaser.title": "Begin gratis. Betaal pas als het je iets oplevert.",
+    "landing.pricingTeaser.body": "Drie evenementen en een agenda op je website kosten je niets. Groei je door, dan groeit het abonnement mee. Maandelijks opzegbaar.",
+    "landing.pricingTeaser.cta": "Bekijk de prijzen",
+
+    "landing.faq.title": "Veelgestelde vragen",
+    "landing.faq.q1": "Werkt dit met mijn bestaande website?",
+    "landing.faq.a1": "Ja. Werk je met WordPress, dan installeer je onze plugin — dat lukt in vijf minuten, ook zonder ervaring. Op Wix, Squarespace en vrijwel elke andere site plak je één regel code op de plek waar je agenda moet komen. Lukt het niet? Dan helpen we je erdoorheen.",
+    "landing.faq.q2": "Moet ik verstand hebben van techniek?",
+    "landing.faq.a2": "Nee. Als je een Facebook-bericht kunt plaatsen, kun je hiermee werken.",
+    "landing.faq.q3": "Wat gebeurt er met mijn gastenlijst?",
+    "landing.faq.a3": "Die is van jou en blijft van jou. Gasten melden zich zelf aan en kunnen zich met één klik afmelden. Wij verkopen niets door.",
+    "landing.faq.q4": "Kan ik ermee stoppen?",
+    "landing.faq.a4": "Elk moment. Maandelijks opzegbaar, geen contract.",
+
+    "landing.final.title": "Zet je eerstvolgende evenement er nu op",
+    "landing.final.body": "Een evenement aanmaken duurt twee minuten — de ingebouwde assistent schrijft de teksten voor je. Binnen een kwartier staat het live op je eigen site.",
+    "landing.final.cta": "Gratis beginnen",
   },
   en: {
     // Common
@@ -2046,6 +2103,63 @@ export const UI_TRANSLATIONS: Record<UILanguageCode, TranslationDict> = {
     "logo.preview.light": "Light",
     "logo.preview.dark": "Dark",
     "logo.preview.brand": "Brand color",
+
+    // Landing page (public homepage)
+    "landing.hero.kicker": "FOR HOSPITALITY AND EVENT ORGANISERS",
+    "landing.hero.titleLine1": "Enter it once.",
+    "landing.hero.titleLine2": "Up to date everywhere.",
+    "landing.hero.subtitle": "You set up your event once. TX EventShare makes sure it appears on your website, is shareable via WhatsApp and social, and that your regulars are notified automatically.",
+    "landing.hero.ctaPrimary": "Start for free",
+    "landing.hero.ctaSecondary": "See an example",
+    "landing.hero.proof": "Used by Café De Jutter, Eigeweis and De Retro Brothers. No technical skills required.",
+
+    "landing.problem.title": "The same event, retyped six times",
+    "landing.problem.body": "You put it on your website. Then on Facebook. Then on Instagram. Then a message to your regulars. And when the date shifts, you get to do it all over again. You usually forget one, and it stays wrong for weeks.",
+
+    "landing.how.kicker": "HOW IT WORKS",
+    "landing.how.title": "From entry to a packed room in three steps",
+    "landing.how.step1Title": "Set up your event",
+    "landing.how.step1Body": "Title, date, photo. That's all you need. Recurring nights like a weekly quiz you enter just once.",
+    "landing.how.step2Title": "Put it on your site",
+    "landing.how.step2Body": "Your agenda appears automatically on your own website. New event? It shows up on its own. On WordPress you install our plugin in five minutes; on any other site you paste one line of code. You never have to call your web builder again.",
+    "landing.how.step3Title": "Let it spread",
+    "landing.how.step3Body": "Ready-made copy for WhatsApp, Instagram and your newsletter. Copy, paste, done. Your regulars are notified automatically.",
+
+    "landing.refs.eyebrow": "They already run their programme here",
+    "landing.refs.name1": "Café De Jutter",
+    "landing.refs.name2": "Texels Specialiteiten Restaurant Eigeweis",
+    "landing.refs.name3": "De Retro Brothers",
+
+    "landing.results.kicker": "WHAT YOU GET",
+    "landing.results.title": "Less work, more people",
+    "landing.results.block1Title": "Your agenda is always right",
+    "landing.results.block1Body": "One change flows through everywhere. On your site, in your messages, in your guests' calendars.",
+    "landing.results.block2Title": "Your guests know in time",
+    "landing.results.block2Body": "Anyone who signed up gets a reminder automatically before it starts. No half-empty room because people forgot.",
+    "landing.results.block3Title": "An hour a week instead of an afternoon",
+    "landing.results.block3Body": "What is now scattered across six places, you do in one.",
+
+    "landing.audience.title": "Built for smaller organisers",
+    "landing.audience.body1": "Cafés with a regular quiz night. Beach clubs with live music in season. Restaurants with tastings. Organisers who run their own programme and don't have a marketing agency on standby.",
+    "landing.audience.body2": "No enterprise software. No implementation project. You're live within fifteen minutes.",
+
+    "landing.pricingTeaser.title": "Start free. Pay only when it pays off.",
+    "landing.pricingTeaser.body": "Three events and an agenda on your website cost you nothing. Grow further and the plan grows with you. Cancel monthly.",
+    "landing.pricingTeaser.cta": "See pricing",
+
+    "landing.faq.title": "Frequently asked questions",
+    "landing.faq.q1": "Does this work with my existing website?",
+    "landing.faq.a1": "Yes. If you use WordPress, you install our plugin — that takes five minutes, no experience needed. On Wix, Squarespace and almost any other site you paste one line of code where the agenda should appear. Stuck? We'll help you through it.",
+    "landing.faq.q2": "Do I need to be technical?",
+    "landing.faq.a2": "No. If you can post on Facebook, you can work with this.",
+    "landing.faq.q3": "What happens with my guest list?",
+    "landing.faq.a3": "It's yours and it stays yours. Guests sign up themselves and can unsubscribe with one click. We don't sell anything on.",
+    "landing.faq.q4": "Can I stop whenever?",
+    "landing.faq.a4": "Any time. Cancel monthly, no contract.",
+
+    "landing.final.title": "Put your next event up now",
+    "landing.final.body": "Creating an event takes two minutes — the built-in assistant writes the copy for you. Within a quarter of an hour it's live on your own site.",
+    "landing.final.cta": "Start for free",
   },
 };
 
