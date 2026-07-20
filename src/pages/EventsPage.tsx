@@ -212,6 +212,7 @@ export default function EventsPage() {
 
   return (
     <div className="space-y-5">
+      <EventsTabs active="overview" />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
