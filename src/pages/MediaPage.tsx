@@ -184,6 +184,7 @@ export default function MediaPage() {
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
     >
+      <ContentSettingsTabs active="media" />
       {/* Drag overlay */}
       {dragOver && (
         <div className="fixed inset-0 z-50 bg-primary/10 border-4 border-dashed border-primary rounded-xl flex items-center justify-center pointer-events-none">

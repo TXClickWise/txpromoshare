@@ -101,6 +101,7 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
+      <ContentSettingsTabs active="categorieen" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground">{t("categories.title")}</h1>
