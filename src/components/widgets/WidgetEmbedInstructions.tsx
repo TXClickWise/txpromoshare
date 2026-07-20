@@ -65,7 +65,7 @@ export function WidgetEmbedInstructions({ widgetId }: Props) {
               }`}
             >
               {t("embed.version.v2")}
-              <span className="text-[9px] px-1 py-0.5 rounded bg-accent/20 text-accent font-semibold uppercase tracking-wide">
+              <span className="text-[9px] px-1 py-0.5 rounded bg-primary/10 text-primary font-semibold uppercase tracking-wide">
                 {t("embed.version.v2Badge")}
               </span>
             </button>
