@@ -87,8 +87,8 @@ export default function BrandingTab() {
 
   const [state, setState] = useState<BrandingState>({
     logoUrl: null,
-    primaryColor: "#16264D",
-    secondaryColor: "#C8A24E",
+    primaryColor: "#17244C",
+    secondaryColor: "#C4A055",
     fontFamily: "system",
     buttonStyle: "rounded",
     defaultCtaText: "Meer info",
@@ -127,8 +127,8 @@ export default function BrandingTab() {
     if (tenant) {
       setState({
         logoUrl: tenant.logo_url || null,
-        primaryColor: tenant.primary_color || "#16264D",
-        secondaryColor: tenant.secondary_color || "#C8A24E",
+        primaryColor: tenant.primary_color || "#17244C",
+        secondaryColor: tenant.secondary_color || "#C4A055",
         fontFamily: (tenant as any).font_family || "system",
         buttonStyle: (tenant as any).button_style || "rounded",
         defaultCtaText: (tenant as any).default_cta_text || "Meer info",
