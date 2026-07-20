@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
-import logoTxEventShare from "@/assets/logo-tx-eventshare.png";
+import { Logo } from "@/components/brand/Logo";
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState("");
@@ -32,7 +32,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src={logoTxEventShare} alt="TX EventShare" className="h-[2.7rem] w-auto mx-auto mb-4" />
+          <div className="flex justify-center mb-4"><Logo variant="light" size="md" /></div>
           <h1 className="text-2xl font-display font-bold text-foreground">Wachtwoord vergeten</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {sent ? "Check je inbox voor een reset link." : "Voer je e-mailadres in om je wachtwoord te herstellen."}
