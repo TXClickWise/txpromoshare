@@ -16,7 +16,7 @@ export function AddOnCard({ addon, loading, onAdd }: AddOnCardProps) {
       <div className="flex items-start justify-between gap-2">
         <h4 className="font-display font-semibold text-foreground text-sm">{addon.name}</h4>
         {addon.badge && (
-          <span className="text-xs font-semibold uppercase tracking-wide text-accent bg-accent/10 px-1.5 py-0.5 rounded-full">
+          <span className="text-xs font-semibold uppercase tracking-wide text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
             {addon.badge}
           </span>
         )}
