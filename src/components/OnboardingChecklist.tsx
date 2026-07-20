@@ -47,8 +47,8 @@ export function OnboardingChecklist() {
         .eq("tenant_id", tenantId!);
 
       setItems([
-        { id: "profile", label: "Organisatie instellen", description: "Naam, locatie en contactgegevens", done: true, to: "/app/settings" },
-        { id: "branding", label: "Logo & huisstijl toevoegen", description: "Upload je logo en kies je kleuren", done: hasBranding, to: "/app/settings" },
+        { id: "profile", label: "Organisatie instellen", description: "Naam, locatie en contactgegevens", done: true, to: "/app/settings/organisatie" },
+        { id: "branding", label: "Logo & huisstijl toevoegen", description: "Upload je logo en kies je kleuren", done: hasBranding, to: "/app/settings/merk" },
         { id: "event", label: "Eerste evenement aanmaken", description: "Gebruik een sjabloon of begin blanco", done: (eventCount || 0) > 0, to: "/app/events/new" },
         { id: "distribution", label: "Evenement delen", description: "Verspreid via WhatsApp, link of embed", done: (distCount || 0) > 0, to: "/app/distribution" },
         { id: "widget", label: "Widget op je website plaatsen", description: "Toon je agenda automatisch op je site", done: (widgetCount || 0) > 0, to: "/app/widgets" },

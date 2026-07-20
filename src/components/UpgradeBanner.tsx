@@ -32,7 +32,7 @@ export function UpgradeBanner({ feature, plan, compact = false, variant }: Upgra
   if (compact) {
     return (
       <Link
-        to="/app/billing"
+        to="/app/settings/abonnement"
         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/15 text-xs hover:bg-primary/10 transition-colors"
       >
         <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
