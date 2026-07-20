@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useSEO } from "@/lib/seo";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import logoTxEventShare from "@/assets/logo-tx-eventshare.png";
+import { Logo } from "@/components/brand/Logo";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
@@ -59,7 +59,7 @@ export default function RegisterPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src={logoTxEventShare} alt="TX EventShare" className="h-[2.7rem] w-auto mx-auto mb-4" />
+          <div className="flex justify-center mb-4"><Logo variant="light" size="md" /></div>
           <h1 className="text-2xl font-display font-bold text-foreground">{t.auth.register}</h1>
           <p className="text-sm text-muted-foreground mt-1">Start gratis met TX EventShare</p>
         </div>
