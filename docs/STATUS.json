@@ -1,9 +1,13 @@
 {
-  "fase": "Fase 9 (ClickWise-integratie) afgerond; Fase 10 (validatie & lancering) niet gestart",
-  "procent_klaar": 85,
-  "huidige_focus": "Onderhoud op de draaiende productie-app; laatste wijziging 20-07-2026 (unsubscribe-fix in de fan-out). Fase 10 nog niet opgepakt.",
+  "project": "TX EventShare",
+  "lovable_project_id": "3c0fc060-1e41-42dd-bb3a-078f4525105e",
+  "fase": "Fase 11 — UI/UX-herziening",
+  "procent_klaar": 88,
+  "huidige_focus": "UI/UX-herziening; fundament, bugronde, landingspagina, goudcorrectie en logo afgerond. Volgende stap is 11.2: navigatie van elf items naar vijf en instellingen als echte laag.",
   "blockers": [
-    "Volgende fase/prioriteit moet gekozen worden voordat er verder gebouwd wordt"
+    "Logo is een typografische tussenoplossing in code; professioneel hertekend logo in navy/goud staat nog open.",
+    "Fase 10 (validatie en lancering) blijft open: E2E-tenanttest en Stripe-betaalflow zijn nog niet gevalideerd.",
+    "De knop 'Bekijk een voorbeeld' op de landingspagina verwijst naar uitleg in plaats van naar een echte eventpagina."
   ],
   "laatst_gesynct": "2026-07-20"
 }

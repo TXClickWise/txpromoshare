@@ -4,6 +4,63 @@
 
 Doorlopend genummerd, nieuwste entry bovenaan. Tijden Europe/Amsterdam.
 
+## #008 — 20-07-2026 — UI-UX
+Goudcorrectie en typografisch logo als tussenoplossing.
+
+- Nieuwe token `--accent-strong` (light 40 60% 32%, dark 40 55% 62%) toegevoegd in index.css en gemapt in tailwind.config.ts. Bedoeld voor kleine goudkleurige tekst op lichte achtergronden, die met het heldere `--accent` slechts ~2.4:1 haalde.
+- Toegepast op de drie sectiekopjes van de landingspagina en op het scorepercentage in QualityCheck.
+- Nieuw component `src/components/brand/Logo.tsx`: typografisch woordmerk in Plus Jakarta Sans met varianten light/dark, drie maten en optionele tagline. Vervangt het PNG-logo in AppLayout, PublicLayout, LoginPage, RegisterPage, ResetPasswordPage en UnsubscribePage. Het bestand logo-tx-eventshare.png blijft staan voor e-mail en OG-afbeeldingen.
+
+### Beslissingen
+- Twee goudtinten in plaats van één: het heldere ClickWise-goud blijft voor grote display-tekst, iconen, lijnen en alles op navy; de donkere tint is uitsluitend voor kleine tekst op licht. ClickWise zelf gebruikt klein goud op licht, maar dat haalt de WCAG AA-norm niet; leesbaarheid gaat hier voor exacte merkgelijkheid.
+- Het logo is expliciet een tussenoplossing in code. Een professioneel hertekend logo in navy/goud, met een variant voor donkere achtergronden, blijft openstaan.
+
+## #007 — 20-07-2026 — UI-UX
+Landingspagina volledig herbouwd op nieuwe copy.
+
+Verwijderd: de zes frustratiekaartjes met emoji's, de feature-grid van twaalf tegels, de vijf use-case-kaartjes, de vergelijkingstabel "Handmatig vs Generiek vs TX", de volledige prijstabel en de FAQ van zeven vragen.
+
+Nieuw: hero met gouden cursieve tweede regel, kort probleemblok, drie-staps uitleg, referentiestrook, drie opbrengstblokken, doelgroepblok, prijzen-teaser met link naar /prijzen, FAQ met vier vragen in een accordion, en een navy slot-CTA. 43 nieuwe vertaalsleutels onder `landing.*` in nl en en; geen hardgecodeerde strings.
+
+### Beslissingen
+- Copy is geschreven op resultaat in plaats van functie, zonder emoji's en zonder jargon ("distributiecentrum", "fan-out", "embed", "multi-location"). De AI-schrijfhulp wordt aangeduid als "de ingebouwde assistent", niet als AI.
+- Referenties (Café De Jutter, Texels Specialiteiten Restaurant Eigeweis, De Retro Brothers) staan als tekst-wordmarks met een `data-ref-slot`-haakje, zodat er later logo's in kunnen zonder structuurwijziging.
+- Claims zijn geverifieerd bij de eigenaar: evenement aanmaken duurt circa twee minuten met de assistent; widget-installatie duurt circa vijf minuten via de WordPress-plugin of via één regel code.
+
+### Openstaande punten
+- De knop "Bekijk een voorbeeld" scrolt naar de uitleg in plaats van naar een echte eventpagina. Moet gaan verwijzen naar een gepubliceerd evenement of naar /evenementen.
+
+## #006 — 20-07-2026 — Bugfix
+Acht bugs opgelost die zichtbaar werden na de fundamentronde.
+
+- Taalmix EN/NL: oorzaak was tweeledig. De UI-taal in het profiel stond op Engels, terwijl de event-wizard volledig hardgecodeerde Nederlandse strings bevatte en de taalinstelling negeerde. Alle wizardteksten lopen nu via vertaalsleutels (`wizard.*`), in nl en en.
+- Statusbadges werden afgekapt op mobiel; lijstitems op het dashboard zijn omgebouwd zodat titel en tijd boven staan en badges eronder afbreken.
+- Tijden toonden seconden; gedeelde helper `formatTime()` toegevoegd in src/lib/utils.ts.
+- Branding-defaults stonden op felgroen en roze; gewijzigd naar navy en goud. Bestaande tenantkleuren zijn niet overschreven.
+- UsageMeter toonde een volle balk bij nul verbruik op onbeperkte plannen; vulberekening en kleuren gecorrigeerd, label toont nu "x van y gebruikt".
+- Dashboardcijfers waren tegenstrijdig; nu drie eerlijke tellingen (Gepubliceerd, Gepland, Concepten), waarbij concepten niet meer als aankomend meetellen.
+- Formulierlabels in kapitalen omgezet naar normale schrijfwijze door de hele app.
+- Statkaarten op mobiel compact gemaakt.
+
+## #005 — 20-07-2026 — UI-UX
+Fundamentronde van de UI-herziening (fase 0 en 1), in twee rondes uitgevoerd.
+
+- Scroll-naar-boven bij elke routewisseling (ScrollToTop in App.tsx) en bij stapwisselingen in de event-wizard.
+- ClickWise-palet doorgevoerd in index.css en tailwind.config.ts: navy als drager, goud als accent. Oranje en teal volledig vervallen. Nieuwe tokens voor surface-dark, on-dark, success en warning.
+- Sidebar navy met gouden indicatorstreep bij het actieve item, in zowel AppLayout als AdminLayout.
+- Plus Jakarta Sans als enige lettertype; Space Grotesk en DM Sans vervallen.
+- Alle `text-[10px]` en `text-[11px]` vervangen door `text-xs`.
+- Onleesbaar felgeel (`--highlight`) vervangen door donker amber (`--warning`); goud als kleine tekst op licht vervangen door navy, grijs of groen.
+- Gradient-icoontegels vervangen door neutrale containers, schaduwen subtieler, staggered framer-motion-animaties verwijderd.
+- Dubbele "Nieuw evenement"-knoppen en de misleidende quick action "Dupliceren" verwijderd; tapdoelen op mobiel naar minimaal 44px; instellingen-tabs horizontaal scrollbaar op mobiel.
+
+### Beslissingen
+- Navy wordt gebruikt als chrome (sidebar, headers, donkere secties op publieke pagina's), niet als werkvlak. De app zelf blijft licht, omdat een werkomgeving anders te zwaar wordt bij langdurig gebruik.
+- Harde regel vastgelegd: goud nooit als knop, link, badge of kleine tekst op een lichte achtergrond. Wel voor iconen, randen, lijnen, bullets, grote display-tekst en alle tekst op navy.
+
+### Bevindingen
+- De eerste ronde liet twee zaken half af: de sidebar gebruikte nog `bg-card` waardoor de nieuwe sidebar-tokens nergens landden, en goud stond nog op diverse plekken als kleine tekst op licht. Beide in een tweede ronde gecorrigeerd.
+
 ## #004 — 20-07-2026 — Bugfix
 Vastgelopen unsubscribe-afhandeling in de fan-out opgelost. Afgemelde contacten werden elke run opnieuw benaderd omdat de afmelding alleen in HighLevel stond en niet aan onze kant werd vastgelegd; elke run eindigde daardoor permanent op status "partial", wat echte fouten maskeerde.
 

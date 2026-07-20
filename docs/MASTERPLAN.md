@@ -51,3 +51,31 @@ Nulmeting opgesteld 20-07-2026, gereconstrueerd uit de volledige Lovable-edit-hi
 - [ ] Stripe-betaalflow valideren (echte checkout, portal, add-ons)
 - [x] Custom domein txeventshare.nl gekoppeld (gecorrigeerd 20-07-2026, zie BOUWLOG #003)
 - [ ] Onboarding eerste echte tenants
+
+## Fase 11: UI/UX-herziening — doing
+Aanleiding: de app was op veel plekken druk en onoverzichtelijk, met contrastfouten en onlogische flows. Doel is een rustige, premium uitstraling in de ClickWise-huisstijl, die zowel op desktop als op mobiel klopt.
+
+- [x] 11.0 Quick fixes: scroll-naar-boven, dubbele knoppen, tapdoelen
+- [x] 11.1 Fundament: ClickWise-palet, contrast naar WCAG AA, typografische schaal, minder gradient en motion
+- [x] 11.1b Bugronde: taalmix, afgekapte badges, seconden in tijden, branding-defaults, usage-meters, dashboardcijfers, labels, statkaarten
+- [x] 11.1c Landingspagina herbouwd op nieuwe copy
+- [x] 11.1d Goudcorrectie (accent-strong) en typografisch logo als tussenoplossing
+- [ ] 11.2 Navigatie en instellingen: van elf menu-items naar vijf, instellingen als echte laag
+- [ ] 11.3 Kernschermen mobile-first: dashboard, distributiepagina, eventoverzicht
+- [ ] 11.4 Wizard en flows: vaste stappenstructuur, eerlijke voortgang, één publiceeractie
+
+## Fase 12: Omslachtige procedures wegwerken — todo
+- [ ] Media-upload herzien: meerdere bestanden tegelijk, geüploade afbeelding automatisch in het veld van herkomst, terugkeer in de galerij met de nieuwe afbeelding geselecteerd
+- [ ] Inventarisatie van alle flows: per taak het aantal kliks, contextwissels en doodlopende einden vaststellen
+- [ ] De gevonden knelpunten oplossen
+
+## Fase 13: AI-assistent herzien — todo
+- [ ] Datum en tijd uit vrije tekst herkennen en in de juiste velden zetten, met bevestigingsstap
+- [ ] Bronnen kiezen via een zoekfunctie in plaats van handmatig ingevoerde URL's; gekozen bron krijgt voorrang bij het schrijven van de content
+- [ ] Afbeeldingen kiezen uit zoekresultaten, waar mogelijk gefilterd op vrij te gebruiken materiaal, met een korte melding aan de gebruiker over eigen verantwoordelijkheid voor rechten
+
+## Fase 14: Helpsectie — todo
+Bewust als laatste, omdat screenshots van schermen die nog wijzigen direct verouderen.
+- [ ] Widget-installatie per platform: WordPress-plugin, Wix, Squarespace, handmatig in HTML
+- [ ] Stap-voor-stap instructies: account aanmaken, evenement maken, widget plaatsen
+- [ ] Voorzien van echte screenshots uit de afgeronde app
