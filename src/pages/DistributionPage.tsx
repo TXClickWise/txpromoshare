@@ -1,6 +1,5 @@
 import { Share2, Smartphone, Zap, BarChart3, ArrowRight, Sparkles, Loader2, Globe, Mail, QrCode, Code2, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useTranslation } from "@/hooks/useUILanguage";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -320,12 +319,9 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
           <span className="text-[11px] text-muted-foreground hidden sm:inline">{t("distribution.section1Hint2")}</span>
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          <ShareLinkCard url={publicShareUrl} eventId={event.id} />
-        </motion.div>
+        <ShareLinkCard url={publicShareUrl} eventId={event.id} />
 
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <ChannelBar
+        <ChannelBar
             shareUrl={publicShareUrl}
             previewShareUrl={ogProxyUrl}
             whatsappText={getText("whatsapp")}
@@ -335,12 +331,10 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
             onChannelClick={trackAction}
             onShowQR={() => setShowQR(true)}
           />
-        </motion.div>
       </section>
 
       {/* ─────────── SECTIE 2: KWALITEITSCHECK ─────────── */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <QualityCheck
+      <QualityCheck
           event={event}
           texts={{
             whatsapp: getText("whatsapp"),
@@ -353,7 +347,6 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
             website: getText("website"),
           }}
         />
-      </motion.div>
 
       {/* ─────────── SECTIE 3: COPY PER KANAAL ─────────── */}
       <section className="space-y-4 pt-2">
