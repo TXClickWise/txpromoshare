@@ -1,16 +1,12 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Calendar, Share2, Code2, Zap, Palette, Users, ArrowRight, Check, Star, Shield,
-  Clock, Smartphone, MessageCircle, Layout, Repeat, Tags, Ticket, ChevronDown,
-  Globe, BarChart3, Target, Plug, Sparkles, Heart, Mail, Phone,
-  TrendingUp, Eye, Layers, RefreshCw
+  Calendar, Share2, Code2, ArrowRight, ChevronDown, Plus, Minus,
 } from "lucide-react";
-import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useSEO, organizationSchema, websiteSchema, softwareSchema, faqSchema } from "@/lib/seo";
-import logoTxEventShare from "@/assets/logo-tx-eventshare.png";
+import { useTranslation } from "@/hooks/useUILanguage";
 
 /* ────────────────────────── Data ────────────────────────── */
 
