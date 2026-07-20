@@ -2,9 +2,20 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Calendar, Share2, Code2, ArrowRight, ChevronDown, Plus, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSEO, organizationSchema, websiteSchema, softwareSchema, faqSchema } from "@/lib/seo";
 import { useTranslation } from "@/hooks/useUILanguage";
+
+// Referentie-logo's: vervang `logo` door een import zodra het bestand klaarstaat.
+// Voorbeeld: import jutterLogo from "@/assets/refs/cafe-de-jutter.png";
+const REFERENCES: Array<{ name: string; href: string; logo?: string }> = [
+  { name: "Café De Jutter", href: "https://cafedejutter.nl", logo: undefined },
+  { name: "Texels Specialiteiten Restaurant Eigeweis", href: "https://eigeweis.nl", logo: undefined },
+  { name: "De Retro Brothers", href: "https://deretrobrothers.nl", logo: undefined },
+];
+
+const DEMO_WIDGET_ID = "c703b11a-45c1-4c6c-8ba5-2c1fe58cfda4";
+const DEMO_EVENT_PATH = "/e/retro-brothers-dansen-door-de-80s-90s";
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -36,7 +47,7 @@ export default function LandingPage() {
     { title: t("landing.results.block3Title"), body: t("landing.results.block3Body") },
   ];
 
-  const refs = [
+  const refNames = [
     t("landing.refs.name1"),
     t("landing.refs.name2"),
     t("landing.refs.name3"),
@@ -76,16 +87,21 @@ export default function LandingPage() {
                 <Link to="/register" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity shadow-elevated">
                   {t("landing.hero.ctaPrimary")} <ArrowRight className="w-5 h-5" />
                 </Link>
-                <a href="#hoe-het-werkt" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-secondary text-secondary-foreground font-semibold hover:bg-secondary/80 transition-colors">
-                  {t("landing.hero.ctaSecondary")} <ChevronDown className="w-4 h-4" />
+                <a
+                  href={DEMO_EVENT_PATH}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-secondary text-secondary-foreground font-semibold hover:bg-secondary/80 transition-colors"
+                >
+                  {t("landing.hero.ctaSecondary")} <ArrowRight className="w-4 h-4" />
                 </a>
               </div>
               <p className="text-sm text-muted-foreground max-w-xl">{t("landing.hero.proof")}</p>
             </motion.div>
 
-            {/* Hero mockup — kept from previous version */}
-            <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, delay: 0.2 }} className="hidden lg:block">
-              <div className="rounded-2xl border border-border bg-card shadow-elevated overflow-hidden">
+            {/* Hero mockup — responsive, ook op mobiel zichtbaar */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }} className="w-full max-w-full">
+              <div className="rounded-2xl border border-border bg-card shadow-elevated overflow-hidden max-w-full">
                 <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-secondary/30">
                   <div className="flex gap-1.5">
                     <div className="w-2.5 h-2.5 rounded-full bg-destructive/40" />
@@ -93,22 +109,22 @@ export default function LandingPage() {
                     <div className="w-2.5 h-2.5 rounded-full bg-accent/40" />
                   </div>
                   <div className="flex-1 text-center">
-                    <span className="text-xs text-muted-foreground font-mono">app.txeventshare.nl</span>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground font-mono truncate">app.txeventshare.nl</span>
                   </div>
                 </div>
-                <div className="p-5 bg-gradient-to-br from-surface-cool to-card">
-                  <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="p-3 sm:p-5 bg-gradient-to-br from-surface-cool to-card">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
                     {[
                       { icon: Calendar, label: "3 events", sub: "Actief" },
                       { icon: Share2, label: "12 shares", sub: "Deze week" },
                       { icon: Code2, label: "2 widgets", sub: "Live" },
                     ].map((m, i) => (
-                      <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 + i * 0.12 }} className="p-3 rounded-lg bg-card border border-border shadow-card text-center">
-                        <div className="w-8 h-8 rounded-md gradient-hero flex items-center justify-center mx-auto mb-2">
-                          <m.icon className="w-4 h-4 text-primary-foreground" />
+                      <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 + i * 0.12 }} className="p-2 sm:p-3 rounded-lg bg-card border border-border shadow-card text-center min-w-0">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-md gradient-hero flex items-center justify-center mx-auto mb-1.5 sm:mb-2">
+                          <m.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-foreground" />
                         </div>
-                        <p className="font-display font-bold text-foreground text-xs">{m.label}</p>
-                        <p className="text-xs text-muted-foreground">{m.sub}</p>
+                        <p className="font-display font-bold text-foreground text-[11px] sm:text-xs truncate">{m.label}</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{m.sub}</p>
                       </motion.div>
                     ))}
                   </div>
@@ -170,6 +186,14 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
+
+          {/* Live agenda-widget van Café De Jutter */}
+          <motion.div {...fadeUp} className="mt-12 md:mt-16 max-w-3xl mx-auto">
+            <LiveWidgetShowcase widgetId={DEMO_WIDGET_ID} loadingLabel={t("landing.how.step2LiveLoading")} />
+            <p className="text-xs md:text-sm text-muted-foreground text-center mt-3">
+              {t("landing.how.step2LiveCaption")}
+            </p>
+          </motion.div>
         </div>
       </section>
 
@@ -177,15 +201,30 @@ export default function LandingPage() {
       <section className="py-14 md:py-16 bg-surface-cool border-y border-border">
         <div className="container px-4">
           <p className="text-center text-sm text-muted-foreground mb-6">{t("landing.refs.eyebrow")}</p>
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-10 text-center">
-            {refs.map((name) => (
-              <span
-                key={name}
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 text-center">
+            {REFERENCES.map((ref, i) => (
+              <a
+                key={ref.name}
+                href={ref.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 data-ref-slot
-                className="font-display text-base md:text-lg font-semibold text-foreground/70 tracking-wide"
+                aria-label={ref.name}
+                className="group inline-flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity"
               >
-                {name}
-              </span>
+                {ref.logo ? (
+                  <img
+                    src={ref.logo}
+                    alt={ref.name}
+                    className="h-10 md:h-12 w-auto object-contain grayscale group-hover:grayscale-0 transition-[filter]"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className="font-display text-base md:text-lg font-semibold text-foreground/70 tracking-wide">
+                    {refNames[i]}
+                  </span>
+                )}
+              </a>
             ))}
           </div>
         </div>
@@ -306,6 +345,70 @@ export default function LandingPage() {
           </motion.div>
         </div>
       </section>
+    </div>
+  );
+}
+
+// --- Live widget showcase ------------------------------------------------
+// Sluit de widget in op exact dezelfde manier als de officiële iframe-embed
+// (zie WidgetEmbedInstructions.tsx, tab "iframe"): een iframe naar de
+// widget-embed edge function met format=html&v=2. We laden pas wanneer het
+// blok in beeld komt, zodat de pagina niet trager wordt.
+function LiveWidgetShowcase({ widgetId, loadingLabel }: { widgetId: string; loadingLabel: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    if (!containerRef.current || inView) return;
+    const el = containerRef.current;
+    if (typeof IntersectionObserver === "undefined") {
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "200px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [inView]);
+
+  const baseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+  const src = `${baseUrl}/functions/v1/widget-embed?widget_id=${widgetId}&format=html&v=2`;
+
+  return (
+    <div ref={containerRef} className="rounded-2xl border border-border bg-card shadow-elevated overflow-hidden">
+      {/* Browser chrome */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-secondary/30">
+        <div className="flex gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-destructive/40" />
+          <span className="w-2.5 h-2.5 rounded-full bg-highlight/40" />
+          <span className="w-2.5 h-2.5 rounded-full bg-accent/40" />
+        </div>
+        <div className="flex-1 mx-2 px-3 py-1 rounded-md bg-background/70 text-[11px] md:text-xs text-muted-foreground font-mono truncate text-center">
+          cafedejutter.nl
+        </div>
+      </div>
+      <div className="bg-white">
+        {inView ? (
+          <iframe
+            src={src}
+            title="Live agenda Café De Jutter"
+            loading="lazy"
+            className="block w-full border-0"
+            style={{ height: 640 }}
+          />
+        ) : (
+          <div className="flex items-center justify-center text-sm text-muted-foreground" style={{ height: 320 }}>
+            {loadingLabel}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
