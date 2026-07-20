@@ -32,7 +32,7 @@ export function WizardProgress({ steps, currentStep, onStepClick, completedSteps
               className={cn(
                 "flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all w-full min-w-0",
                 isActive && "bg-primary/10 border border-primary/30",
-                !isActive && isCompleted && "bg-accent/5 border border-accent/20 hover:bg-accent/10",
+                !isActive && isCompleted && "bg-success/5 border border-success/20 hover:bg-success/10",
                 !isActive && !isCompleted && isClickable && "hover:bg-secondary border border-transparent",
                 !isActive && !isCompleted && !isClickable && "opacity-40 cursor-not-allowed border border-transparent",
               )}
@@ -40,7 +40,7 @@ export function WizardProgress({ steps, currentStep, onStepClick, completedSteps
               <div className={cn(
                 "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold transition-colors",
                 isActive && "bg-primary text-primary-foreground",
-                isCompleted && !isActive && "bg-accent text-accent-foreground",
+                isCompleted && !isActive && "bg-success text-success-foreground",
                 !isActive && !isCompleted && "bg-secondary text-muted-foreground",
               )}>
                 {isCompleted && !isActive ? <Check className="w-3.5 h-3.5" /> : step.id}
@@ -48,7 +48,7 @@ export function WizardProgress({ steps, currentStep, onStepClick, completedSteps
               <div className="min-w-0 text-left hidden sm:block">
                 <p className={cn(
                   "text-xs font-medium truncate",
-                  isActive ? "text-primary" : isCompleted ? "text-accent" : "text-muted-foreground",
+                  isActive ? "text-primary" : isCompleted ? "text-success" : "text-muted-foreground",
                 )}>
                   {step.label}
                 </p>
@@ -57,7 +57,7 @@ export function WizardProgress({ steps, currentStep, onStepClick, completedSteps
             {i < steps.length - 1 && (
               <div className={cn(
                 "w-6 h-px shrink-0 mx-0.5",
-                isCompleted ? "bg-accent/40" : "bg-border",
+                isCompleted ? "bg-success/40" : "bg-border",
               )} />
             )}
           </div>
