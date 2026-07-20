@@ -357,6 +357,7 @@ export default function LandingPage() {
 function LiveWidgetShowcase({ widgetId, loadingLabel }: { widgetId: string; loadingLabel: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
+  const [iframeHeight, setIframeHeight] = useState(520);
 
   useEffect(() => {
     if (!containerRef.current || inView) return;
@@ -378,8 +379,26 @@ function LiveWidgetShowcase({ widgetId, loadingLabel }: { widgetId: string; load
     return () => io.disconnect();
   }, [inView]);
 
+  useEffect(() => {
+    function onMsg(e: MessageEvent) {
+      if (!e.data || e.data.type !== "txes-preview-height") return;
+      if (e.data.widgetId !== widgetId) return;
+      const h = Number(e.data.height) || 0;
+      if (h > 0) setIframeHeight(Math.min(Math.max(h + 24, 320), 1600));
+    }
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, [widgetId]);
+
   const baseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-  const src = `${baseUrl}/functions/v1/widget-embed?widget_id=${widgetId}&format=html&v=2`;
+  // Officiële embed (script + container-div), ingesloten in een iframe via
+  // srcDoc zodat widget-styles losstaan van de landingspagina.
+  const scriptUrl = `${baseUrl}/functions/v1/widget-embed?widget_id=${widgetId}&v=2`;
+  const srcDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0;background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}body{padding:12px;}</style></head><body>
+<div id="txeventshare-widget-${widgetId}"></div>
+<script src="${scriptUrl}" data-widget-id="${widgetId}" async></script>
+<script>(function(){function report(){var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight);parent.postMessage({type:'txes-preview-height',widgetId:'${widgetId}',height:h},'*');}var ro=new ResizeObserver(function(){report();});ro.observe(document.body);window.addEventListener('load',function(){setTimeout(report,200);});setTimeout(report,600);setTimeout(report,1500);setTimeout(report,3000);})();</script>
+</body></html>`;
 
   return (
     <div ref={containerRef} className="rounded-2xl border border-border bg-card shadow-elevated overflow-hidden">
@@ -397,11 +416,12 @@ function LiveWidgetShowcase({ widgetId, loadingLabel }: { widgetId: string; load
       <div className="bg-white">
         {inView ? (
           <iframe
-            src={src}
+            srcDoc={srcDoc}
             title="Live agenda Café De Jutter"
             loading="lazy"
+            sandbox="allow-scripts allow-same-origin"
             className="block w-full border-0"
-            style={{ height: 640 }}
+            style={{ height: iframeHeight, transition: "height 200ms ease" }}
           />
         ) : (
           <div className="flex items-center justify-center text-sm text-muted-foreground" style={{ height: 320 }}>
