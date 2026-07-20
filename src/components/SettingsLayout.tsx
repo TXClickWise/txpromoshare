@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, NavLink } from "react-router-dom";
-import { Building2, Palette, FolderKanban, Users, Plug, CreditCard, ChevronLeft } from "lucide-react";
+import { Building2, Palette, FolderKanban, Users, Globe, CreditCard, ChevronLeft } from "lucide-react";
 import { useTranslation } from "@/hooks/useUILanguage";
 import { cn } from "@/lib/utils";
 
@@ -8,7 +8,7 @@ export const settingsSections = [
   { key: "merk", icon: Palette, labelKey: "settings.section.brand", descKey: "settings.section.brand.desc" },
   { key: "inhoud", icon: FolderKanban, labelKey: "settings.section.content", descKey: "settings.section.content.desc" },
   { key: "team", icon: Users, labelKey: "settings.section.team", descKey: "settings.section.team.desc" },
-  { key: "koppelingen", icon: Plug, labelKey: "settings.section.integrations", descKey: "settings.section.integrations.desc" },
+  { key: "website", icon: Globe, labelKey: "settings.section.website", descKey: "settings.section.website.desc" },
   { key: "abonnement", icon: CreditCard, labelKey: "settings.section.subscription", descKey: "settings.section.subscription.desc" },
 ] as const;
 
