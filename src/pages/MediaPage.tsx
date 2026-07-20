@@ -12,6 +12,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import type { Tables } from "@/integrations/supabase/types";
+import { ContentSettingsTabs } from "@/components/ContentSettingsTabs";
 import StockImageSearch from "@/components/StockImageSearch";
 import { useTranslation } from "@/hooks/useUILanguage";
 

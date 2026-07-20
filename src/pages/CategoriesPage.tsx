@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
+import { ContentSettingsTabs } from "@/components/ContentSettingsTabs";
 
 export default function CategoriesPage() {
   const { t } = useTranslation();
