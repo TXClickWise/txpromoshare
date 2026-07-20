@@ -31,6 +31,7 @@ import SettingsLayout from "@/components/SettingsLayout";
 import SettingsOverviewPage from "@/pages/settings/SettingsOverviewPage";
 import OrganizationSettingsPage from "@/pages/settings/OrganizationSettingsPage";
 import BrandSettingsPage from "@/pages/settings/BrandSettingsPage";
+import LocationsPage from "@/pages/settings/LocationsPage";
 import PublicEventPage from "@/pages/PublicEventPage";
 import NotFound from "@/pages/NotFound";
 import UnsubscribePage from "@/pages/UnsubscribePage";
@@ -111,25 +112,34 @@ const App = () => (
                 <Route path="events/:id" element={<CreateEventPage />} />
                 <Route path="templates" element={<Navigate to="/app/events/templates" replace />} />
                 <Route path="distribution" element={<DistributionPage />} />
-                <Route path="widgets" element={<Navigate to="/app/settings/website/widgets" replace />} />
-                <Route path="categories" element={<Navigate to="/app/settings/inhoud/categorieen" replace />} />
-                <Route path="media" element={<Navigate to="/app/settings/inhoud/media" replace />} />
+                <Route path="widgets" element={<Navigate to="/app/settings/widgets" replace />} />
+                <Route path="categories" element={<Navigate to="/app/settings/categorieen" replace />} />
+                <Route path="media" element={<Navigate to="/app/settings/media" replace />} />
                 <Route path="team" element={<Navigate to="/app/settings/team" replace />} />
-                <Route path="integrations" element={<Navigate to="/app/settings/website/koppelingen" replace />} />
+                <Route path="integrations" element={<Navigate to="/app/settings/berichten" replace />} />
                 <Route path="billing" element={<Navigate to="/app/settings/abonnement" replace />} />
                 <Route path="settings" element={<SettingsLayout />}>
                   <Route index element={<SettingsOverviewPage />} />
-                  <Route path="organisatie" element={<OrganizationSettingsPage />} />
-                  <Route path="merk" element={<BrandSettingsPage />} />
-                  <Route path="inhoud" element={<Navigate to="/app/settings/inhoud/categorieen" replace />} />
-                  <Route path="inhoud/categorieen" element={<CategoriesPage />} />
-                  <Route path="inhoud/media" element={<MediaPage />} />
+                  {/* New canonical routes */}
+                  <Route path="bedrijfsgegevens" element={<OrganizationSettingsPage />} />
+                  <Route path="locaties" element={<LocationsPage />} />
+                  <Route path="huisstijl" element={<BrandSettingsPage />} />
+                  <Route path="categorieen" element={<CategoriesPage />} />
+                  <Route path="media" element={<MediaPage />} />
+                  <Route path="widgets" element={<WidgetsPage />} />
+                  <Route path="berichten" element={<IntegrationsPage />} />
                   <Route path="team" element={<TeamPage />} />
-                  <Route path="koppelingen" element={<Navigate to="/app/settings/website/koppelingen" replace />} />
-                  <Route path="website" element={<Navigate to="/app/settings/website/widgets" replace />} />
-                  <Route path="website/widgets" element={<WidgetsPage />} />
-                  <Route path="website/koppelingen" element={<IntegrationsPage />} />
                   <Route path="abonnement" element={<BillingPage />} />
+                  {/* Legacy redirects */}
+                  <Route path="organisatie" element={<Navigate to="/app/settings/bedrijfsgegevens" replace />} />
+                  <Route path="merk" element={<Navigate to="/app/settings/huisstijl" replace />} />
+                  <Route path="inhoud" element={<Navigate to="/app/settings/categorieen" replace />} />
+                  <Route path="inhoud/categorieen" element={<Navigate to="/app/settings/categorieen" replace />} />
+                  <Route path="inhoud/media" element={<Navigate to="/app/settings/media" replace />} />
+                  <Route path="koppelingen" element={<Navigate to="/app/settings/berichten" replace />} />
+                  <Route path="website" element={<Navigate to="/app/settings/widgets" replace />} />
+                  <Route path="website/widgets" element={<Navigate to="/app/settings/widgets" replace />} />
+                  <Route path="website/koppelingen" element={<Navigate to="/app/settings/berichten" replace />} />
                 </Route>
               </Route>
 
