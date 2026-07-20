@@ -111,11 +111,11 @@ const App = () => (
                 <Route path="events/:id" element={<CreateEventPage />} />
                 <Route path="templates" element={<Navigate to="/app/events/templates" replace />} />
                 <Route path="distribution" element={<DistributionPage />} />
-                <Route path="widgets" element={<WidgetsPage />} />
+                <Route path="widgets" element={<Navigate to="/app/settings/website/widgets" replace />} />
                 <Route path="categories" element={<Navigate to="/app/settings/inhoud/categorieen" replace />} />
                 <Route path="media" element={<Navigate to="/app/settings/inhoud/media" replace />} />
                 <Route path="team" element={<Navigate to="/app/settings/team" replace />} />
-                <Route path="integrations" element={<Navigate to="/app/settings/koppelingen" replace />} />
+                <Route path="integrations" element={<Navigate to="/app/settings/website/koppelingen" replace />} />
                 <Route path="billing" element={<Navigate to="/app/settings/abonnement" replace />} />
                 <Route path="settings" element={<SettingsLayout />}>
                   <Route index element={<SettingsOverviewPage />} />
@@ -125,7 +125,10 @@ const App = () => (
                   <Route path="inhoud/categorieen" element={<CategoriesPage />} />
                   <Route path="inhoud/media" element={<MediaPage />} />
                   <Route path="team" element={<TeamPage />} />
-                  <Route path="koppelingen" element={<IntegrationsPage />} />
+                  <Route path="koppelingen" element={<Navigate to="/app/settings/website/koppelingen" replace />} />
+                  <Route path="website" element={<Navigate to="/app/settings/website/widgets" replace />} />
+                  <Route path="website/widgets" element={<WidgetsPage />} />
+                  <Route path="website/koppelingen" element={<IntegrationsPage />} />
                   <Route path="abonnement" element={<BillingPage />} />
                 </Route>
               </Route>
