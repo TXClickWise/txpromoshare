@@ -503,7 +503,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
               {t("distribution.embedDesc")}
             </p>
           </div>
-          <Link to="/app/settings/website/widgets" className="shrink-0 w-full sm:w-auto">
+          <Link to="/app/settings/widgets" className="shrink-0 w-full sm:w-auto">
             <Button variant="outline" className="gap-2 w-full sm:w-auto justify-center">
               {t("distribution.manageWidgets")} <ArrowRight className="w-4 h-4" />
             </Button>

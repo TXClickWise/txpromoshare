@@ -38,7 +38,7 @@ export default function DashboardPage() {
 
   const quickActions = [
     { icon: Share2, title: t("dashboard.qa.distribute"), description: t("dashboard.qa.distributeDesc"), to: "/app/distribution", gradient: "bg-secondary" },
-    { icon: Code2, title: t("dashboard.qa.widget"), description: t("dashboard.qa.widgetDesc"), to: "/app/settings/website/widgets", gradient: "bg-secondary" },
+    { icon: Code2, title: t("dashboard.qa.widget"), description: t("dashboard.qa.widgetDesc"), to: "/app/settings/widgets", gradient: "bg-secondary" },
   ];
 
   const [events, setEvents] = useState<DashboardEvent[]>([]);
