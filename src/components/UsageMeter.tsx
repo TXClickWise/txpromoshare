@@ -55,7 +55,7 @@ export function UsageMeter({ metric, current, label }: UsageMeterProps) {
       />
       {atLimit && !isUnlimited && (
         <Link
-          to="/app/billing"
+          to="/app/settings/abonnement"
           className="inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline"
         >
           {t("usage.limitReached", { metric: metricLabels[metric] })}

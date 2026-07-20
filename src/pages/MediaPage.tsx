@@ -12,6 +12,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import type { Tables } from "@/integrations/supabase/types";
+import { ContentSettingsTabs } from "@/components/ContentSettingsTabs";
 import StockImageSearch from "@/components/StockImageSearch";
 import { useTranslation } from "@/hooks/useUILanguage";
 
@@ -184,6 +185,7 @@ export default function MediaPage() {
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
     >
+      <ContentSettingsTabs active="media" />
       {/* Drag overlay */}
       {dragOver && (
         <div className="fixed inset-0 z-50 bg-primary/10 border-4 border-dashed border-primary rounded-xl flex items-center justify-center pointer-events-none">

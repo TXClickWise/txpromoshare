@@ -1,7 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate, Navigate } from "react-router-dom";
 import {
-  LayoutDashboard, Calendar, Layers, Share2, Code2, Tags,
-  Image, Users, Plug, Settings, CreditCard, Shield, Menu, X, LogOut
+  LayoutDashboard, Calendar, Share2, Code2, Settings, Shield, Menu, X, LogOut
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
@@ -24,15 +23,9 @@ export default function AppLayout() {
   const navItems = useMemo(() => [
     { to: "/app", icon: LayoutDashboard, label: t("nav.dashboard"), end: true },
     { to: "/app/events", icon: Calendar, label: t("nav.events") },
-    { to: "/app/templates", icon: Layers, label: t("nav.templates") },
     { to: "/app/distribution", icon: Share2, label: t("nav.distribution") },
     { to: "/app/widgets", icon: Code2, label: t("nav.widgets") },
-    { to: "/app/categories", icon: Tags, label: t("nav.categories") },
-    { to: "/app/media", icon: Image, label: t("nav.media") },
-    { to: "/app/team", icon: Users, label: t("nav.team") },
-    { to: "/app/integrations", icon: Plug, label: t("nav.integrations") },
     { to: "/app/settings", icon: Settings, label: t("nav.settings") },
-    { to: "/app/billing", icon: CreditCard, label: t("nav.billing") },
   ], [t]);
 
   if (loading) {

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -26,8 +26,11 @@ import CategoriesPage from "@/pages/CategoriesPage";
 import MediaPage from "@/pages/MediaPage";
 import TeamPage from "@/pages/TeamPage";
 import IntegrationsPage from "@/pages/IntegrationsPage";
-import SettingsPage from "@/pages/SettingsPage";
 import BillingPage from "@/pages/BillingPage";
+import SettingsLayout from "@/components/SettingsLayout";
+import SettingsOverviewPage from "@/pages/settings/SettingsOverviewPage";
+import OrganizationSettingsPage from "@/pages/settings/OrganizationSettingsPage";
+import BrandSettingsPage from "@/pages/settings/BrandSettingsPage";
 import PublicEventPage from "@/pages/PublicEventPage";
 import NotFound from "@/pages/NotFound";
 import UnsubscribePage from "@/pages/UnsubscribePage";
@@ -104,16 +107,27 @@ const App = () => (
                 <Route index element={<DashboardPage />} />
                 <Route path="events" element={<EventsPage />} />
                 <Route path="events/new" element={<CreateEventPage />} />
+                <Route path="events/templates" element={<TemplatesPage />} />
                 <Route path="events/:id" element={<CreateEventPage />} />
-                <Route path="templates" element={<TemplatesPage />} />
+                <Route path="templates" element={<Navigate to="/app/events/templates" replace />} />
                 <Route path="distribution" element={<DistributionPage />} />
                 <Route path="widgets" element={<WidgetsPage />} />
-                <Route path="categories" element={<CategoriesPage />} />
-                <Route path="media" element={<MediaPage />} />
-                <Route path="team" element={<TeamPage />} />
-                <Route path="integrations" element={<IntegrationsPage />} />
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="billing" element={<BillingPage />} />
+                <Route path="categories" element={<Navigate to="/app/settings/inhoud/categorieen" replace />} />
+                <Route path="media" element={<Navigate to="/app/settings/inhoud/media" replace />} />
+                <Route path="team" element={<Navigate to="/app/settings/team" replace />} />
+                <Route path="integrations" element={<Navigate to="/app/settings/koppelingen" replace />} />
+                <Route path="billing" element={<Navigate to="/app/settings/abonnement" replace />} />
+                <Route path="settings" element={<SettingsLayout />}>
+                  <Route index element={<SettingsOverviewPage />} />
+                  <Route path="organisatie" element={<OrganizationSettingsPage />} />
+                  <Route path="merk" element={<BrandSettingsPage />} />
+                  <Route path="inhoud" element={<Navigate to="/app/settings/inhoud/categorieen" replace />} />
+                  <Route path="inhoud/categorieen" element={<CategoriesPage />} />
+                  <Route path="inhoud/media" element={<MediaPage />} />
+                  <Route path="team" element={<TeamPage />} />
+                  <Route path="koppelingen" element={<IntegrationsPage />} />
+                  <Route path="abonnement" element={<BillingPage />} />
+                </Route>
               </Route>
 
               {/* Admin routes */}

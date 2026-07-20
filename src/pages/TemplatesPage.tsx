@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { EventsTabs } from "@/components/EventsTabs";
 
 interface TemplateData {
   id: string;
@@ -115,6 +116,7 @@ export default function TemplatesPage() {
 
   return (
     <div className="space-y-8 max-w-4xl">
+      <EventsTabs active="templates" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground">{t("templates.title")}</h1>

@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/hooks/useTenant";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
+import { EventsTabs } from "@/components/EventsTabs";
 
 type StatusTab = "all" | "draft" | "scheduled" | "published" | "ended_archived" | "recurring";
 
@@ -211,6 +212,7 @@ export default function EventsPage() {
 
   return (
     <div className="space-y-5">
+      <EventsTabs active="overview" />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -350,7 +352,7 @@ export default function EventsPage() {
           actionLabel={search || activeTab !== "all" ? undefined : t("events.firstEvent")}
           actionTo={search || activeTab !== "all" ? undefined : "/app/events/new"}
           secondaryLabel={search || activeTab !== "all" ? undefined : t("events.chooseTemplate")}
-          secondaryTo={search || activeTab !== "all" ? undefined : "/app/templates"}
+          secondaryTo={search || activeTab !== "all" ? undefined : "/app/events/templates"}
         />
       ) : view === "grid" ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

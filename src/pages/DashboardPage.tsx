@@ -211,7 +211,7 @@ export default function DashboardPage() {
               ? "Eigen branding, 15 evenementen en de distributie hub"
               : "Onbeperkt evenementen, ClickWise-integratie en multi-location";
             return (
-              <Link to="/app/billing" className="block rounded-xl bg-secondary/50 border border-border p-4 hover:border-primary/30 transition-colors">
+              <Link to="/app/settings/abonnement" className="block rounded-xl bg-secondary/50 border border-border p-4 hover:border-primary/30 transition-colors">
                 <div className="flex items-start gap-3">
                   <div className="w-9 h-9 rounded-lg bg-background border border-border flex items-center justify-center shrink-0">
                     <Zap className="w-4 h-4 text-primary" />
@@ -233,7 +233,7 @@ export default function DashboardPage() {
               <div>
                 <p className="text-xs font-medium text-foreground">💡 {t("dashboard.tip")}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.tipText")}</p>
-                <Link to="/app/templates" className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1 mt-1">
+                <Link to="/app/events/templates" className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1 mt-1">
                   {t("dashboard.viewTemplates")} <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
