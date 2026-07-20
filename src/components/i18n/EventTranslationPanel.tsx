@@ -179,7 +179,7 @@ export function EventTranslationPanel({
 
   const sourceFieldRow = (label: string, value: string | null | undefined, multi = false) => (
     <div className="space-y-1">
-      <Label className="text-xs uppercase tracking-wide text-muted-foreground">{label}</Label>
+      <Label className="text-sm font-medium text-foreground">{label}</Label>
       <div
         className={`text-sm rounded-lg border border-border bg-secondary/40 px-3 py-2 text-foreground/80 ${
           multi ? "whitespace-pre-wrap" : "truncate"
@@ -269,7 +269,7 @@ export function EventTranslationPanel({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Source column */}
               <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
-                <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                <div className="text-sm font-medium text-foreground font-medium">
                   Bron — Nederlands
                 </div>
                 {sourceFieldRow("Titel", source.title)}
@@ -285,12 +285,12 @@ export function EventTranslationPanel({
               {/* Translation column */}
               <div className="rounded-xl border border-border bg-card p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                  <div className="text-sm font-medium text-foreground font-medium">
                     {getContentLanguageMeta(activeLang).nativeLabel}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Titel</Label>
+                  <Label className="text-sm font-medium text-foreground">Titel</Label>
                   <Input
                     value={draft.title ?? ""}
                     onChange={(e) => updateDraft({ title: e.target.value })}
@@ -298,14 +298,14 @@ export function EventTranslationPanel({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Subtitel</Label>
+                  <Label className="text-sm font-medium text-foreground">Subtitel</Label>
                   <Input
                     value={draft.subtitle ?? ""}
                     onChange={(e) => updateDraft({ subtitle: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Korte beschrijving</Label>
+                  <Label className="text-sm font-medium text-foreground">Korte beschrijving</Label>
                   <Textarea
                     rows={2}
                     value={draft.short_description ?? ""}
@@ -313,14 +313,14 @@ export function EventTranslationPanel({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">CTA knoptekst</Label>
+                  <Label className="text-sm font-medium text-foreground">CTA knoptekst</Label>
                   <Input
                     value={draft.cta_button_text ?? ""}
                     onChange={(e) => updateDraft({ cta_button_text: e.target.value })}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">WhatsApp tekst</Label>
+                  <Label className="text-sm font-medium text-foreground">WhatsApp tekst</Label>
                   <Textarea
                     rows={2}
                     value={draft.whatsapp_share_text ?? ""}
@@ -328,7 +328,7 @@ export function EventTranslationPanel({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Social tekst</Label>
+                  <Label className="text-sm font-medium text-foreground">Social tekst</Label>
                   <Textarea
                     rows={2}
                     value={draft.social_share_text ?? ""}
@@ -336,7 +336,7 @@ export function EventTranslationPanel({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">SEO titel (max 60)</Label>
+                  <Label className="text-sm font-medium text-foreground">SEO titel (max 60)</Label>
                   <Input
                     maxLength={60}
                     value={draft.seo_title ?? ""}
@@ -344,7 +344,7 @@ export function EventTranslationPanel({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">SEO beschrijving (max 160)</Label>
+                  <Label className="text-sm font-medium text-foreground">SEO beschrijving (max 160)</Label>
                   <Textarea
                     rows={2}
                     maxLength={160}

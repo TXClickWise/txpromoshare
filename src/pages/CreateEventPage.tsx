@@ -19,54 +19,45 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useUILanguage";
 
-const BASE_STEPS = [
-  { id: 1, label: "Basis", icon: FileText },
-  { id: 2, label: "Datum & Locatie", icon: CalendarDays },
-  { id: 3, label: "Content & Media", icon: Image },
-  { id: 4, label: "Promotie", icon: Megaphone },
-  { id: 5, label: "Publiceren", icon: SendIcon },
-];
-
-const OCCURRENCES_STEP = { id: 6, label: "Datums", icon: Repeat };
-const TRANSLATIONS_STEP = { id: 7, label: "Vertalingen", icon: Languages };
-
-function formatRelativeTime(date: Date): string {
+function formatRelativeTime(date: Date, t: (key: string, vars?: Record<string, string>) => string, language: string): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (seconds < 5) return "zojuist";
-  if (seconds < 60) return `${seconds}s geleden`;
+  if (seconds < 5) return t("wizard.justNow");
+  if (seconds < 60) return t("wizard.secondsAgo", { n: String(seconds) });
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} min geleden`;
-  return date.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
+  if (minutes < 60) return t("wizard.minutesAgo", { n: String(minutes) });
+  return date.toLocaleTimeString(language === "en" ? "en-GB" : "nl-NL", { hour: "2-digit", minute: "2-digit" });
 }
 
 function SaveIndicator({ saving, autosaving, isDirty, lastSavedAt }: {
   saving: boolean; autosaving: boolean; isDirty: boolean; lastSavedAt: Date | null;
 }) {
+  const { t, language } = useTranslation();
   // Force re-render every 15s for relative time updates
   const [, setTick] = useState(0);
   useEffect(() => {
     if (!lastSavedAt) return;
-    const t = setInterval(() => setTick(x => x + 1), 15000);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setTick(x => x + 1), 15000);
+    return () => clearInterval(timer);
   }, [lastSavedAt]);
 
   if (saving || autosaving) {
     return (
       <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Loader2 className="w-3 h-3 animate-spin" />
-        Opslaan…
+        {t("wizard.saving")}
       </span>
     );
   }
   if (isDirty) {
-    return <span className="text-xs text-warning font-medium">• Niet opgeslagen</span>;
+    return <span className="text-xs text-warning font-medium">• {t("wizard.notSaved")}</span>;
   }
   if (lastSavedAt) {
     return (
       <span className="flex items-center gap-1.5 text-xs text-success">
         <CheckCircle2 className="w-3 h-3" />
-        Concept opgeslagen · {formatRelativeTime(lastSavedAt)}
+        {t("wizard.draftSaved")} · {formatRelativeTime(lastSavedAt, t, language)}
       </span>
     );
   }
@@ -74,8 +65,19 @@ function SaveIndicator({ saving, autosaving, isDirty, lastSavedAt }: {
 }
 
 export default function CreateEventPage() {
+  const { t, language } = useTranslation();
   const ctx = useEventForm();
   const [currentStep, setCurrentStep] = useState(1);
+
+  const BASE_STEPS = [
+    { id: 1, label: t("wizard.step.basics"), icon: FileText },
+    { id: 2, label: t("wizard.step.dateLocation"), icon: CalendarDays },
+    { id: 3, label: t("wizard.step.contentMedia"), icon: Image },
+    { id: 4, label: t("wizard.step.promotion"), icon: Megaphone },
+    { id: 5, label: t("wizard.step.publish"), icon: SendIcon },
+  ];
+  const OCCURRENCES_STEP = { id: 6, label: t("wizard.step.dates"), icon: Repeat };
+  const TRANSLATIONS_STEP = { id: 7, label: t("wizard.step.translations"), icon: Languages };
 
   const showOccurrences = ctx.isEditing && ctx.form.isRecurring;
   const showTranslations = ctx.isEditing && !!ctx.id && !!ctx.tenantId;
@@ -153,16 +155,16 @@ export default function CreateEventPage() {
           <button
             onClick={() => ctx.navigate(-1)}
             className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors"
-            aria-label="Terug"
+            aria-label={t("wizard.back")}
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-lg font-display font-bold text-foreground truncate">
-              {ctx.isEditing ? (ctx.form.title || "Evenement bewerken") : (ctx.form.title || "Nieuw evenement")}
+              {ctx.isEditing ? (ctx.form.title || t("wizard.editEvent")) : (ctx.form.title || t("wizard.newEvent"))}
             </h1>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>Stap {STEPS.findIndex(s => s.id === currentStep) + 1} van {STEPS.length}</span>
+              <span>{t("wizard.stepXofY", { current: String(STEPS.findIndex(s => s.id === currentStep) + 1), total: String(STEPS.length) })}</span>
               <span aria-hidden>·</span>
               <SaveIndicator
                 saving={ctx.saving}
@@ -174,7 +176,7 @@ export default function CreateEventPage() {
           </div>
           <div className="flex items-center gap-2">
             {ctx.isEditing && (
-              <Button variant="outline" size="sm" onClick={ctx.handleDelete} className="gap-2 text-destructive hover:text-destructive" aria-label="Verwijderen">
+              <Button variant="outline" size="sm" onClick={ctx.handleDelete} className="gap-2 text-destructive hover:text-destructive" aria-label={t("wizard.delete")}>
                 <Trash2 className="w-4 h-4" />
               </Button>
             )}
@@ -186,7 +188,7 @@ export default function CreateEventPage() {
               className="gap-2"
             >
               <Save className="w-4 h-4" />
-              <span className="hidden sm:inline">{ctx.saving ? "Opslaan…" : "Concept"}</span>
+              <span className="hidden sm:inline">{ctx.saving ? t("wizard.saving") : t("wizard.draft")}</span>
             </Button>
             <Button
               size="sm"
@@ -195,7 +197,7 @@ export default function CreateEventPage() {
               className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <Send className="w-4 h-4" />
-              <span className="hidden sm:inline">Publiceren</span>
+              <span className="hidden sm:inline">{t("wizard.publish")}</span>
             </Button>
           </div>
         </div>
@@ -275,7 +277,7 @@ export default function CreateEventPage() {
         {!canGoNext() && currentStep < maxStep && (
           <div className="rounded-lg bg-warning/10 border border-warning/30 px-3 py-2">
             <p className="text-xs text-foreground">
-              <span className="text-warning font-semibold">Bijna goed</span> — vul nog in:{" "}
+              <span className="text-warning font-semibold">{t("wizard.almostThere")}</span> — {t("wizard.fillIn")}:{" "}
               {ctx.validateStep(currentStep).errors.join(" · ")}
             </p>
           </div>
@@ -283,12 +285,12 @@ export default function CreateEventPage() {
         <div className="flex items-center justify-between">
           <Button variant="outline" onClick={goPrev} disabled={currentStep === STEPS[0].id} className="gap-2">
             <ArrowLeft className="w-4 h-4" />
-            Vorige
+            {t("wizard.prev")}
           </Button>
 
           {currentStep < maxStep ? (
             <Button onClick={goNext} disabled={!canGoNext()} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
-              Volgende
+              {t("wizard.next")}
               <ArrowRight className="w-4 h-4" />
             </Button>
           ) : currentStep === 5 ? (
@@ -300,11 +302,11 @@ export default function CreateEventPage() {
                 className="gap-2"
               >
                 <Save className="w-4 h-4" />
-                Concept
+                {t("wizard.draft")}
               </Button>
               <Button onClick={ctx.handlePublish} disabled={ctx.saving || !ctx.validateStep(5).isValid} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
                 <Send className="w-4 h-4" />
-                {ctx.form.publishAt ? "Inplannen" : "Publiceren"}
+                {ctx.form.publishAt ? t("wizard.schedule") : t("wizard.publish")}
               </Button>
             </div>
           ) : null}
@@ -335,12 +337,14 @@ export default function CreateEventPage() {
                 : <CheckCircle2 className="w-6 h-6 text-primary" />}
             </div>
             <DialogTitle>
-              {ctx.publishedStatus === "scheduled" ? "Evenement ingepland" : "Je event is live"}
+              {ctx.publishedStatus === "scheduled" ? t("wizard.scheduledTitle") : t("wizard.publishedTitle")}
             </DialogTitle>
             <DialogDescription>
               {ctx.publishedStatus === "scheduled"
-                ? `Het event wordt automatisch gepubliceerd op ${ctx.form.publishAt ? new Date(ctx.form.publishAt).toLocaleString("nl-NL", { dateStyle: "long", timeStyle: "short" }) : "de ingestelde datum"}.`
-                : "Je event is direct zichtbaar voor bezoekers en kan nu gedeeld worden."}
+                ? (ctx.form.publishAt
+                    ? t("wizard.scheduledDescAt", { when: new Date(ctx.form.publishAt).toLocaleString(language === "en" ? "en-GB" : "nl-NL", { dateStyle: "long", timeStyle: "short" }) })
+                    : t("wizard.scheduledDescFallback"))
+                : t("wizard.publishedDesc")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-col gap-2 sm:gap-2 sm:space-x-0">
@@ -348,7 +352,7 @@ export default function CreateEventPage() {
               <Button asChild className="w-full gap-2">
                 <a href={publicUrl} target="_blank" rel="noreferrer">
                   <ExternalLink className="w-4 h-4" />
-                  Bekijk publieke pagina
+                  {t("wizard.viewPublicPage")}
                 </a>
               </Button>
             )}
@@ -356,7 +360,7 @@ export default function CreateEventPage() {
               <Button variant="outline" asChild className="w-full gap-2">
                 <Link to={`/app/distribution?event=${ctx.publishedEventId}`} onClick={() => ctx.dismissPublishSuccess()}>
                   <Share2 className="w-4 h-4" />
-                  Nu delen
+                  {t("wizard.shareNow")}
                 </Link>
               </Button>
             )}
@@ -366,7 +370,7 @@ export default function CreateEventPage() {
               onClick={() => { ctx.dismissPublishSuccess(); ctx.navigate("/app/events"); }}
             >
               <LayoutList className="w-4 h-4" />
-              Naar overzicht
+              {t("wizard.toOverview")}
             </Button>
           </DialogFooter>
         </DialogContent>

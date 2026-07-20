@@ -3,6 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useUILanguage";
 
 interface UsageMeterProps {
   metric: "events" | "widgets" | "team";
@@ -18,12 +19,14 @@ const metricLabels: Record<string, string> = {
 
 export function UsageMeter({ metric, current, label }: UsageMeterProps) {
   const { limits, usagePercent, isAtLimit } = usePlan();
+  const { t } = useTranslation();
   const percent = usagePercent(metric, current);
   const max =
     metric === "events" ? limits.maxActiveEvents : metric === "widgets" ? limits.maxWidgets : limits.maxTeamMembers;
   const atLimit = isAtLimit(metric, current);
   const nearLimit = percent >= 80;
   const isUnlimited = max === Infinity;
+  const barValue = isUnlimited ? 0 : percent;
 
   return (
     <div className="space-y-2">
@@ -32,19 +35,22 @@ export function UsageMeter({ metric, current, label }: UsageMeterProps) {
         <span
           className={cn(
             "tabular-nums",
-            atLimit ? "text-foreground font-semibold" : "text-muted-foreground",
+            atLimit && !isUnlimited ? "text-foreground font-semibold" : "text-muted-foreground",
           )}
         >
-          {current} <span className="text-muted-foreground/70">/ {isUnlimited ? "onbeperkt" : max}</span>
+          {isUnlimited
+            ? t("usage.usedOfUnlimited", { current: String(current) })
+            : t("usage.usedOf", { current: String(current), max: String(max) })}
         </span>
       </div>
       <Progress
-        value={isUnlimited ? 100 : percent}
+        value={barValue}
         className={cn(
           "h-1.5",
-          isUnlimited && "[&>div]:bg-accent/60",
-          atLimit && "[&>div]:bg-primary",
-          !atLimit && nearLimit && "[&>div]:bg-accent",
+          // Default: navy fill.
+          "[&>div]:bg-primary/70",
+          atLimit && !isUnlimited && "[&>div]:bg-destructive",
+          !atLimit && nearLimit && "[&>div]:bg-warning",
         )}
       />
       {atLimit && !isUnlimited && (
@@ -52,12 +58,12 @@ export function UsageMeter({ metric, current, label }: UsageMeterProps) {
           to="/app/billing"
           className="inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline"
         >
-          Limiet bereikt — bekijk opties voor meer {metricLabels[metric]}
+          {t("usage.limitReached", { metric: metricLabels[metric] })}
           <ArrowRight className="w-3 h-3" />
         </Link>
       )}
       {nearLimit && !atLimit && (
-        <p className="text-xs text-muted-foreground">Je nadert je limiet ({percent}%)</p>
+        <p className="text-xs text-muted-foreground">{t("usage.nearLimit", { percent: String(percent) })}</p>
       )}
     </div>
   );
