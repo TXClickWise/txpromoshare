@@ -3,6 +3,7 @@ import { Upload, X, AlertTriangle, CheckCircle2, Loader2, ImageIcon, Sparkles } 
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useUILanguage";
 
 interface LogoMeta {
   width: number;
@@ -98,6 +99,7 @@ export default function LogoUploader({
   onUpload,
   onRemove,
 }: LogoUploaderProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
   const [meta, setMeta] = useState<LogoMeta | null>(null);
@@ -122,11 +124,11 @@ export default function LogoUploader({
       setError(null);
 
       if (!file.type.startsWith("image/")) {
-        setError("Alleen afbeeldingen zijn toegestaan");
+        setError(t("logo.upload.errorImageOnly"));
         return;
       }
       if (file.size > MAX_FILE_SIZE) {
-        setError(`Bestand is te groot (max ${(MAX_FILE_SIZE / 1024 / 1024).toFixed(0)}MB)`);
+        setError(`${(MAX_FILE_SIZE / 1024 / 1024).toFixed(0)}MB max`);
         return;
       }
 
@@ -143,7 +145,7 @@ export default function LogoUploader({
 
       await onUpload(file);
     },
-    [onUpload]
+    [onUpload, t]
   );
 
   function handleFiles(files: FileList | null) {
@@ -198,13 +200,13 @@ export default function LogoUploader({
             )}
           </div>
           <p className="text-sm font-medium text-foreground">
-            {uploading ? "Logo uploaden..." : dragActive ? "Laat los om te uploaden" : "Sleep je logo of klik om te kiezen"}
+            {uploading ? t("logo.upload.uploading") : dragActive ? t("logo.upload.drop") : t("logo.upload.pick")}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            PNG, SVG, JPG of WebP • min. {MIN_DIMENSION}×{MIN_DIMENSION}px • max 5MB
+            {t("logo.upload.formatHelp", { min: String(MIN_DIMENSION) })}
           </p>
           <p className="text-xs text-muted-foreground/80 mt-2">
-            Tip: gebruik een transparante PNG of SVG voor de beste weergave op kleur
+            {t("logo.upload.tip")}
           </p>
 
           {error && (
@@ -234,9 +236,9 @@ export default function LogoUploader({
 
       {/* Three-up preview: light / dark / branded */}
       <div className="grid grid-cols-3 gap-2">
-        <PreviewTile label="Licht" bg="white" textColor="text-slate-500" logoUrl={logoUrl} />
-        <PreviewTile label="Donker" bg="#0F172A" textColor="text-slate-300" logoUrl={logoUrl} />
-        <PreviewTile label="Merkkleur" bg={primaryColor} textColor="text-white/80" logoUrl={logoUrl} />
+        <PreviewTile label={t("logo.preview.light")} bg="white" textColor="text-slate-500" logoUrl={logoUrl} />
+        <PreviewTile label={t("logo.preview.dark")} bg="#0F172A" textColor="text-slate-300" logoUrl={logoUrl} />
+        <PreviewTile label={t("logo.preview.brand")} bg={primaryColor} textColor="text-white/80" logoUrl={logoUrl} />
       </div>
 
       {/* Meta + warnings */}
@@ -249,7 +251,7 @@ export default function LogoUploader({
             className="flex items-center gap-2 text-xs text-muted-foreground"
           >
             <Loader2 className="w-3 h-3 animate-spin" />
-            Logo analyseren...
+            {t("logo.upload.analyzing")}
           </motion.div>
         )}
 
@@ -267,19 +269,19 @@ export default function LogoUploader({
             {meta.hasTransparency ? (
               <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 className="w-3 h-3" />
-                Transparante achtergrond
+                {t("logo.upload.transparent")}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400">
                 <AlertTriangle className="w-3 h-3" />
-                Geen transparantie
+                {t("logo.upload.noTransparency")}
               </span>
             )}
 
             {isSmall && (
               <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400">
                 <AlertTriangle className="w-3 h-3" />
-                Lage resolutie
+                {t("logo.upload.lowRes")}
               </span>
             )}
           </motion.div>
@@ -293,12 +295,12 @@ export default function LogoUploader({
           <div className="text-foreground/80">
             {noTransparency && (
               <p>
-                <strong>Tip:</strong> upload een PNG of SVG met transparante achtergrond, dan ziet je logo er beter uit op donkere of gekleurde panelen.
+                <strong>Tip:</strong> {t("logo.upload.tipTransparency")}
               </p>
             )}
             {isSmall && (
               <p className={noTransparency ? "mt-1" : ""}>
-                <strong>Tip:</strong> kies een grotere versie (minimaal {MIN_DIMENSION}×{MIN_DIMENSION}px) zodat je logo scherp blijft op alle schermen.
+                <strong>Tip:</strong> {t("logo.upload.tipSize", { min: String(MIN_DIMENSION) })}
               </p>
             )}
           </div>
@@ -322,11 +324,11 @@ export default function LogoUploader({
           className="gap-2 text-xs"
         >
           {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-          {uploading ? "Uploaden..." : "Vervang logo"}
+          {uploading ? t("logo.upload.uploadingShort") : t("logo.upload.replace")}
         </Button>
         <Button variant="ghost" size="sm" className="text-destructive gap-2 text-xs" onClick={onRemove}>
           <X className="w-3.5 h-3.5" />
-          Verwijder
+          {t("logo.upload.remove")}
         </Button>
       </div>
     </div>
@@ -359,7 +361,7 @@ function PreviewTile({
           }}
         />
       </div>
-      <div className={cn("text-xs font-medium uppercase tracking-wider text-center py-1.5", textColor)}>
+      <div className={cn("text-xs font-medium text-center py-1.5", textColor)}>
         {label}
       </div>
     </div>
