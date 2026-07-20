@@ -212,7 +212,7 @@ export default function LandingPage() {
                           <p className="text-xs font-medium text-foreground truncate">{title}</p>
                           <p className="text-xs text-muted-foreground">18 apr · 20:00</p>
                         </div>
-                        <div className="px-1.5 py-0.5 rounded-full bg-accent/10 text-accent text-[9px] font-semibold">Live</div>
+                        <div className="px-1.5 py-0.5 rounded-full bg-success/15 text-success text-[9px] font-semibold">Live</div>
                       </motion.div>
                     ))}
                   </div>
@@ -501,7 +501,7 @@ export default function LandingPage() {
                     <div className="w-10 h-0.5 bg-primary/40" />
                   </div>
                   <div className="w-16 h-16 rounded-xl bg-accent/20 flex items-center justify-center">
-                    <span className="text-accent font-display font-bold text-base">CW</span>
+                    <span className="text-primary font-display font-bold text-base">CW</span>
                   </div>
                 </div>
                 <p className="text-primary-foreground/80 text-sm text-center mb-4">Event publiceren → de rest gaat automatisch</p>
