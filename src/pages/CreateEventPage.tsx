@@ -38,8 +38,8 @@ function SaveIndicator({ saving, autosaving, isDirty, lastSavedAt }: {
   const [, setTick] = useState(0);
   useEffect(() => {
     if (!lastSavedAt) return;
-    const t = setInterval(() => setTick(x => x + 1), 15000);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setTick(x => x + 1), 15000);
+    return () => clearInterval(timer);
   }, [lastSavedAt]);
 
   if (saving || autosaving) {
