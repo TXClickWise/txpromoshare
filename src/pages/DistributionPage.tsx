@@ -52,6 +52,20 @@ function CollapsibleBlock({
   );
 }
 
+function ChannelStatusBadge({ hasText, t }: { hasText: boolean; t: (k: string) => string }) {
+  return (
+    <span
+      className={
+        hasText
+          ? "text-xs font-medium px-2 py-0.5 rounded-full bg-success/10 text-success shrink-0"
+          : "text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground shrink-0"
+      }
+    >
+      {hasText ? t("distribution.channelHasText") : t("distribution.channelNoText")}
+    </span>
+  );
+}
+
 function buildGoogleCalendarUrl(event: Tables<"events">, venueName: string) {
   const start = `${event.start_date.replace(/-/g, "")}T${event.start_time.replace(/:/g, "")}00`;
   const end = event.end_time
