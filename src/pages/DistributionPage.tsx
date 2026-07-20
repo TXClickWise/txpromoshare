@@ -20,6 +20,38 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 
+/** Local collapsible for stacking channel/quality blocks with light chrome. */
+function CollapsibleBlock({
+  title,
+  subtitle,
+  icon,
+  defaultOpen = false,
+  badge,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  icon?: React.ReactNode;
+  defaultOpen?: boolean;
+  badge?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <details open={defaultOpen} className="group rounded-xl bg-card border border-border shadow-card overflow-hidden">
+      <summary className="flex items-center gap-3 px-4 py-3 cursor-pointer list-none min-h-11 hover:bg-secondary/40 transition-colors">
+        {icon && <span className="shrink-0">{icon}</span>}
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-display font-semibold text-foreground truncate">{title}</div>
+          {subtitle && <div className="text-xs text-muted-foreground truncate">{subtitle}</div>}
+        </div>
+        {badge}
+        <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180 shrink-0" />
+      </summary>
+      <div className="px-4 pb-4 pt-1 space-y-3">{children}</div>
+    </details>
+  );
+}
+
 function buildGoogleCalendarUrl(event: Tables<"events">, venueName: string) {
   const start = `${event.start_date.replace(/-/g, "")}T${event.start_time.replace(/:/g, "")}00`;
   const end = event.end_time
@@ -336,32 +368,24 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
           />
       </section>
 
-      {/* ─────────── SECTIE 2: KWALITEITSCHECK ─────────── */}
-      <QualityCheck
-          event={event}
-          texts={{
-            whatsapp: getText("whatsapp"),
-            whatsapp_short: getText("whatsapp_short"),
-            instagram: getText("instagram"),
-            social: getText("social"),
-            teaser: getText("teaser"),
-            promo: getText("promo"),
-            newsletter: getText("newsletter"),
-            website: getText("website"),
-          }}
-        />
-
-      {/* ─────────── SECTIE 3: COPY PER KANAAL ─────────── */}
+      {/* ─────────── SECTIE 2: COPY PER KANAAL ─────────── */}
       <section className="space-y-4 pt-2">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
             <Sparkles className="w-3.5 h-3.5 text-primary" />
           </div>
-          <h2 className="text-sm font-display font-semibold text-foreground">{t("distribution.section2")}</h2>
+          <h2 className="text-sm font-display font-semibold text-foreground">{t("distribution.channelsHeader")}</h2>
           <span className="text-xs text-muted-foreground hidden sm:inline">{t("distribution.section2Hint2")}</span>
         </div>
 
-      {/* WhatsApp — kort & medium variants */}
+      {/* WhatsApp — kort & medium variants (standaard open) */}
+      <CollapsibleBlock
+        title={t("distribution.wa.title")}
+        subtitle={t("distribution.wa.subtitle")}
+        icon={<img src="/images/whatsapp-icon.png" alt="WhatsApp" className="w-5 h-5 rounded-sm" />}
+        defaultOpen
+        badge={<ChannelStatusBadge hasText={!!(getText("whatsapp") || getText("whatsapp_short"))} t={t} />}
+      >
       <ChannelCopyGroup
         icon={<img src="/images/whatsapp-icon.png" alt="WhatsApp" className="w-4 h-4 rounded-sm" />}
         title={t("distribution.wa.title")}
@@ -390,14 +414,21 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         ]}
         actions={
           <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-            <Button size="sm" className="gap-2 bg-green-600 text-white hover:bg-green-700 border-0 text-xs">
+            <Button size="sm" className="gap-2 bg-whatsapp text-whatsapp-foreground hover:bg-whatsapp/90 border-0 text-xs">
               <Smartphone className="w-3.5 h-3.5" />{t("distribution.wa.button")}
             </Button>
           </a>
         }
       />
+      </CollapsibleBlock>
 
       {/* Social — teaser / Instagram-Facebook / lange promo */}
+      <CollapsibleBlock
+        title={t("distribution.social.title")}
+        subtitle={t("distribution.social.subtitle")}
+        icon={<img src="/images/instagram-icon.png" alt="Instagram" className="w-5 h-5 rounded-sm" />}
+        badge={<ChannelStatusBadge hasText={!!(getText("instagram") || getText("teaser") || getText("promo"))} t={t} />}
+      >
       <ChannelCopyGroup
         icon={<img src="/images/instagram-icon.png" alt="Instagram" className="w-4 h-4 rounded-sm" />}
         title={t("distribution.social.title")}
@@ -431,8 +462,15 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
           },
         ]}
       />
+      </CollapsibleBlock>
 
-      {/* TikTok blijft losstaand */}
+      {/* TikTok */}
+      <CollapsibleBlock
+        title={t("distribution.tiktok.title")}
+        subtitle={t("distribution.tiktok.desc")}
+        icon={<img src="/images/tiktok-icon.png" alt="TikTok" className="w-5 h-5 rounded-sm" />}
+        badge={<ChannelStatusBadge hasText={!!getText("tiktok")} t={t} />}
+      >
       <ShareTextCard
         icon={<img src="/images/tiktok-icon.png" alt="TikTok" className="w-4 h-4 rounded-sm" />}
         title={t("distribution.tiktok.title")}
@@ -443,12 +481,14 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
         onAiRewrite={handleRewrite}
         aiLoading={!!rewriting}
       />
+      </CollapsibleBlock>
 
-        <div className="space-y-3">
-          <h3 className="text-xs font-display font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-            <img src="/images/google-icon.png" alt="Google" className="w-3.5 h-3.5" />
-            {t("distribution.gbp.section")}
-          </h3>
+        <CollapsibleBlock
+          title={t("distribution.gbp.section")}
+          subtitle={t("distribution.gbp.desc")}
+          icon={<img src="/images/google-icon.png" alt="Google" className="w-5 h-5" />}
+          badge={<ChannelStatusBadge hasText={!!getText("gbp")} t={t} />}
+        >
           <ShareTextCard
             icon={<img src="/images/google-icon.png" alt="Google" className="w-4 h-4" />}
             title={t("distribution.gbp.title")}
@@ -459,13 +499,13 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
             onAiRewrite={handleRewrite}
             aiLoading={!!rewriting}
           />
-        </div>
+        </CollapsibleBlock>
 
-        <div className="space-y-3">
-          <h3 className="text-xs font-display font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-            <Globe className="w-3.5 h-3.5 text-primary" />
-            {t("distribution.web.section")}
-          </h3>
+        <CollapsibleBlock
+          title={t("distribution.web.section")}
+          icon={<Globe className="w-5 h-5 text-primary" />}
+          badge={<ChannelStatusBadge hasText={!!(getText("website") || getText("newsletter"))} t={t} />}
+        >
           <div className="grid md:grid-cols-2 gap-3">
             <ShareTextCard
               icon={<Globe className="w-4 h-4 text-primary" />}
@@ -486,10 +526,10 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
               aiLoading={!!rewriting}
             />
           </div>
-        </div>
+        </CollapsibleBlock>
       </section>
 
-      {/* ─────────── SECTIE 3: VERSPREIDEN & METEN ─────────── */}
+      {/* ─────────── SECTIE 3: KWALITEIT & RESULTATEN ─────────── */}
       <section className="space-y-4 pt-2">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
@@ -498,6 +538,36 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
           <h2 className="text-sm font-display font-semibold text-foreground">{t("distribution.section3")}</h2>
           <span className="text-xs text-muted-foreground hidden sm:inline">— {t("distribution.section3Hint")}</span>
         </div>
+
+        {/* Kwaliteitscheck — auto-open bij ontbrekende basics */}
+        {(() => {
+          const qcOpen =
+            !event.featured_image_id ||
+            !event.short_description ||
+            event.short_description.length < 20 ||
+            !getText("whatsapp");
+          return (
+            <CollapsibleBlock
+              title={t("distribution.qcHeader")}
+              icon={<Sparkles className="w-5 h-5 text-primary" />}
+              defaultOpen={qcOpen}
+            >
+              <QualityCheck
+                event={event}
+                texts={{
+                  whatsapp: getText("whatsapp"),
+                  whatsapp_short: getText("whatsapp_short"),
+                  instagram: getText("instagram"),
+                  social: getText("social"),
+                  teaser: getText("teaser"),
+                  promo: getText("promo"),
+                  newsletter: getText("newsletter"),
+                  website: getText("website"),
+                }}
+              />
+            </CollapsibleBlock>
+          );
+        })()}
 
         <div className="p-4 sm:p-5 rounded-xl bg-card border border-border shadow-card flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <div className="flex-1 min-w-0">
@@ -513,13 +583,12 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
           </Link>
         </div>
 
-        <div className="space-y-2">
-          <h3 className="text-xs font-display font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-            <BarChart3 className="w-3.5 h-3.5 text-primary" />
-            {t("distribution.statsHeader")}
-          </h3>
+        <CollapsibleBlock
+          title={t("distribution.statsHeader")}
+          icon={<BarChart3 className="w-5 h-5 text-primary" />}
+        >
           <DistributionStats stats={stats} />
-        </div>
+        </CollapsibleBlock>
       </section>
 
       {/* QR Dialog */}
