@@ -1,10 +1,9 @@
-import { Calendar, TrendingUp, Plus, ArrowRight, Share2, Code2, Zap, Clock, FileText, CalendarClock } from "lucide-react";
+import { Calendar, TrendingUp, Plus, ArrowRight, Zap, Clock, FileText, CalendarClock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/hooks/useUILanguage";
 import { EventStatusBadge } from "@/components/EventStatusBadge";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
-import { QuickActionCard } from "@/components/QuickActionCard";
 import { EventActionMenu } from "@/components/EventActionMenu";
 import { UsageMeter } from "@/components/UsageMeter";
 import { usePlan } from "@/hooks/usePlan";
@@ -28,18 +27,13 @@ interface DashboardEvent {
 
 export default function DashboardPage() {
   const { t } = useTranslation();
-  const { effectivePlanId, upgradePlan } = usePlan();
+  const { effectivePlanId, upgradePlan, limits, usagePercent } = usePlan();
   const { user } = useAuth();
   const { tenant, tenantId } = useTenant();
   const planLabel = effectivePlanId.charAt(0).toUpperCase() + effectivePlanId.slice(1);
 
-  const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "daar";
-  const orgName = tenant?.name || "Mijn organisatie";
-
-  const quickActions = [
-    { icon: Share2, title: t("dashboard.qa.distribute"), description: t("dashboard.qa.distributeDesc"), to: "/app/distribution", gradient: "bg-secondary" },
-    { icon: Code2, title: t("dashboard.qa.widget"), description: t("dashboard.qa.widgetDesc"), to: "/app/settings/widgets", gradient: "bg-secondary" },
-  ];
+  const firstName = user?.user_metadata?.full_name?.split(" ")[0] || t("dashboard.userFallback");
+  const orgName = tenant?.name || t("dashboard.orgFallback");
 
   const [events, setEvents] = useState<DashboardEvent[]>([]);
   const [stats, setStats] = useState({ published: 0, scheduled: 0, drafts: 0, widgets: 0, team: 1 });
@@ -102,12 +96,28 @@ export default function DashboardPage() {
     { label: t("dashboard.stats.drafts"), sub: t("dashboard.stats.draftsDesc"), value: String(stats.drafts), icon: FileText },
   ];
 
+  // Verbruiksmeters alleen tonen bij eindige limiet + >=50% verbruik
+  const meters: { metric: "events" | "widgets" | "team"; current: number; label: string; max: number }[] = [
+    { metric: "events", current: stats.published, label: t("dashboard.stats.published"), max: limits.maxActiveEvents },
+    { metric: "widgets", current: stats.widgets, label: t("dashboard.widgets"), max: limits.maxWidgets },
+    { metric: "team", current: stats.team, label: t("billing.teamMembers"), max: limits.maxTeamMembers },
+  ];
+  const visibleMeters = meters.filter((m) => Number.isFinite(m.max) && (m.current / m.max) * 100 >= 50);
+
+  // Upgrade-prompt alleen wanneer limiet ≥70% in zicht
+  const showUpgrade = !!upgradePlan && meters.some(
+    (m) => Number.isFinite(m.max) && (m.current / m.max) * 100 >= 70,
+  );
+  const upgradeCopy = effectivePlanId === "free"
+    ? t("dashboard.upgradeFromFree")
+    : t("dashboard.upgradeFromBasic");
+
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">{t("dashboard.welcome")}, {firstName} 👋</h1>
+          <h1 className="text-2xl font-display font-bold text-foreground">{t("dashboard.welcome")}, {firstName}</h1>
           <p className="text-muted-foreground text-sm mt-1">{orgName} · {planLabel} plan</p>
         </div>
         <Link to="/app/events/new" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity min-h-11 sm:min-h-0">
@@ -136,16 +146,6 @@ export default function DashboardPage() {
             <div className="hidden sm:block text-xs text-muted-foreground mt-0.5">{s.sub}</div>
           </div>
         ))}
-      </div>
-
-      {/* Quick actions grid */}
-      <div>
-        <h2 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("dashboard.quickActions")}</h2>
-        <div className="grid sm:grid-cols-2 gap-3">
-          {quickActions.map((a) => (
-            <QuickActionCard key={a.title} {...a} />
-          ))}
-        </div>
       </div>
 
       {/* Two-column layout */}
@@ -179,7 +179,7 @@ export default function DashboardPage() {
                   </p>
                   <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                     <EventStatusBadge status={event.status as any} />
-                    {event.is_recurring && <span className="text-xs font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">Wekelijks</span>}
+                    {event.is_recurring && <span className="text-xs font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">{t("events.recurring")}</span>}
                   </div>
                 </div>
                 <EventActionMenu eventId={event.id} eventTitle={event.title} eventSlug={event.slug} status={event.status as any} />
@@ -190,55 +190,33 @@ export default function DashboardPage() {
 
         {/* Sidebar */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Usage meters */}
-          <div className="rounded-xl bg-card border border-border shadow-card p-4 space-y-4">
-            <h3 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider">{t("dashboard.usage")}</h3>
-            <UsageMeter metric="events" current={stats.published} label={t("dashboard.activeEvents")} />
-            <UsageMeter metric="widgets" current={stats.widgets} label={t("dashboard.widgets")} />
-            <UsageMeter metric="team" current={stats.team} label={t("billing.teamMembers")} />
-          </div>
+          {/* Usage meters — alleen bij zinvolle limiet-druk */}
+          {visibleMeters.length > 0 && (
+            <div className="rounded-xl bg-card border border-border shadow-card p-4 space-y-4">
+              <h3 className="text-sm font-display font-semibold text-muted-foreground uppercase tracking-wider">{t("dashboard.usage")}</h3>
+              {visibleMeters.map((m) => (
+                <UsageMeter key={m.metric} metric={m.metric} current={m.current} label={m.label} />
+              ))}
+            </div>
+          )}
 
-          {/* Smart upgrade prompt — alleen tonen als upgrade mogelijk én zinvol (limiet bijna bereikt) */}
-          {upgradePlan && (() => {
-            const limits = (effectivePlanId === "free")
-              ? { events: 3, widgets: 1 }
-              : { events: 15, widgets: 3 };
-            const eventsPercent = limits.events === Infinity ? 0 : Math.round((stats.published / limits.events) * 100);
-            const widgetsPercent = limits.widgets === Infinity ? 0 : Math.round((stats.widgets / limits.widgets) * 100);
-            const showSmart = eventsPercent >= 70 || widgetsPercent >= 70 || effectivePlanId === "free";
-            if (!showSmart) return null;
-            const variantCopy = effectivePlanId === "free"
-              ? "Eigen branding, 15 evenementen en de distributie hub"
-              : "Onbeperkt evenementen, ClickWise-integratie en multi-location";
-            return (
-              <Link to="/app/settings/abonnement" className="block rounded-xl bg-secondary/50 border border-border p-4 hover:border-primary/30 transition-colors">
+          {/* Upgrade-prompt — alleen bij écht naderende limiet */}
+          {showUpgrade && upgradePlan && (
+            <Link to="/app/settings/abonnement" className="block rounded-xl bg-secondary/50 border border-border p-4 hover:border-primary/30 transition-colors">
                 <div className="flex items-start gap-3">
                   <div className="w-9 h-9 rounded-lg bg-background border border-border flex items-center justify-center shrink-0">
                     <Zap className="w-4 h-4 text-primary" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground">Klaar voor {upgradePlan.charAt(0).toUpperCase() + upgradePlan.slice(1)}?</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{variantCopy}</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {t("dashboard.upgradeTitle", { plan: upgradePlan.charAt(0).toUpperCase() + upgradePlan.slice(1) })}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{upgradeCopy}</p>
                   </div>
                   <ArrowRight className="w-4 h-4 text-primary shrink-0 mt-2" />
                 </div>
               </Link>
-            );
-          })()}
-
-          {/* Quick tip */}
-          <div className="rounded-xl bg-secondary/50 border border-border p-4">
-            <div className="flex items-start gap-2">
-              <Zap className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-              <div>
-                <p className="text-xs font-medium text-foreground">💡 {t("dashboard.tip")}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.tipText")}</p>
-                <Link to="/app/events/templates" className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1 mt-1">
-                  {t("dashboard.viewTemplates")} <ArrowRight className="w-3 h-3" />
-                </Link>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
