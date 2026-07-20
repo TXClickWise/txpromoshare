@@ -1,6 +1,5 @@
-import { Calendar, Eye, TrendingUp, Plus, ArrowRight, Share2, Code2, Zap, Clock, Copy } from "lucide-react";
+import { Calendar, Eye, TrendingUp, Plus, ArrowRight, Share2, Code2, Zap, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useTranslation } from "@/hooks/useUILanguage";
 import { EventStatusBadge } from "@/components/EventStatusBadge";
@@ -37,10 +36,8 @@ export default function DashboardPage() {
   const orgName = tenant?.name || "Mijn organisatie";
 
   const quickActions = [
-    { icon: Plus, title: t("dashboard.qa.newEvent"), description: t("dashboard.qa.newEventDesc"), to: "/app/events/new", gradient: "gradient-hero" },
-    { icon: Copy, title: t("dashboard.qa.duplicate"), description: t("dashboard.qa.duplicateDesc"), to: "/app/events", gradient: "gradient-accent" },
-    { icon: Share2, title: t("dashboard.qa.distribute"), description: t("dashboard.qa.distributeDesc"), to: "/app/distribution", gradient: "gradient-hero" },
-    { icon: Code2, title: t("dashboard.qa.widget"), description: t("dashboard.qa.widgetDesc"), to: "/app/widgets", gradient: "gradient-dark" },
+    { icon: Share2, title: t("dashboard.qa.distribute"), description: t("dashboard.qa.distributeDesc"), to: "/app/distribution", gradient: "bg-secondary" },
+    { icon: Code2, title: t("dashboard.qa.widget"), description: t("dashboard.qa.widgetDesc"), to: "/app/widgets", gradient: "bg-secondary" },
   ];
 
   const [events, setEvents] = useState<DashboardEvent[]>([]);
@@ -92,9 +89,9 @@ export default function DashboardPage() {
   }, [tenantId]);
 
   const statCards = [
-    { label: t("dashboard.activeEvents"), value: String(stats.active), icon: Calendar, color: "gradient-hero" },
-    { label: t("dashboard.upcomingEvents"), value: String(stats.upcoming), icon: TrendingUp, color: "gradient-accent" },
-    { label: t("dashboard.widgets"), value: String(stats.widgets), icon: Code2, color: "gradient-dark" },
+    { label: t("dashboard.activeEvents"), value: String(stats.active), icon: Calendar },
+    { label: t("dashboard.upcomingEvents"), value: String(stats.upcoming), icon: TrendingUp },
+    { label: t("dashboard.widgets"), value: String(stats.widgets), icon: Code2 },
   ];
 
   return (
@@ -105,7 +102,7 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-display font-bold text-foreground">{t("dashboard.welcome")}, {firstName} 👋</h1>
           <p className="text-muted-foreground text-sm mt-1">{orgName} · {planLabel} plan</p>
         </div>
-        <Link to="/app/events/new" className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-lg gradient-hero text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity shadow-glow">
+        <Link to="/app/events/new" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity min-h-11 sm:min-h-0">
           <Plus className="w-4 h-4" />
           {t("dashboard.createEvent")}
         </Link>
@@ -116,30 +113,21 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {statCards.map((s, i) => (
-          <motion.div
+        {statCards.map((s) => (
+          <div
             key={s.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="p-5 rounded-xl bg-card border border-border shadow-card hover:shadow-elevated transition-shadow"
+            className="p-5 rounded-xl bg-card border border-border"
           >
             <div className="flex items-center justify-between mb-3">
-              <div className={`w-9 h-9 rounded-lg ${s.color} flex items-center justify-center`}>
-                <s.icon className="w-4 h-4 text-primary-foreground" />
+              <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center">
+                <s.icon className="w-4 h-4 text-primary" />
               </div>
             </div>
             <div className="text-2xl font-display font-bold text-foreground">{s.value}</div>
             <div className="text-xs text-muted-foreground mt-1">{s.label}</div>
-          </motion.div>
+          </div>
         ))}
       </div>
-
-      {/* Quick actions mobile */}
-      <Link to="/app/events/new" className="sm:hidden flex items-center justify-center gap-2 p-3 rounded-xl gradient-hero text-primary-foreground font-semibold">
-        <Plus className="w-4 h-4" />
-        {t("dashboard.createEvent")}
-      </Link>
 
       {/* Quick actions grid */}
       <div>
@@ -212,10 +200,10 @@ export default function DashboardPage() {
               ? "Eigen branding, 15 evenementen en de distributie hub"
               : "Onbeperkt evenementen, ClickWise-integratie en multi-location";
             return (
-              <Link to="/app/billing" className="block rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 p-4 hover:border-primary/30 transition-colors">
+              <Link to="/app/billing" className="block rounded-xl bg-secondary/50 border border-border p-4 hover:border-primary/30 transition-colors">
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg gradient-hero flex items-center justify-center shrink-0">
-                    <Zap className="w-4 h-4 text-primary-foreground" />
+                  <div className="w-9 h-9 rounded-lg bg-background border border-border flex items-center justify-center shrink-0">
+                    <Zap className="w-4 h-4 text-primary" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-foreground">Klaar voor {upgradePlan.charAt(0).toUpperCase() + upgradePlan.slice(1)}?</p>
