@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import type { EventFormState } from "./useEventForm";
 import type { Tables } from "@/integrations/supabase/types";
 import { generateDates as libGenerateDates, summarizeRecurrence, type RecurrenceInput } from "@/lib/recurrence";
+import { useTranslation } from "@/hooks/useUILanguage";
 
 function toRecurrenceInput(form: EventFormState): RecurrenceInput {
   return {
@@ -28,21 +29,30 @@ interface StepDateTimeProps {
   venues?: Tables<"venues">[];
 }
 
-const RECURRENCE_PRESETS = [
-  { value: "weekly", label: "Wekelijks", desc: "Elke week op dezelfde dag" },
-  { value: "biweekly", label: "Om de 2 weken", desc: "Elke twee weken" },
-  { value: "monthly", label: "Maandelijks", desc: "Eén keer per maand" },
-  { value: "daily", label: "Dagelijks", desc: "Elke dag" },
-  { value: "custom", label: "Aangepast", desc: "Stel zelf de frequentie in" },
-];
-
-const END_OPTIONS = [
-  { value: "never", label: "Geen einddatum" },
-  { value: "date", label: "Tot een datum" },
-  { value: "count", label: "Na X keer" },
-];
-
 export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProps) {
+  const { t, language } = useTranslation();
+  const RECURRENCE_PRESETS = [
+    { value: "weekly", label: t("wizard.dateTime.preset.weekly"), desc: t("wizard.dateTime.preset.weeklyDesc") },
+    { value: "biweekly", label: t("wizard.dateTime.preset.biweekly"), desc: t("wizard.dateTime.preset.biweeklyDesc") },
+    { value: "monthly", label: t("wizard.dateTime.preset.monthly"), desc: t("wizard.dateTime.preset.monthlyDesc") },
+    { value: "daily", label: t("wizard.dateTime.preset.daily"), desc: t("wizard.dateTime.preset.dailyDesc") },
+    { value: "custom", label: t("wizard.dateTime.preset.custom"), desc: t("wizard.dateTime.preset.customDesc") },
+  ];
+  const END_OPTIONS = [
+    { value: "never", label: t("wizard.dateTime.end.never") },
+    { value: "date", label: t("wizard.dateTime.end.date") },
+    { value: "count", label: t("wizard.dateTime.end.count") },
+  ];
+  const WEEKDAYS = [
+    t("wizard.dateTime.weekday.mon"),
+    t("wizard.dateTime.weekday.tue"),
+    t("wizard.dateTime.weekday.wed"),
+    t("wizard.dateTime.weekday.thu"),
+    t("wizard.dateTime.weekday.fri"),
+    t("wizard.dateTime.weekday.sat"),
+    t("wizard.dateTime.weekday.sun"),
+  ];
+  const dateLocale = language === "en" ? "en-US" : "nl-NL";
   const handleVenueSelect = (venueId: string) => {
     if (venueId === "custom") {
       updateForm({ venueId: "", venue: "", address: "" });
@@ -63,40 +73,40 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-xl font-display font-bold text-foreground">Datum & locatie</h2>
-        <p className="text-sm text-muted-foreground">Wanneer en waar vindt je evenement plaats? Tip: kies een opgeslagen locatie voor één-klik invullen.</p>
+        <h2 className="text-xl font-display font-bold text-foreground">{t("wizard.dateTime.title")}</h2>
+        <p className="text-sm text-muted-foreground">{t("wizard.dateTime.subtitle")}</p>
       </div>
 
       {/* Date & Time */}
       <div className="rounded-xl bg-card border border-border p-5 space-y-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <CalendarDays className="w-4 h-4 text-primary" />
-          Datum & tijd
+          {t("wizard.dateTime.dateTime")}
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Startdatum <span className="text-destructive">*</span></Label>
+            <Label className="text-xs text-muted-foreground">{t("wizard.dateTime.startDate")} <span className="text-destructive">*</span></Label>
             <Input type="date" value={form.startDate} onChange={(e) => updateForm({ startDate: e.target.value })} />
           </div>
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Einddatum</Label>
+            <Label className="text-xs text-muted-foreground">{t("wizard.dateTime.endDate")}</Label>
             <Input type="date" value={form.endDate} onChange={(e) => updateForm({ endDate: e.target.value })} min={form.startDate || undefined} />
             {form.endDate && form.startDate && form.endDate < form.startDate ? (
-              <p className="text-xs text-destructive">Einddatum moet op of na de startdatum liggen</p>
+              <p className="text-xs text-destructive">{t("wizard.dateTime.endDateInvalid")}</p>
             ) : (
-              <p className="text-xs text-muted-foreground">Alleen invullen voor meerdaagse events</p>
+              <p className="text-xs text-muted-foreground">{t("wizard.dateTime.endDateHint")}</p>
             )}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Starttijd <span className="text-destructive">*</span></Label>
+            <Label className="text-xs text-muted-foreground">{t("wizard.dateTime.startTime")} <span className="text-destructive">*</span></Label>
             <Input type="time" value={form.startTime} onChange={(e) => updateForm({ startTime: e.target.value })} />
           </div>
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Eindtijd</Label>
+            <Label className="text-xs text-muted-foreground">{t("wizard.dateTime.endTime")}</Label>
             <Input type="time" value={form.endTime} onChange={(e) => updateForm({ endTime: e.target.value })} />
-            <p className="text-xs text-muted-foreground">Automatisch gezet op +3u — pas aan indien gewenst</p>
+            <p className="text-xs text-muted-foreground">{t("wizard.dateTime.endTimeHint")}</p>
           </div>
         </div>
       </div>
@@ -105,20 +115,20 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
       <div className="rounded-xl bg-card border border-border p-5 space-y-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <MapPin className="w-4 h-4 text-primary" />
-          Locatie
+          {t("wizard.dateTime.location")}
         </div>
         {venues.length > 0 && (
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Kies een opgeslagen locatie</Label>
+            <Label className="text-xs text-muted-foreground">{t("wizard.dateTime.savedVenue")}</Label>
             <Select value={form.venueId || "custom"} onValueChange={handleVenueSelect}>
-              <SelectTrigger><SelectValue placeholder="Selecteer locatie" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("wizard.dateTime.selectVenue")} /></SelectTrigger>
               <SelectContent>
                 {venues.map((v) => (
                   <SelectItem key={v.id} value={v.id}>
                     {v.name}{v.is_primary ? " ★" : ""}{v.city ? ` — ${v.city}` : ""}
                   </SelectItem>
                 ))}
-                <SelectItem value="custom">Andere locatie invoeren...</SelectItem>
+                <SelectItem value="custom">{t("wizard.dateTime.customVenue")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -126,12 +136,12 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
         {(!form.venueId || venues.length === 0) && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Locatienaam</Label>
-              <Input value={form.venue} onChange={(e) => updateForm({ venue: e.target.value })} placeholder="Bijv. Café De Kroeg" />
+              <Label className="text-xs text-muted-foreground">{t("wizard.dateTime.venueName")}</Label>
+              <Input value={form.venue} onChange={(e) => updateForm({ venue: e.target.value })} placeholder={t("wizard.dateTime.venueNamePlaceholder")} />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Adres</Label>
-              <Input value={form.address} onChange={(e) => updateForm({ address: e.target.value })} placeholder="Straat, Stad" />
+              <Label className="text-xs text-muted-foreground">{t("wizard.dateTime.address")}</Label>
+              <Input value={form.address} onChange={(e) => updateForm({ address: e.target.value })} placeholder={t("wizard.dateTime.addressPlaceholder")} />
             </div>
           </div>
         )}
@@ -150,8 +160,8 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
               <Repeat className="w-4 h-4 text-accent" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">Terugkerend evenement</p>
-              <p className="text-xs text-muted-foreground">Automatisch herhalend op een vast schema</p>
+              <p className="text-sm font-semibold text-foreground">{t("wizard.dateTime.recurring")}</p>
+              <p className="text-xs text-muted-foreground">{t("wizard.dateTime.recurringHelp")}</p>
             </div>
           </div>
           <Switch checked={form.isRecurring} onCheckedChange={(v) => updateForm({ isRecurring: v })} />
@@ -161,7 +171,7 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
           <div className="space-y-5 pt-4 border-t border-border">
             {/* Presets */}
             <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground font-medium">Herhaling</Label>
+              <Label className="text-xs text-muted-foreground font-medium">{t("wizard.dateTime.repetition")}</Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {RECURRENCE_PRESETS.map(p => (
                   <button
@@ -195,18 +205,18 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
             {isCustomFreq && (
               <div className="grid grid-cols-2 gap-4 bg-secondary/30 rounded-lg p-4">
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Frequentie</Label>
+                  <Label className="text-xs text-muted-foreground">{t("wizard.dateTime.frequency")}</Label>
                   <Select value={form.recurringCustomFreq || "weekly"} onValueChange={(v) => updateForm({ recurringCustomFreq: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="daily">Dagen</SelectItem>
-                      <SelectItem value="weekly">Weken</SelectItem>
-                      <SelectItem value="monthly">Maanden</SelectItem>
+                      <SelectItem value="daily">{t("wizard.dateTime.freq.daily")}</SelectItem>
+                      <SelectItem value="weekly">{t("wizard.dateTime.freq.weekly")}</SelectItem>
+                      <SelectItem value="monthly">{t("wizard.dateTime.freq.monthly")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Elke</Label>
+                  <Label className="text-xs text-muted-foreground">{t("wizard.dateTime.every")}</Label>
                   <Input
                     type="number"
                     min={1}
@@ -222,9 +232,9 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
             {/* Days of week (for weekly) */}
             {(form.recurringFreq === "weekly" || (isCustomFreq && (form.recurringCustomFreq || "weekly") === "weekly")) && (
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Op welke dag(en)</Label>
+                <Label className="text-xs text-muted-foreground">{t("wizard.dateTime.onDays")}</Label>
                 <div className="flex gap-1.5 flex-wrap">
-                  {["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"].map((day, i) => (
+                  {WEEKDAYS.map((day, i) => (
                     <button
                       key={day}
                       type="button"
@@ -248,7 +258,7 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
 
             {/* End condition */}
             <div className="space-y-3">
-              <Label className="text-xs text-muted-foreground font-medium">Wanneer stopt de herhaling?</Label>
+              <Label className="text-xs text-muted-foreground font-medium">{t("wizard.dateTime.stopWhen")}</Label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {END_OPTIONS.map(opt => (
                   <button
@@ -268,7 +278,7 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
 
               {form.recurringEndType === "date" && (
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Einddatum herhaling</Label>
+                  <Label className="text-xs text-muted-foreground">{t("wizard.dateTime.endRecurrenceDate")}</Label>
                   <Input
                     type="date"
                     value={form.recurringEndDate}
@@ -281,7 +291,7 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
 
               {form.recurringEndType === "count" && (
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Aantal keer herhalen</Label>
+                  <Label className="text-xs text-muted-foreground">{t("wizard.dateTime.repeatCount")}</Label>
                   <Input
                     type="number"
                     min={2}
@@ -300,7 +310,7 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
               <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 flex items-start gap-2">
                 <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 <div className="space-y-0.5">
-                  <p className="text-xs font-semibold text-primary">Samenvatting herhaling</p>
+                  <p className="text-xs font-semibold text-primary">{t("wizard.dateTime.recurrenceSummary")}</p>
                   <p className="text-sm text-foreground">{summarizeRecurrence(toRecurrenceInput(form)) || "—"}</p>
                 </div>
               </div>
@@ -309,16 +319,16 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
             {/* Preview of generated dates */}
             {form.startDate && (
               <div className="bg-secondary/30 rounded-lg p-3 space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">Eerste datums die gegenereerd worden:</p>
+                <p className="text-xs font-medium text-muted-foreground">{t("wizard.dateTime.firstDates")}</p>
                 <div className="flex flex-wrap gap-1.5 mt-1">
                   {libGenerateDates(toRecurrenceInput(form)).slice(0, 8).map((d, i) => (
                     <span key={i} className="text-xs bg-background rounded px-2 py-0.5 text-foreground border border-border">
-                      {new Date(d).toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short" })}
+                      {new Date(d).toLocaleDateString(dateLocale, { weekday: "short", day: "numeric", month: "short" })}
                     </span>
                   ))}
                   {libGenerateDates(toRecurrenceInput(form)).length > 8 && (
                     <span className="text-xs text-muted-foreground px-2 py-0.5">
-                      +{libGenerateDates(toRecurrenceInput(form)).length - 8} meer
+                      {t("wizard.dateTime.moreDates", { count: String(libGenerateDates(toRecurrenceInput(form)).length - 8) })}
                     </span>
                   )}
                 </div>

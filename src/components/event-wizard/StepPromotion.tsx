@@ -7,6 +7,7 @@ import { AiFieldActions } from "./AiFieldActions";
 import { AiAssistButton } from "@/components/AiAssistButton";
 import { useAiAssist } from "@/hooks/useAiAssist";
 import type { EventFormState } from "./useEventForm";
+import { useTranslation } from "@/hooks/useUILanguage";
 
 interface StepPromotionProps {
   form: EventFormState;
@@ -14,6 +15,7 @@ interface StepPromotionProps {
 }
 
 export function StepPromotion({ form, updateForm }: StepPromotionProps) {
+  const { t } = useTranslation();
   const { run, loading } = useAiAssist();
   const eventContext = { title: form.title, category: "", description: form.shortDescription };
 
@@ -52,20 +54,20 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-xl font-display font-bold text-foreground">Promotie</h2>
-        <p className="text-sm text-muted-foreground">Stel je CTA-knop, deelteksten en SEO in. Tip: laat AI alle teksten in één klik genereren op basis van je titel.</p>
+        <h2 className="text-xl font-display font-bold text-foreground">{t("wizard.promotion.title")}</h2>
+        <p className="text-sm text-muted-foreground">{t("wizard.promotion.subtitle")}</p>
       </div>
 
       {/* CTA */}
       <div className="rounded-xl bg-card border border-border p-5 space-y-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <LinkIcon className="w-4 h-4 text-primary" />
-          Call-to-Action knop
+          {t("wizard.promotion.cta")}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label className="text-xs text-muted-foreground">Knoptekst</Label>
+              <Label className="text-xs text-muted-foreground">{t("wizard.promotion.ctaText")}</Label>
               <AiFieldActions
                 fieldName="CTA knoptekst"
                 currentText={form.ctaButtonText}
@@ -74,14 +76,14 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
                 compact
               />
             </div>
-            <Input value={form.ctaButtonText} onChange={(e) => updateForm({ ctaButtonText: e.target.value })} placeholder="Reserveer nu" />
+            <Input value={form.ctaButtonText} onChange={(e) => updateForm({ ctaButtonText: e.target.value })} placeholder={t("wizard.promotion.ctaTextPlaceholder")} />
           </div>
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Link</Label>
+            <Label className="text-xs text-muted-foreground">{t("wizard.promotion.ctaLink")}</Label>
             <Input value={form.ctaLink} onChange={(e) => updateForm({ ctaLink: e.target.value })} placeholder="https://..." type="url" />
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">Deze knop wordt prominent getoond op de evenementpagina</p>
+        <p className="text-xs text-muted-foreground">{t("wizard.promotion.ctaHelp")}</p>
       </div>
 
       {/* Tags */}
@@ -89,14 +91,14 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <Hash className="w-4 h-4 text-primary" />
-            Tags
+            {t("wizard.promotion.tags")}
           </div>
           {form.title && (
-            <AiAssistButton onClick={handleGenerateTags} loading={loading === "generate_tags"} label="Genereer" />
+            <AiAssistButton onClick={handleGenerateTags} loading={loading === "generate_tags"} label={t("wizard.ai.generate")} />
           )}
         </div>
-        <Input value={form.tags} onChange={(e) => updateForm({ tags: e.target.value })} placeholder="bijv. live-muziek, DJ, 80s, retro" />
-        <p className="text-xs text-muted-foreground">Gescheiden door komma's, zonder #. Helpen bij zoeken en ontdekken.</p>
+        <Input value={form.tags} onChange={(e) => updateForm({ tags: e.target.value })} placeholder={t("wizard.promotion.tagsPlaceholder")} />
+        <p className="text-xs text-muted-foreground">{t("wizard.promotion.tagsHelp")}</p>
       </div>
 
       {/* Share texts */}
@@ -104,15 +106,15 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <MessageSquare className="w-4 h-4 text-primary" />
-            Deelteksten
+            {t("wizard.promotion.shareTexts")}
           </div>
           {form.title && (
-            <AiAssistButton onClick={handleGenerateShareTexts} loading={loading === "generate_share_texts"} label="Genereer alle" />
+            <AiAssistButton onClick={handleGenerateShareTexts} loading={loading === "generate_share_texts"} label={t("wizard.promotion.generateAll")} />
           )}
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-xs text-muted-foreground">WhatsApp tekst</Label>
+            <Label className="text-xs text-muted-foreground">{t("wizard.promotion.whatsapp")}</Label>
             <AiFieldActions
               fieldName="WhatsApp tekst"
               currentText={form.whatsappText}
@@ -125,7 +127,7 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-xs text-muted-foreground">Social media tekst</Label>
+            <Label className="text-xs text-muted-foreground">{t("wizard.promotion.social")}</Label>
             <AiFieldActions
               fieldName="social media tekst"
               currentText={form.socialText}
@@ -143,14 +145,14 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <SearchIcon className="w-4 h-4 text-primary" />
-            SEO & URL
+            {t("wizard.promotion.seoUrl")}
           </div>
           {form.title && (
-            <AiAssistButton onClick={handleGenerateSeo} loading={loading === "generate_seo"} label="Genereer" />
+            <AiAssistButton onClick={handleGenerateSeo} loading={loading === "generate_seo"} label={t("wizard.ai.generate")} />
           )}
         </div>
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">URL slug</Label>
+          <Label className="text-xs text-muted-foreground">{t("wizard.promotion.slug")}</Label>
           <div className="flex items-center gap-0">
             <span className="text-xs text-muted-foreground bg-secondary px-3 py-2.5 rounded-l-lg border border-r-0 border-border whitespace-nowrap">txeventshare.nl/e/</span>
             <Input value={form.slug} onChange={(e) => updateForm({ slug: e.target.value })} className="rounded-l-none" />
@@ -158,7 +160,7 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-xs text-muted-foreground">SEO titel (max 60 tekens)</Label>
+            <Label className="text-xs text-muted-foreground">{t("wizard.promotion.seoTitle")}</Label>
             <AiFieldActions
               fieldName="SEO titel"
               currentText={form.seoTitle}
@@ -172,7 +174,7 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-xs text-muted-foreground">SEO beschrijving (max 160 tekens)</Label>
+            <Label className="text-xs text-muted-foreground">{t("wizard.promotion.seoDescription")}</Label>
             <AiFieldActions
               fieldName="SEO beschrijving"
               currentText={form.seoDescription}

@@ -9,6 +9,7 @@ import { AiFieldActions } from "./AiFieldActions";
 import MediaPicker from "@/components/MediaPicker";
 import type { EventFormState } from "./useEventForm";
 import type { Tables } from "@/integrations/supabase/types";
+import { useTranslation } from "@/hooks/useUILanguage";
 
 const MAX_GALLERY = 12;
 
@@ -33,6 +34,7 @@ export function StepMedia({
   fileInputRef, openMediaPicker, handleMediaUpload,
   categories = [],
 }: StepMediaProps) {
+  const { t } = useTranslation();
   const categoryName = categories.find((c) => c.id === form.category)?.name || "";
   const eventContext = { title: form.title, category: categoryName, description: form.shortDescription };
   const [galleryPickerOpen, setGalleryPickerOpen] = useState(false);
@@ -65,14 +67,14 @@ export function StepMedia({
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-xl font-display font-bold text-foreground">Content & media</h2>
-        <p className="text-sm text-muted-foreground">Een goede foto verdubbelt je bereik. Voeg ook een uitgebreide beschrijving en eventuele sponsors toe.</p>
+        <h2 className="text-xl font-display font-bold text-foreground">{t("wizard.media.title")}</h2>
+        <p className="text-sm text-muted-foreground">{t("wizard.media.subtitle")}</p>
       </div>
 
       {/* Full description */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium">Uitgebreide beschrijving</Label>
+          <Label className="text-sm font-medium">{t("wizard.media.fullDescription")}</Label>
           <AiFieldActions
             fieldName="uitgebreide beschrijving"
             currentText={form.fullDescription}
@@ -83,18 +85,18 @@ export function StepMedia({
         <Textarea
           value={form.fullDescription}
           onChange={(e) => updateForm({ fullDescription: e.target.value })}
-          placeholder="Uitgebreide beschrijving voor de evenementpagina. Vertel bezoekers wat ze kunnen verwachten..."
+          placeholder={t("wizard.media.fullDescriptionPlaceholder")}
           rows={6}
           className="min-h-[120px]"
         />
-        <p className="text-xs text-muted-foreground">Wordt getoond op de volledige evenementpagina</p>
+        <p className="text-xs text-muted-foreground">{t("wizard.media.fullDescriptionHelp")}</p>
       </div>
 
       {/* Featured Image */}
       <div className="space-y-3">
         <div>
-          <Label className="text-sm font-medium">Uitgelichte afbeelding</Label>
-          <p className="text-xs text-muted-foreground mt-0.5">Aanbevolen: 16:9 verhouding • min. 1200×675px</p>
+          <Label className="text-sm font-medium">{t("wizard.media.featured")}</Label>
+          <p className="text-xs text-muted-foreground mt-0.5">{t("wizard.media.featuredHelp")}</p>
         </div>
         {form.featuredImageUrl ? (
           <div className="relative rounded-xl border border-border overflow-hidden bg-secondary/20 max-w-md">
@@ -102,8 +104,8 @@ export function StepMedia({
               <img src={form.featuredImageUrl} alt="Featured" className="w-full h-full object-cover" />
             </div>
             <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-colors flex items-center justify-center gap-3 opacity-0 hover:opacity-100">
-              <Button size="sm" variant="secondary" onClick={() => setMediaPickerOpen(true)}>Wijzigen</Button>
-              <Button size="sm" variant="destructive" onClick={() => updateForm({ featuredImageId: null, featuredImageUrl: null })}>Verwijderen</Button>
+              <Button size="sm" variant="secondary" onClick={() => setMediaPickerOpen(true)}>{t("wizard.media.change")}</Button>
+              <Button size="sm" variant="destructive" onClick={() => updateForm({ featuredImageId: null, featuredImageUrl: null })}>{t("common.remove")}</Button>
             </div>
           </div>
         ) : (
@@ -112,8 +114,8 @@ export function StepMedia({
             onClick={() => setMediaPickerOpen(true)}
           >
             <Image className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
-            <p className="text-sm font-medium text-foreground mb-1">Kies of upload een afbeelding</p>
-            <p className="text-xs text-muted-foreground">Uit je bibliotheek, stockfoto's of upload nieuw</p>
+            <p className="text-sm font-medium text-foreground mb-1">{t("wizard.media.pickPrompt")}</p>
+            <p className="text-xs text-muted-foreground">{t("wizard.media.pickHint")}</p>
           </div>
         )}
       </div>
@@ -122,10 +124,8 @@ export function StepMedia({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <Label className="text-sm font-medium">Galerij (extra foto's)</Label>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Worden onder de beschrijving getoond. Klikbaar om te vergroten. Max {MAX_GALLERY} foto's.
-            </p>
+            <Label className="text-sm font-medium">{t("wizard.media.gallery")}</Label>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("wizard.media.galleryHelp", { max: String(MAX_GALLERY) })}</p>
           </div>
           <Button
             type="button"
@@ -136,7 +136,7 @@ export function StepMedia({
             disabled={form.gallery.length >= MAX_GALLERY}
           >
             <Plus className="w-3.5 h-3.5" />
-            Foto toevoegen
+            {t("wizard.media.addPhoto")}
           </Button>
         </div>
 
@@ -146,7 +146,7 @@ export function StepMedia({
             onClick={() => setGalleryPickerOpen(true)}
           >
             <Image className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">Nog geen galerij-foto's. Klik om toe te voegen.</p>
+            <p className="text-xs text-muted-foreground">{t("wizard.media.galleryEmpty")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
@@ -162,7 +162,7 @@ export function StepMedia({
                     type="button"
                     onClick={() => removeGallery(i)}
                     className="w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:scale-110 transition-transform"
-                    aria-label="Verwijderen"
+                    aria-label={t("common.remove")}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -193,33 +193,33 @@ export function StepMedia({
           </div>
         )}
         {form.gallery.length >= MAX_GALLERY && (
-          <p className="text-xs text-muted-foreground">Maximum van {MAX_GALLERY} foto's bereikt.</p>
+          <p className="text-xs text-muted-foreground">{t("wizard.media.galleryMaxed", { max: String(MAX_GALLERY) })}</p>
         )}
       </div>
 
       {/* Sponsors */}
       <div className="space-y-4">
         <div>
-          <Label className="text-sm font-medium">Sponsoren & Partners</Label>
-          <p className="text-xs text-muted-foreground mt-0.5">Worden getoond op de evenementpagina.</p>
+          <Label className="text-sm font-medium">{t("wizard.media.sponsors")}</Label>
+          <p className="text-xs text-muted-foreground mt-0.5">{t("wizard.media.sponsorsHelp")}</p>
         </div>
         {form.sponsors.map((sp, i) => (
           <div key={i} className="rounded-lg border border-border p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground">Sponsor {i + 1}</span>
+              <span className="text-xs font-medium text-muted-foreground">{t("wizard.media.sponsorN", { n: String(i + 1) })}</span>
               <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" onClick={() => updateForm({ sponsors: form.sponsors.filter((_, j) => j !== i) })}>
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>
-            <Input value={sp.name} onChange={(e) => { const u = [...form.sponsors]; u[i] = { ...u[i], name: e.target.value }; updateForm({ sponsors: u }); }} placeholder="Naam sponsor" />
+            <Input value={sp.name} onChange={(e) => { const u = [...form.sponsors]; u[i] = { ...u[i], name: e.target.value }; updateForm({ sponsors: u }); }} placeholder={t("wizard.media.sponsorName")} />
             <div className="grid grid-cols-2 gap-2">
-              <Input value={sp.website_url} onChange={(e) => { const u = [...form.sponsors]; u[i] = { ...u[i], website_url: e.target.value }; updateForm({ sponsors: u }); }} placeholder="https://website.nl" />
-              <Input value={sp.logo_url} onChange={(e) => { const u = [...form.sponsors]; u[i] = { ...u[i], logo_url: e.target.value }; updateForm({ sponsors: u }); }} placeholder="Logo URL (optioneel)" />
+              <Input value={sp.website_url} onChange={(e) => { const u = [...form.sponsors]; u[i] = { ...u[i], website_url: e.target.value }; updateForm({ sponsors: u }); }} placeholder={t("wizard.media.sponsorSite")} />
+              <Input value={sp.logo_url} onChange={(e) => { const u = [...form.sponsors]; u[i] = { ...u[i], logo_url: e.target.value }; updateForm({ sponsors: u }); }} placeholder={t("wizard.media.sponsorLogo")} />
             </div>
           </div>
         ))}
         <Button variant="outline" size="sm" onClick={() => updateForm({ sponsors: [...form.sponsors, { name: "", logo_url: "", website_url: "" }] })} className="gap-2">
-          <Plus className="w-3.5 h-3.5" />Sponsor toevoegen
+          <Plus className="w-3.5 h-3.5" />{t("wizard.media.addSponsor")}
         </Button>
       </div>
 
