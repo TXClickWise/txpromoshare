@@ -4,7 +4,7 @@ import { Menu, X, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useUILanguage";
 import { UILanguageSwitcher } from "@/components/i18n/UILanguageSwitcher";
-import logoTxEventShare from "@/assets/logo-tx-eventshare.png";
+import { Logo } from "@/components/brand/Logo";
 
 export default function PublicLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -75,7 +75,7 @@ export default function PublicLayout() {
       )}>
         <div className="container flex items-center justify-between h-[6.3rem] px-4">
           <Link to="/" onClick={handleHomeClick} className="flex items-center gap-2">
-            <img src={logoTxEventShare} alt="TX EventShare" className="w-auto" style={{ height: '5.4rem' }} />
+            <Logo variant="light" size="lg" />
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
