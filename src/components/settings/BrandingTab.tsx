@@ -527,14 +527,14 @@ export default function BrandingTab() {
               <Section icon={Palette} title={t("branding.section.colors")} description={t("branding.section.colorsDesc")}>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("branding.section.primaryColor")}</Label>
+                    <Label className="text-sm font-medium text-foreground">{t("branding.section.primaryColor")}</Label>
                     <div className="flex gap-2 items-center">
                       <Input type="color" value={state.primaryColor} onChange={(e) => update("primaryColor", e.target.value)} className="w-12 h-10 p-1 cursor-pointer" />
                       <Input value={state.primaryColor} onChange={(e) => update("primaryColor", e.target.value)} className="flex-1 font-mono text-sm" />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("branding.section.secondaryColor")}</Label>
+                    <Label className="text-sm font-medium text-foreground">{t("branding.section.secondaryColor")}</Label>
                     <div className="flex gap-2 items-center">
                       <Input type="color" value={state.secondaryColor} onChange={(e) => update("secondaryColor", e.target.value)} className="w-12 h-10 p-1 cursor-pointer" />
                       <Input value={state.secondaryColor} onChange={(e) => update("secondaryColor", e.target.value)} className="flex-1 font-mono text-sm" />
@@ -557,7 +557,7 @@ export default function BrandingTab() {
               <Section icon={MousePointer} title={t("branding.section.buttonsCta")} description={t("branding.section.buttonsCtaDesc")}>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("branding.section.buttonStyle")}</Label>
+                    <Label className="text-sm font-medium text-foreground">{t("branding.section.buttonStyle")}</Label>
                     <Select value={state.buttonStyle} onValueChange={(v) => update("buttonStyle", v)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -568,7 +568,7 @@ export default function BrandingTab() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("branding.section.defaultCta")}</Label>
+                    <Label className="text-sm font-medium text-foreground">{t("branding.section.defaultCta")}</Label>
                     <Input value={state.defaultCtaText} onChange={(e) => update("defaultCtaText", e.target.value)} placeholder={t("branding.section.defaultCtaPlaceholder")} />
                   </div>
                 </div>
@@ -580,7 +580,7 @@ export default function BrandingTab() {
               <Section icon={Sparkles} title={t("branding.section.toneImage")} description={t("branding.section.toneImageDesc")}>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("branding.section.tone")}</Label>
+                    <Label className="text-sm font-medium text-foreground">{t("branding.section.tone")}</Label>
                     <Select value={state.toneOfVoice || "none"} onValueChange={(v) => update("toneOfVoice", v === "none" ? "" : v)}>
                       <SelectTrigger><SelectValue placeholder={t("branding.section.tonePlaceholder")} /></SelectTrigger>
                       <SelectContent>
@@ -594,7 +594,7 @@ export default function BrandingTab() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("branding.section.imageStyle")}</Label>
+                    <Label className="text-sm font-medium text-foreground">{t("branding.section.imageStyle")}</Label>
                     <Select value={state.imageStyle || "none"} onValueChange={(v) => update("imageStyle", v === "none" ? "" : v)}>
                       <SelectTrigger><SelectValue placeholder={t("branding.section.tonePlaceholder")} /></SelectTrigger>
                       <SelectContent>

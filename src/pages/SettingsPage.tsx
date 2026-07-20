@@ -183,21 +183,21 @@ export default function SettingsPage() {
           <SettingsCard title={t("settings.org.title")} description={t("settings.org.subtitle")}>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.org.name")}</Label>
+                <Label className="text-sm font-medium text-foreground">{t("settings.org.name")}</Label>
                 <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.org.contact")}</Label>
+                <Label className="text-sm font-medium text-foreground">{t("settings.org.contact")}</Label>
                 <Input value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} placeholder={t("settings.org.contactPlaceholder")} />
               </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.org.businessType")}</Label>
+                <Label className="text-sm font-medium text-foreground">{t("settings.org.businessType")}</Label>
                 <Input value={businessType} onChange={(e) => setBusinessType(e.target.value)} placeholder={t("settings.org.businessPlaceholder")} />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.org.website")}</Label>
+                <Label className="text-sm font-medium text-foreground">{t("settings.org.website")}</Label>
                 <Input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://" />
               </div>
             </div>
@@ -206,11 +206,11 @@ export default function SettingsPage() {
           <SettingsCard title={t("settings.contact.title")}>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Mail className="w-3 h-3" />{t("settings.contact.email")}</Label>
+                <Label className="text-sm font-medium text-foreground flex items-center gap-1.5"><Mail className="w-3 h-3" />{t("settings.contact.email")}</Label>
                 <Input value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Phone className="w-3 h-3" />{t("settings.contact.phone")}</Label>
+                <Label className="text-sm font-medium text-foreground flex items-center gap-1.5"><Phone className="w-3 h-3" />{t("settings.contact.phone")}</Label>
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+31..." />
               </div>
             </div>
@@ -219,16 +219,16 @@ export default function SettingsPage() {
           <SettingsCard title={t("settings.address.title")}>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.address.street")}</Label>
+                <Label className="text-sm font-medium text-foreground">{t("settings.address.street")}</Label>
                 <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t("settings.address.streetPlaceholder")} />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.address.city")}</Label>
+                <Label className="text-sm font-medium text-foreground">{t("settings.address.city")}</Label>
                 <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder={t("settings.org.cityPlaceholder")} />
               </div>
             </div>
             <div className="space-y-2 max-w-[200px]">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.address.postal")}</Label>
+              <Label className="text-sm font-medium text-foreground">{t("settings.address.postal")}</Label>
               <Input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="1234 AB" />
             </div>
           </SettingsCard>
@@ -278,21 +278,21 @@ export default function SettingsPage() {
             description={t("settings.venues.help")}
           >
             <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.venues.nameRequired")}</Label>
+              <Label className="text-sm font-medium text-foreground">{t("settings.venues.nameRequired")}</Label>
               <Input value={venueName} onChange={(e) => setVenueName(e.target.value)} placeholder={t("settings.venues.namePlaceholder")} />
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.address.street")}</Label>
+                <Label className="text-sm font-medium text-foreground">{t("settings.address.street")}</Label>
                 <Input value={venueAddress} onChange={(e) => setVenueAddress(e.target.value)} placeholder={t("settings.address.streetPlaceholder")} />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.address.city")}</Label>
+                <Label className="text-sm font-medium text-foreground">{t("settings.address.city")}</Label>
                 <Input value={venueCity} onChange={(e) => setVenueCity(e.target.value)} placeholder={t("settings.org.cityPlaceholder")} />
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("settings.address.postal")}</Label>
+              <Label className="text-sm font-medium text-foreground">{t("settings.address.postal")}</Label>
               <Input value={venuePostal} onChange={(e) => setVenuePostal(e.target.value)} placeholder="1234 AB" className="max-w-[200px]" />
             </div>
             <div className="flex gap-2">
