@@ -4,6 +4,29 @@
 
 Doorlopend genummerd, nieuwste entry bovenaan. Tijden Europe/Amsterdam.
 
+## #004 — 20-07-2026 — Bugfix
+Vastgelopen unsubscribe-afhandeling in de fan-out opgelost. Afgemelde contacten werden elke run opnieuw benaderd omdat de afmelding alleen in HighLevel stond en niet aan onze kant werd vastgelegd; elke run eindigde daardoor permanent op status "partial", wat echte fouten maskeerde.
+
+Wijzigingen (identiek toegepast in de drie kopieën van fan-out-sms.ts: clickwise-sync, event-reminder-cron, weekly-event-digest):
+- `sendMessage` geeft nu een veld `unsubscribed` terug, herkend aan de HighLevel-responsbody.
+- Nieuwe functie `markUnsubscribed` zet de tag `sms-unsubscribed` op het contact in HighLevel.
+- Nieuwe helper `keepContact` filtert in `fetchSubscribers` en `fetchSubscribersFallback` op: de tag `sms-unsubscribed`, `dnd === true`, en `dndSettings.SMS.status === "active"` (defensief, met optional chaining en per-skip logregel).
+- Afmeldingen tellen als `skipped_unsubscribed` in plaats van `failed`; een run met uitsluitend afmeldingen logt weer als "success".
+- Ook meegelogd in de payload van event-reminder-cron en weekly-event-digest.
+
+Templates, cron-registraties, kanaal- en taaldetectie, RLS en migraties zijn niet aangeraakt.
+
+### Beslissingen
+- Gekozen voor een niet-destructieve markering (tag `sms-unsubscribed` toevoegen) in plaats van het verwijderen van de `events`-tag, omdat tenants die tag mogelijk in eigen HighLevel-workflows gebruiken.
+- De DND-check is bewust defensief geschreven: bij ontbrekende velden gedraagt de code zich exact als voorheen, en blijft de tag het vangnet.
+
+### Bevindingen
+- Geverifieerd in HighLevel op het betrokken contact (7HmNzy0s8kz5JgnItuaj): de opt-out staat als "Text Messages" onder DND, terwijl "DND All Channels" uit staat. Een controle op alleen `dnd === true` zou dit geval dus gemist hebben; de kanaalspecifieke check is doorslaggevend.
+- HighLevel verwijdert bij een opt-out de `events`-tag niet, waardoor het contact zonder deze fix in de subscriberlijst bleef staan.
+
+### Openstaande punten
+- Nog te verifiëren in de functielogs van de eerstvolgende cron-run: of `POST /contacts/search` het `dndSettings`-object daadwerkelijk meestuurt. Zo niet, dan vangt de tag het op vanaf de tweede run.
+
 ## #003 — 20-07-2026 — Beslissing
 Correctie op #001/#002: custom domein txeventshare.nl blijkt al gekoppeld (DNS A-record wijst naar Lovable custom-domain-IP 185.158.133.1, bevestigd door eigenaar). Het "domeinbesluit" vervalt als blocker en als openstaand punt; de Lovable-API toont custom domeinen niet en rapporteert alleen de lovable.app-URL — daardoor ontstond de verkeerde aanname.
 
