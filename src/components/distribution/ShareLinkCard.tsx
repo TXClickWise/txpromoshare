@@ -37,7 +37,7 @@ export function ShareLinkCard({ url, eventId }: ShareLinkCardProps) {
 
       <div className="space-y-3">
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">{t("share.eventUrl")}</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">{t("share.eventUrl")}</p>
           <div className="flex gap-2">
             <code className="flex-1 text-xs bg-secondary p-2.5 rounded-lg text-muted-foreground overflow-x-auto font-mono">{url}</code>
             <Button variant="outline" size="sm" onClick={copyLink} className="shrink-0 h-9">
@@ -50,7 +50,7 @@ export function ShareLinkCard({ url, eventId }: ShareLinkCardProps) {
         </div>
 
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">{t("share.eventId")} <span className="normal-case">{t("share.eventIdHint")}</span></p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">{t("share.eventId")} <span className="normal-case">{t("share.eventIdHint")}</span></p>
           <div className="flex gap-2">
             <code className="flex-1 text-xs bg-secondary p-2.5 rounded-lg text-muted-foreground overflow-x-auto font-mono">{eventId}</code>
             <Button variant="outline" size="sm" onClick={copyId} className="shrink-0 h-9">

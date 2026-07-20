@@ -110,7 +110,7 @@ export function AiFieldActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="text-[10px] text-muted-foreground">AI acties</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-xs text-muted-foreground">AI acties</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {visibleActions.map((action) => (
           <DropdownMenuItem key={action.id} onClick={() => handleAction(action)} className="text-xs gap-2">

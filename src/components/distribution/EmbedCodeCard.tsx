@@ -44,7 +44,7 @@ export function EmbedCodeCard({ type, tenantSlug, eventSlug }: EmbedCodeCardProp
         </div>
         <div className="absolute top-2 right-2">
           <Select value={theme} onValueChange={setTheme}>
-            <SelectTrigger className="h-7 text-[10px] w-20 bg-background">
+            <SelectTrigger className="h-7 text-xs w-20 bg-background">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -60,8 +60,8 @@ export function EmbedCodeCard({ type, tenantSlug, eventSlug }: EmbedCodeCardProp
         <p className="text-xs text-muted-foreground leading-relaxed">{t("widgetWizard.embedDesc")}</p>
 
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">{t("distribution.embedTitle")}:</p>
-          <code className="block text-[11px] bg-secondary p-3 rounded-lg text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">{t("distribution.embedTitle")}:</p>
+          <code className="block text-xs bg-secondary p-3 rounded-lg text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">
             {code}
           </code>
         </div>

@@ -143,7 +143,7 @@ export function WidgetConfigPanel({ widget, events, onUpdated }: WidgetConfigPan
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-medium text-foreground">Beschrijvingen tonen</p>
-            <p className="text-[11px] text-muted-foreground">Korte beschrijving onder de titel</p>
+            <p className="text-xs text-muted-foreground">Korte beschrijving onder de titel</p>
           </div>
           <Switch checked={showDescription} onCheckedChange={setShowDescription} />
         </div>
@@ -151,7 +151,7 @@ export function WidgetConfigPanel({ widget, events, onUpdated }: WidgetConfigPan
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-medium text-foreground">Deelknoppen tonen</p>
-            <p className="text-[11px] text-muted-foreground">WhatsApp, Facebook, X, E-mail</p>
+            <p className="text-xs text-muted-foreground">WhatsApp, Facebook, X, E-mail</p>
           </div>
           <Switch checked={showShareButtons} onCheckedChange={setShowShareButtons} />
         </div>
@@ -166,7 +166,7 @@ export function WidgetConfigPanel({ widget, events, onUpdated }: WidgetConfigPan
       {/* Embed code */}
       <div className="space-y-3">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Embed code</p>
-        <code className="block text-[11px] bg-secondary p-3 rounded-lg text-muted-foreground whitespace-pre-wrap font-mono break-all">
+        <code className="block text-xs bg-secondary p-3 rounded-lg text-muted-foreground whitespace-pre-wrap font-mono break-all">
           {embedCode}
         </code>
         <Button variant="outline" size="sm" onClick={copyCode} className="gap-2 w-full">

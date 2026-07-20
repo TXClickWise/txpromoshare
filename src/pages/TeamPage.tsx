@@ -225,7 +225,7 @@ export default function TeamPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {ROLE_KEYS.map((key) => (
             <div key={key} className="flex items-start gap-2 p-2 rounded-lg hover:bg-secondary/50 transition-colors">
-              <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium mt-0.5 ${roleColors[key] || ""}`}>{roleLabel(key)}</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full border font-medium mt-0.5 ${roleColors[key] || ""}`}>{roleLabel(key)}</span>
               <p className="text-xs text-muted-foreground flex-1">{roleDesc(key)}</p>
             </div>
           ))}
@@ -245,11 +245,11 @@ export default function TeamPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{invite.email}</p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {t("team.invitedAt", { date: new Date(invite.created_at).toLocaleDateString(dateLocale) })} · {t("team.expiresAt", { date: new Date(invite.expires_at).toLocaleDateString(dateLocale) })}
                   </p>
                 </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${roleColors[invite.role] || ""}`}>
+                <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${roleColors[invite.role] || ""}`}>
                   {roleLabel(invite.role)}
                 </span>
               </div>
@@ -275,7 +275,7 @@ export default function TeamPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="font-medium text-foreground text-sm">{m.full_name}</p>
-                  {m.user_id === user?.id && <span className="text-[10px] font-medium text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-full">{t("team.you")}</span>}
+                  {m.user_id === user?.id && <span className="text-xs font-medium text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-full">{t("team.you")}</span>}
                 </div>
               </div>
 

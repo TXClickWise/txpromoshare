@@ -40,14 +40,14 @@ export function WidgetEmbedInstructions({ widgetId }: Props) {
       {/* Version + bottom offset controls */}
       <div className="rounded-lg border border-border bg-card p-3 space-y-3">
         <div>
-          <Label className="text-[11px] font-medium text-foreground mb-1.5 block">
+          <Label className="text-xs font-medium text-foreground mb-1.5 block">
             {t("embed.version.label")}
           </Label>
           <div className="flex gap-1.5">
             <button
               type="button"
               onClick={() => setVersion("1")}
-              className={`flex-1 text-[11px] px-3 py-1.5 rounded-md border transition-colors ${
+              className={`flex-1 text-xs px-3 py-1.5 rounded-md border transition-colors ${
                 version === "1"
                   ? "border-primary bg-primary/10 text-foreground font-medium"
                   : "border-border bg-background text-muted-foreground hover:text-foreground"
@@ -58,7 +58,7 @@ export function WidgetEmbedInstructions({ widgetId }: Props) {
             <button
               type="button"
               onClick={() => setVersion("2")}
-              className={`flex-1 text-[11px] px-3 py-1.5 rounded-md border transition-colors inline-flex items-center justify-center gap-1.5 ${
+              className={`flex-1 text-xs px-3 py-1.5 rounded-md border transition-colors inline-flex items-center justify-center gap-1.5 ${
                 version === "2"
                   ? "border-primary bg-primary/10 text-foreground font-medium"
                   : "border-border bg-background text-muted-foreground hover:text-foreground"
@@ -70,11 +70,11 @@ export function WidgetEmbedInstructions({ widgetId }: Props) {
               </span>
             </button>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">{t("embed.version.help")}</p>
+          <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{t("embed.version.help")}</p>
         </div>
 
         <div>
-          <Label className="text-[11px] font-medium text-foreground mb-1.5 block">
+          <Label className="text-xs font-medium text-foreground mb-1.5 block">
             {t("embed.bottomOffset.label")}
           </Label>
           <Input
@@ -87,9 +87,9 @@ export function WidgetEmbedInstructions({ widgetId }: Props) {
               const v = parseInt(e.target.value, 10);
               setBottomOffset(Number.isFinite(v) && v >= 0 ? Math.min(v, 200) : 0);
             }}
-            className="h-7 text-[11px]"
+            className="h-7 text-xs"
           />
-          <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">{t("embed.bottomOffset.help")}</p>
+          <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{t("embed.bottomOffset.help")}</p>
         </div>
       </div>
 
@@ -106,32 +106,32 @@ export function WidgetEmbedInstructions({ widgetId }: Props) {
             <span dangerouslySetInnerHTML={{ __html: t("embed.htmlInfo") }} />
           </InfoBox>
           <CodeBlock code={htmlSnippet} onCopy={() => copy("html", htmlSnippet)} copied={copiedKey === "html"} t={t} />
-          <p className="text-[11px] text-muted-foreground">{t("embed.htmlFooter")}</p>
+          <p className="text-xs text-muted-foreground">{t("embed.htmlFooter")}</p>
         </TabsContent>
 
         <TabsContent value="wordpress" className="space-y-3 mt-3">
           <InfoBox>
             <span dangerouslySetInnerHTML={{ __html: t("embed.wpInfo") }} />
           </InfoBox>
-          <ol className="text-[11px] text-muted-foreground space-y-1.5 list-decimal list-inside pl-1">
+          <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside pl-1">
             <li>{t("embed.wp.step1")}</li>
-            <li>{t("embed.wp.step2Pre")} <kbd className="px-1.5 py-0.5 rounded bg-secondary text-foreground text-[10px] font-mono">+</kbd> {t("embed.wp.step2Post")} <strong>Custom HTML</strong>.</li>
+            <li>{t("embed.wp.step2Pre")} <kbd className="px-1.5 py-0.5 rounded bg-secondary text-foreground text-xs font-mono">+</kbd> {t("embed.wp.step2Post")} <strong>Custom HTML</strong>.</li>
             <li>{t("embed.wp.step3")}</li>
             <li>{t("embed.wp.step4")}</li>
           </ol>
           <CodeBlock code={htmlSnippet} onCopy={() => copy("wp", htmlSnippet)} copied={copiedKey === "wp"} t={t} />
-          <p className="text-[11px] text-muted-foreground">{t("embed.wp.footer")}</p>
+          <p className="text-xs text-muted-foreground">{t("embed.wp.footer")}</p>
         </TabsContent>
 
         <TabsContent value="iframe" className="space-y-3 mt-3">
           <InfoBox tone="warning">{t("embed.iframeInfo")}</InfoBox>
           <CodeBlock code={iframeSnippet} onCopy={() => copy("iframe", iframeSnippet)} copied={copiedKey === "iframe"} t={t} />
-          <p className="text-[11px] text-muted-foreground" dangerouslySetInnerHTML={{ __html: t("embed.iframeFooter") }} />
+          <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: t("embed.iframeFooter") }} />
         </TabsContent>
 
         <TabsContent value="other" className="space-y-3 mt-3">
           <InfoBox>{t("embed.otherInfo")}</InfoBox>
-          <ul className="space-y-2 text-[11px]">
+          <ul className="space-y-2 text-xs">
             <PlatformRow name="Wix" hint="Voeg een 'Embed HTML' element toe en plak de HTML-snippet." />
             <PlatformRow name="Squarespace" hint="Gebruik een 'Code Block' en plak de HTML-snippet." />
             <PlatformRow name="Webflow" hint="Voeg een 'Embed' element toe en plak de HTML-snippet." />
@@ -140,7 +140,7 @@ export function WidgetEmbedInstructions({ widgetId }: Props) {
           </ul>
           <a
             href="mailto:info@txeventshare.nl?subject=Hulp%20bij%20widget%20embed"
-            className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
+            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
           >
             {t("embed.help")}<ExternalLink className="w-3 h-3" />
           </a>
@@ -153,14 +153,14 @@ export function WidgetEmbedInstructions({ widgetId }: Props) {
 function CodeBlock({ code, onCopy, copied, t }: { code: string; onCopy: () => void; copied: boolean; t: (k: string) => string }) {
   return (
     <div className="relative">
-      <code className="block text-[11px] bg-secondary p-3 pr-20 rounded-lg text-muted-foreground whitespace-pre-wrap font-mono break-all">
+      <code className="block text-xs bg-secondary p-3 pr-20 rounded-lg text-muted-foreground whitespace-pre-wrap font-mono break-all">
         {code}
       </code>
       <Button
         variant="outline"
         size="sm"
         onClick={onCopy}
-        className="absolute top-2 right-2 h-7 px-2 gap-1 text-[11px]"
+        className="absolute top-2 right-2 h-7 px-2 gap-1 text-xs"
       >
         {copied ? <Check className="w-3 h-3 text-accent" /> : <Copy className="w-3 h-3" />}
         {copied ? t("embed.copyOk") : t("embed.copy")}
@@ -174,8 +174,8 @@ function InfoBox({ children, tone = "info" }: { children: React.ReactNode; tone?
     <div
       className={
         tone === "warning"
-          ? "rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 text-[11px] text-foreground"
-          : "rounded-lg border border-primary/20 bg-primary/5 p-2.5 text-[11px] text-foreground"
+          ? "rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 text-xs text-foreground"
+          : "rounded-lg border border-primary/20 bg-primary/5 p-2.5 text-xs text-foreground"
       }
     >
       {children}

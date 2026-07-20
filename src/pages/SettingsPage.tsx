@@ -1,6 +1,5 @@
 import { Building2, Palette, MapPin, Phone, Mail, Save, Plus, Trash2, Upload, X, Globe, Bell, Shield, Key, ExternalLink } from "lucide-react";
 import { logAudit } from "@/lib/audit";
-import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "@/hooks/useUILanguage";
 import { Input } from "@/components/ui/input";
@@ -17,13 +16,13 @@ import BrandingTab from "@/components/settings/BrandingTab";
 
 function SettingsCard({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-card border border-border shadow-card p-6 space-y-5">
+    <div className="rounded-xl bg-card border border-border shadow-card p-6 space-y-5">
       <div>
         <p className="text-sm font-semibold text-foreground">{title}</p>
         {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
       {children}
-    </motion.div>
+    </div>
   );
 }
 
@@ -171,7 +170,7 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="organization">
-        <TabsList className="mb-6 flex-wrap h-auto gap-1">
+        <TabsList className="mb-6 gap-1 h-auto w-full sm:w-auto overflow-x-auto scrollbar-hidden flex-nowrap justify-start sm:flex-wrap">
           <TabsTrigger value="organization" className="gap-1.5 text-xs"><Building2 className="w-3.5 h-3.5" />{t("settings.tab.organization")}</TabsTrigger>
           <TabsTrigger value="branding" className="gap-1.5 text-xs"><Palette className="w-3.5 h-3.5" />{t("settings.tab.branding")}</TabsTrigger>
           <TabsTrigger value="venue" className="gap-1.5 text-xs"><MapPin className="w-3.5 h-3.5" />{t("settings.tab.venues")}</TabsTrigger>
@@ -254,7 +253,7 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-foreground text-sm truncate">{v.name}</p>
                       {v.is_primary && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent font-medium">{t("settings.venues.primary")}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{t("settings.venues.primary")}</span>
                       )}
                     </div>
                     {(v.address || v.city) && (
@@ -264,8 +263,8 @@ export default function SettingsPage() {
                     )}
                   </div>
                   <div className="flex gap-1 shrink-0">
-                    <Button variant="ghost" size="sm" onClick={() => editVenue(v)} className="text-xs h-7 px-2">{t("settings.venues.edit")}</Button>
-                    <Button variant="ghost" size="sm" onClick={() => deleteVenue(v.id)} className="text-destructive hover:text-destructive h-7 px-2">
+                    <Button variant="ghost" size="sm" onClick={() => editVenue(v)} className="text-xs min-h-11 sm:min-h-0 sm:h-7 px-3 sm:px-2">{t("settings.venues.edit")}</Button>
+                    <Button variant="ghost" size="sm" onClick={() => deleteVenue(v.id)} className="text-destructive hover:text-destructive min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 sm:h-7 px-3 sm:px-2">
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>

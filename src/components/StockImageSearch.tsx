@@ -152,7 +152,7 @@ export default function StockImageSearch({ open, onOpenChange, onImageSaved }: P
                     </div>
                   )}
                   <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p className="text-[10px] text-white truncate">
+                    <p className="text-xs text-white truncate">
                       📷 {img.photographer} • {img.source === "unsplash" ? "Unsplash" : "Pexels"}
                     </p>
                   </div>
@@ -162,7 +162,7 @@ export default function StockImageSearch({ open, onOpenChange, onImageSaved }: P
           )}
         </div>
 
-        <p className="text-[10px] text-muted-foreground text-center">
+        <p className="text-xs text-muted-foreground text-center">
           Foto's via Unsplash & Pexels — gratis voor commercieel gebruik
         </p>
       </DialogContent>

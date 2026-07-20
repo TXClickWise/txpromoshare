@@ -82,9 +82,9 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
             <Label className="text-xs text-muted-foreground">Einddatum</Label>
             <Input type="date" value={form.endDate} onChange={(e) => updateForm({ endDate: e.target.value })} min={form.startDate || undefined} />
             {form.endDate && form.startDate && form.endDate < form.startDate ? (
-              <p className="text-[11px] text-destructive">Einddatum moet op of na de startdatum liggen</p>
+              <p className="text-xs text-destructive">Einddatum moet op of na de startdatum liggen</p>
             ) : (
-              <p className="text-[11px] text-muted-foreground">Alleen invullen voor meerdaagse events</p>
+              <p className="text-xs text-muted-foreground">Alleen invullen voor meerdaagse events</p>
             )}
           </div>
         </div>
@@ -96,7 +96,7 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Eindtijd</Label>
             <Input type="time" value={form.endTime} onChange={(e) => updateForm({ endTime: e.target.value })} />
-            <p className="text-[11px] text-muted-foreground">Automatisch gezet op +3u — pas aan indien gewenst</p>
+            <p className="text-xs text-muted-foreground">Automatisch gezet op +3u — pas aan indien gewenst</p>
           </div>
         </div>
       </div>
@@ -185,7 +185,7 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
                     }`}
                   >
                     <span className="text-xs font-semibold block">{p.label}</span>
-                    <span className="text-[10px] opacity-70">{p.desc}</span>
+                    <span className="text-xs opacity-70">{p.desc}</span>
                   </button>
                 ))}
               </div>
@@ -312,12 +312,12 @@ export function StepDateTime({ form, updateForm, venues = [] }: StepDateTimeProp
                 <p className="text-xs font-medium text-muted-foreground">Eerste datums die gegenereerd worden:</p>
                 <div className="flex flex-wrap gap-1.5 mt-1">
                   {libGenerateDates(toRecurrenceInput(form)).slice(0, 8).map((d, i) => (
-                    <span key={i} className="text-[11px] bg-background rounded px-2 py-0.5 text-foreground border border-border">
+                    <span key={i} className="text-xs bg-background rounded px-2 py-0.5 text-foreground border border-border">
                       {new Date(d).toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short" })}
                     </span>
                   ))}
                   {libGenerateDates(toRecurrenceInput(form)).length > 8 && (
-                    <span className="text-[11px] text-muted-foreground px-2 py-0.5">
+                    <span className="text-xs text-muted-foreground px-2 py-0.5">
                       +{libGenerateDates(toRecurrenceInput(form)).length - 8} meer
                     </span>
                   )}

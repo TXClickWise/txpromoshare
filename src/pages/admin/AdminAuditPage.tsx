@@ -168,9 +168,9 @@ export default function AdminAuditPage() {
                     {format(new Date(a.created_at), "d MMM yy HH:mm", { locale: nl })}
                   </TableCell>
                   <TableCell className="text-sm font-medium">{a.tenant_name}</TableCell>
-                  <TableCell><Badge variant="outline" className="text-[10px] capitalize">{a.entity_type}</Badge></TableCell>
-                  <TableCell><Badge variant={actionColor(a.action) as any} className="text-[10px] capitalize">{a.action}</Badge></TableCell>
-                  <TableCell className="text-[10px] text-muted-foreground font-mono">{a.entity_id ? a.entity_id.slice(0, 8) : "—"}</TableCell>
+                  <TableCell><Badge variant="outline" className="text-xs capitalize">{a.entity_type}</Badge></TableCell>
+                  <TableCell><Badge variant={actionColor(a.action) as any} className="text-xs capitalize">{a.action}</Badge></TableCell>
+                  <TableCell className="text-xs text-muted-foreground font-mono">{a.entity_id ? a.entity_id.slice(0, 8) : "—"}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
                       <Eye className="w-3.5 h-3.5" />

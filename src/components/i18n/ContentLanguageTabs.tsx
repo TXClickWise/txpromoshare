@@ -22,7 +22,7 @@ export function ContentLanguageTabs({
 }: ContentLanguageTabsProps) {
   return (
     <div className={cn("flex items-center gap-2 flex-wrap", className)}>
-      <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">
+      <span className="text-xs uppercase tracking-wide text-muted-foreground mr-1">
         Content-taal
       </span>
       <div className="inline-flex rounded-lg bg-secondary p-0.5 gap-0.5">
@@ -62,12 +62,12 @@ export function ContentLanguageTabs({
         })}
       </div>
       {value === "nl" && (
-        <Badge variant="outline" className="text-[10px] gap-1 border-primary/30 text-primary">
+        <Badge variant="outline" className="text-xs gap-1 border-primary/30 text-primary">
           Bron
         </Badge>
       )}
       {value !== "nl" && !translatedLanguages.includes(value) && (
-        <Badge variant="outline" className="text-[10px] text-muted-foreground">
+        <Badge variant="outline" className="text-xs text-muted-foreground">
           Valt terug op NL
         </Badge>
       )}

@@ -100,8 +100,8 @@ export function AdminTenantUsagePanel({ tenantId, effectivePlanId }: Props) {
                     !atLimit && percent >= 80 && "[&>div]:bg-accent",
                   )}
                 />
-                {atLimit && <p className="text-[10px] text-destructive font-medium">Limiet bereikt</p>}
-                {!atLimit && percent >= 80 && <p className="text-[10px] text-muted-foreground">{percent}% gebruikt</p>}
+                {atLimit && <p className="text-xs text-destructive font-medium">Limiet bereikt</p>}
+                {!atLimit && percent >= 80 && <p className="text-xs text-muted-foreground">{percent}% gebruikt</p>}
               </div>
             );
           })}

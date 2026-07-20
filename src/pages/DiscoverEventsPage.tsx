@@ -284,14 +284,14 @@ function EventCard({ event: e, featured = false }: { event: DiscoverEvent; featu
           )}
           {featured && (
             <div className="absolute top-2 left-2">
-              <Badge className="bg-highlight text-highlight-foreground text-[10px] gap-1">
+              <Badge className="bg-highlight text-highlight-foreground text-xs gap-1">
                 <Star className="w-3 h-3 fill-current" />Uitgelicht
               </Badge>
             </div>
           )}
           {e.category_name && (
             <div className="absolute top-2 right-2">
-              <Badge variant="secondary" className="text-[10px]" style={e.category_color ? { backgroundColor: e.category_color, color: "#fff" } : {}}>
+              <Badge variant="secondary" className="text-xs" style={e.category_color ? { backgroundColor: e.category_color, color: "#fff" } : {}}>
                 {e.category_name}
               </Badge>
             </div>
@@ -315,7 +315,7 @@ function EventCard({ event: e, featured = false }: { event: DiscoverEvent; featu
             </div>
           )}
           {e.tenant_name && (
-            <p className="text-[11px] text-muted-foreground/70">door {e.tenant_name}</p>
+            <p className="text-xs text-muted-foreground/70">door {e.tenant_name}</p>
           )}
         </div>
       </Link>

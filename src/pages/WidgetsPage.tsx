@@ -180,17 +180,17 @@ export default function WidgetsPage() {
       <div className="rounded-xl bg-secondary/30 border border-border p-4">
         <div className="flex items-center gap-4 justify-center text-xs text-muted-foreground flex-wrap">
           <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full gradient-hero text-primary-foreground text-[10px] font-bold flex items-center justify-center">1</span>
+            <span className="w-6 h-6 rounded-full gradient-hero text-primary-foreground text-xs font-bold flex items-center justify-center">1</span>
             {t("widgets.step1")}
           </div>
           <span className="text-muted-foreground/30">→</span>
           <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full gradient-hero text-primary-foreground text-[10px] font-bold flex items-center justify-center">2</span>
+            <span className="w-6 h-6 rounded-full gradient-hero text-primary-foreground text-xs font-bold flex items-center justify-center">2</span>
             {t("widgets.step2")}
           </div>
           <span className="text-muted-foreground/30">→</span>
           <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full gradient-hero text-primary-foreground text-[10px] font-bold flex items-center justify-center">3</span>
+            <span className="w-6 h-6 rounded-full gradient-hero text-primary-foreground text-xs font-bold flex items-center justify-center">3</span>
             {t("widgets.step3")}
           </div>
         </div>

@@ -81,14 +81,14 @@ export function AdminTenantOverridePanel({ basePlan, overrides }: Props) {
 
         {history.length > 0 && (
           <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Geschiedenis</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Geschiedenis</p>
             <div className="space-y-1">
               {history.map((o) => (
                 <div key={o.id} className="flex items-center justify-between text-xs py-1.5 px-2 rounded bg-secondary/30">
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="capitalize text-[10px] px-1.5 py-0">{o.original_plan_slug}</Badge>
+                    <Badge variant="outline" className="capitalize text-xs px-1.5 py-0">{o.original_plan_slug}</Badge>
                     <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                    <Badge variant="secondary" className="capitalize text-[10px] px-1.5 py-0">{o.override_plan_slug}</Badge>
+                    <Badge variant="secondary" className="capitalize text-xs px-1.5 py-0">{o.override_plan_slug}</Badge>
                     <span className="text-muted-foreground">
                       {o.reverted_at ? "teruggedraaid" : "verlopen"}
                     </span>

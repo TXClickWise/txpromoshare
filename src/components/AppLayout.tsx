@@ -122,7 +122,7 @@ export default function AppLayout() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 flex items-center gap-4 px-4 py-3 bg-background/80 backdrop-blur-sm border-b border-border lg:px-6">
+        <header className="lg:sticky lg:top-0 z-30 flex items-center gap-4 px-4 py-3 bg-background/80 backdrop-blur-sm border-b border-border lg:px-6">
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-foreground">
             <Menu className="w-5 h-5" />
           </button>

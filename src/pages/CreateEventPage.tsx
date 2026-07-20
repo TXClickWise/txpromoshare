@@ -60,11 +60,11 @@ function SaveIndicator({ saving, autosaving, isDirty, lastSavedAt }: {
     );
   }
   if (isDirty) {
-    return <span className="text-xs text-highlight">• Niet opgeslagen</span>;
+    return <span className="text-xs text-warning font-medium">• Niet opgeslagen</span>;
   }
   if (lastSavedAt) {
     return (
-      <span className="flex items-center gap-1.5 text-xs text-accent">
+      <span className="flex items-center gap-1.5 text-xs text-success">
         <CheckCircle2 className="w-3 h-3" />
         Concept opgeslagen · {formatRelativeTime(lastSavedAt)}
       </span>
@@ -84,6 +84,16 @@ export default function CreateEventPage() {
     ...(showOccurrences ? [OCCURRENCES_STEP] : []),
     ...(showTranslations ? [TRANSLATIONS_STEP] : []),
   ];
+
+  const scrollToWizardTop = () => {
+    // Scroll near top; the sticky wizard header sits at the top of the viewport.
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  };
+
+  const setStep = (step: number) => {
+    setCurrentStep(step);
+    scrollToWizardTop();
+  };
 
   // Browser-level guard for unsaved changes (refresh/close tab)
   useEffect(() => {
@@ -115,14 +125,14 @@ export default function CreateEventPage() {
     if (currentStep < maxStep && canGoNext()) {
       const ids = STEPS.map(s => s.id);
       const i = ids.indexOf(currentStep);
-      if (i < ids.length - 1) setCurrentStep(ids[i + 1]);
+      if (i < ids.length - 1) { setCurrentStep(ids[i + 1]); scrollToWizardTop(); }
     }
   };
 
   const goPrev = () => {
     const ids = STEPS.map(s => s.id);
     const i = ids.indexOf(currentStep);
-    if (i > 0) setCurrentStep(ids[i - 1]);
+    if (i > 0) { setCurrentStep(ids[i - 1]); scrollToWizardTop(); }
   };
 
   if (ctx.loading) {
@@ -196,7 +206,7 @@ export default function CreateEventPage() {
         <WizardProgress
           steps={STEPS}
           currentStep={currentStep}
-          onStepClick={setCurrentStep}
+          onStepClick={setStep}
           completedSteps={completedSteps}
         />
       </div>
@@ -263,9 +273,9 @@ export default function CreateEventPage() {
       {/* Navigation buttons */}
       <div className="mt-8 pt-6 border-t border-border space-y-3">
         {!canGoNext() && currentStep < maxStep && (
-          <div className="rounded-lg bg-highlight/5 border border-highlight/20 px-3 py-2">
-            <p className="text-[11px] text-muted-foreground">
-              <span className="text-highlight font-medium">Bijna goed</span> — vul nog in:{" "}
+          <div className="rounded-lg bg-warning/10 border border-warning/30 px-3 py-2">
+            <p className="text-xs text-foreground">
+              <span className="text-warning font-semibold">Bijna goed</span> — vul nog in:{" "}
               {ctx.validateStep(currentStep).errors.join(" · ")}
             </p>
           </div>

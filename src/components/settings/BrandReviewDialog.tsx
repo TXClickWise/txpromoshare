@@ -60,7 +60,7 @@ function ConfidencePill({ level }: { level?: "high" | "medium" | "low" }) {
     low: "bg-rose-500/10 text-rose-700 dark:text-rose-400",
   };
   const labels = { high: "Zeker", medium: "Waarschijnlijk", low: "Onzeker" };
-  return <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${styles[level]}`}>{labels[level]}</span>;
+  return <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${styles[level]}`}>{labels[level]}</span>;
 }
 
 function ColorSwatch({ value }: { value?: string }) {
@@ -193,7 +193,7 @@ export default function BrandReviewDialog({ open, onClose, scraped, current, has
                 </div>
 
                 <div className="rounded-lg border border-border overflow-hidden">
-                  <div className="grid grid-cols-[auto_1fr_auto_1fr_auto] items-center gap-3 px-3 py-2 bg-muted/40 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                  <div className="grid grid-cols-[auto_1fr_auto_1fr_auto] items-center gap-3 px-3 py-2 bg-muted/40 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     <span></span>
                     <span>Huidig</span>
                     <span></span>
@@ -210,12 +210,12 @@ export default function BrandReviewDialog({ open, onClose, scraped, current, has
                         onCheckedChange={(v) => setSelected((s) => ({ ...s, [field]: !!v }))}
                       />
                       <div className="min-w-0">
-                        <p className="text-[10px] text-muted-foreground mb-0.5">{FIELD_LABELS[field]}</p>
+                        <p className="text-xs text-muted-foreground mb-0.5">{FIELD_LABELS[field]}</p>
                         <ValueDisplay field={field} value={currentValues[field]} />
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-[10px] text-muted-foreground mb-0.5">Nieuw</p>
+                        <p className="text-xs text-muted-foreground mb-0.5">Nieuw</p>
                         <ValueDisplay field={field} value={proposals[field]} />
                       </div>
                       <ConfidencePill level={scraped?.confidence[field]} />
@@ -232,7 +232,7 @@ export default function BrandReviewDialog({ open, onClose, scraped, current, has
                     />
                     <div className="space-y-0.5">
                       <p className="text-xs font-medium text-foreground">Logo ook syncen naar ClickWise subaccount</p>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         Standaard uit — geïmporteerde logo's kunnen banners of favicons zijn. Vink aan als je zeker weet dat dit het juiste logo is.
                       </p>
                     </div>

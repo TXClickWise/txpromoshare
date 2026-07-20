@@ -101,7 +101,7 @@ export function AdminNotesPanel({ entityType, entityId, notes, onChange }: Props
             <div key={n.id} className="group p-3 rounded-lg bg-secondary/40 border border-border">
               <p className="text-sm text-foreground whitespace-pre-wrap">{n.content}</p>
               <div className="flex items-center justify-between mt-2">
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {format(new Date(n.created_at), "d MMM yyyy 'om' HH:mm", { locale: nl })}
                 </p>
                 <Button

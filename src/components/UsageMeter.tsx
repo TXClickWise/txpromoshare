@@ -50,14 +50,14 @@ export function UsageMeter({ metric, current, label }: UsageMeterProps) {
       {atLimit && !isUnlimited && (
         <Link
           to="/app/billing"
-          className="inline-flex items-center gap-1 text-[11px] text-primary font-medium hover:underline"
+          className="inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline"
         >
           Limiet bereikt — bekijk opties voor meer {metricLabels[metric]}
           <ArrowRight className="w-3 h-3" />
         </Link>
       )}
       {nearLimit && !atLimit && (
-        <p className="text-[11px] text-muted-foreground">Je nadert je limiet ({percent}%)</p>
+        <p className="text-xs text-muted-foreground">Je nadert je limiet ({percent}%)</p>
       )}
     </div>
   );

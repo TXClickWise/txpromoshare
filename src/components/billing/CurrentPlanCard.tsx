@@ -42,7 +42,7 @@ export function CurrentPlanCard({
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-display font-bold text-foreground text-lg">{t("nav.plan", { plan: preset.name })}</h3>
               {hasOverride && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/15 text-accent text-[10px] font-semibold uppercase tracking-wide">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/15 text-accent text-xs font-semibold uppercase tracking-wide">
                   <Sparkles className="w-3 h-3" /> {t("billing.tempUpgrade")}
                 </span>
               )}

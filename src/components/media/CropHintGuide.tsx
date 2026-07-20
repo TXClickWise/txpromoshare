@@ -113,7 +113,7 @@ export function CropHintGuide({ imageUrl, imageWidth, imageHeight, role, classNa
           </div>
           <div>
             <p className="text-xs font-semibold text-foreground">{spec.label}</p>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {spec.ratio} • min {spec.minWidth}×{spec.minHeight}px
             </p>
           </div>
@@ -121,7 +121,7 @@ export function CropHintGuide({ imageUrl, imageWidth, imageHeight, role, classNa
         {hasMeta && (
           <span
             className={cn(
-              "text-[10px] px-2 py-0.5 rounded-full font-medium",
+              "text-xs px-2 py-0.5 rounded-full font-medium",
               tooSmall
                 ? "bg-destructive/10 text-destructive"
                 : "bg-primary/10 text-primary"
@@ -160,12 +160,12 @@ export function CropHintGuide({ imageUrl, imageWidth, imageHeight, role, classNa
           <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
           <div className="space-y-0.5">
             {tooSmall && (
-              <p className="text-[11px] text-destructive">
+              <p className="text-xs text-destructive">
                 Resolutie te laag — minimaal {spec.minWidth}×{spec.minHeight}px aanbevolen.
               </p>
             )}
             {ratioMismatch && !tooSmall && (
-              <p className="text-[11px] text-destructive">
+              <p className="text-xs text-destructive">
                 Verhouding wijkt af — afbeelding wordt bijgesneden naar {spec.ratio}.
               </p>
             )}
@@ -174,7 +174,7 @@ export function CropHintGuide({ imageUrl, imageWidth, imageHeight, role, classNa
       )}
 
       <div className="space-y-1">
-        <p className="text-[10px] text-muted-foreground">{spec.description}</p>
+        <p className="text-xs text-muted-foreground">{spec.description}</p>
         <div className="flex flex-wrap gap-1">
           {spec.usage.map((u) => (
             <span
@@ -218,7 +218,7 @@ export function RolePresetSwitcher({
             type="button"
             onClick={() => onChange(key)}
             className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all",
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all",
               isActive
                 ? "bg-card shadow-sm text-foreground"
                 : "text-muted-foreground hover:text-foreground"

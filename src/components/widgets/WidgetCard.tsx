@@ -32,7 +32,7 @@ export function WidgetCard({ widget, isSelected, copied, onSelect, onCopy, onTog
             {widget.type === "agenda" ? t("widgets.typeAgenda") : t("widgets.typeSingle")}
           </p>
         </div>
-        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
           widget.is_active ? "bg-accent/20 text-accent" : "bg-muted text-muted-foreground"
         }`}>
           {widget.is_active ? t("common.active") : t("common.inactive")}

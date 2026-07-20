@@ -77,7 +77,7 @@ export function ShareTextCard({
           {icon}
           <div className="min-w-0">
             <h3 className="font-display font-semibold text-foreground text-sm truncate">{title}</h3>
-            <p className="text-[11px] text-muted-foreground truncate">{description}</p>
+            <p className="text-xs text-muted-foreground truncate">{description}</p>
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -117,7 +117,7 @@ export function ShareTextCard({
           />
           <div className="flex items-center justify-between">
             {charLimit && (
-              <span className={`text-[10px] ${isOverLimit ? "text-destructive" : "text-muted-foreground"}`}>
+              <span className={`text-xs ${isOverLimit ? "text-destructive" : "text-muted-foreground"}`}>
                 {editText.length}/{charLimit}
               </span>
             )}
@@ -139,7 +139,7 @@ export function ShareTextCard({
           {copied ? "Gekopieerd!" : "Kopieer"}
         </Button>
         {charLimit && (
-          <span className={`text-[10px] ${isOverLimit ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+          <span className={`text-xs ${isOverLimit ? "text-destructive font-medium" : "text-muted-foreground"}`}>
             {charCount} tekens{charLimit ? ` / ${charLimit}` : ""}
           </span>
         )}

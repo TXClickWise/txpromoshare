@@ -48,12 +48,12 @@ export function PlanComparisonTable({
             )}
           >
             {isCurrent && (
-              <span className="absolute -top-2.5 left-4 px-2.5 py-0.5 rounded-full gradient-hero text-primary-foreground text-[10px] font-bold uppercase tracking-wide">
+              <span className="absolute -top-2.5 left-4 px-2.5 py-0.5 rounded-full gradient-hero text-primary-foreground text-xs font-bold uppercase tracking-wide">
                 {t("plans.currentBadge")}
               </span>
             )}
             {!isCurrent && isRecommended && (
-              <span className="absolute -top-2.5 left-4 px-2.5 py-0.5 rounded-full gradient-accent text-accent-foreground text-[10px] font-bold uppercase tracking-wide flex items-center gap-1">
+              <span className="absolute -top-2.5 left-4 px-2.5 py-0.5 rounded-full gradient-accent text-accent-foreground text-xs font-bold uppercase tracking-wide flex items-center gap-1">
                 <Sparkles className="w-3 h-3" /> {t("plans.recommendedBadge")}
               </span>
             )}
@@ -75,7 +75,7 @@ export function PlanComparisonTable({
               ))}
             </ul>
 
-            <p className="mt-4 text-[11px] text-muted-foreground italic">{plan.bestFor}</p>
+            <p className="mt-4 text-xs text-muted-foreground italic">{plan.bestFor}</p>
 
             <Button
               variant={isCurrent ? "outline" : "default"}

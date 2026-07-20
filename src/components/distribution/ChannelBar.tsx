@@ -123,7 +123,7 @@ export function ChannelBar({ shareUrl, previewShareUrl, whatsappText, socialText
             onClick={() => handleClick(ch.id)}
           >
             <ch.icon className="w-5 h-5" />
-            <span className="text-[10px] font-medium">{ch.label}</span>
+            <span className="text-xs font-medium">{ch.label}</span>
           </button>
         ))}
       </div>

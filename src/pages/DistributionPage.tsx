@@ -1,6 +1,5 @@
 import { Share2, Smartphone, Zap, BarChart3, ArrowRight, Sparkles, Loader2, Globe, Mail, QrCode, Code2, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useTranslation } from "@/hooks/useUILanguage";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -300,7 +299,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
               <SelectItem key={e.id} value={e.id}>
                 <div className="flex items-center gap-2">
                   <span className="truncate">{e.title}</span>
-                  <span className="text-[10px] text-muted-foreground shrink-0">
+                  <span className="text-xs text-muted-foreground shrink-0">
                     {new Date(e.start_date).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })}
                   </span>
                 </div>
@@ -317,15 +316,12 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
             <Share2 className="w-3.5 h-3.5 text-primary" />
           </div>
           <h2 className="text-sm font-display font-semibold text-foreground">{t("distribution.section1")}</h2>
-          <span className="text-[11px] text-muted-foreground hidden sm:inline">{t("distribution.section1Hint2")}</span>
+          <span className="text-xs text-muted-foreground hidden sm:inline">{t("distribution.section1Hint2")}</span>
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          <ShareLinkCard url={publicShareUrl} eventId={event.id} />
-        </motion.div>
+        <ShareLinkCard url={publicShareUrl} eventId={event.id} />
 
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <ChannelBar
+        <ChannelBar
             shareUrl={publicShareUrl}
             previewShareUrl={ogProxyUrl}
             whatsappText={getText("whatsapp")}
@@ -335,12 +331,10 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
             onChannelClick={trackAction}
             onShowQR={() => setShowQR(true)}
           />
-        </motion.div>
       </section>
 
       {/* ─────────── SECTIE 2: KWALITEITSCHECK ─────────── */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <QualityCheck
+      <QualityCheck
           event={event}
           texts={{
             whatsapp: getText("whatsapp"),
@@ -353,7 +347,6 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
             website: getText("website"),
           }}
         />
-      </motion.div>
 
       {/* ─────────── SECTIE 3: COPY PER KANAAL ─────────── */}
       <section className="space-y-4 pt-2">
@@ -362,7 +355,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
             <Sparkles className="w-3.5 h-3.5 text-primary" />
           </div>
           <h2 className="text-sm font-display font-semibold text-foreground">{t("distribution.section2")}</h2>
-          <span className="text-[11px] text-muted-foreground hidden sm:inline">{t("distribution.section2Hint2")}</span>
+          <span className="text-xs text-muted-foreground hidden sm:inline">{t("distribution.section2Hint2")}</span>
         </div>
 
       {/* WhatsApp — kort & medium variants */}
@@ -500,7 +493,7 @@ ${tenant?.tone_of_voice ? `Tone of voice: ${tenant.tone_of_voice}` : ""}`;
             <Code2 className="w-3.5 h-3.5 text-primary" />
           </div>
           <h2 className="text-sm font-display font-semibold text-foreground">{t("distribution.section3")}</h2>
-          <span className="text-[11px] text-muted-foreground hidden sm:inline">— {t("distribution.section3Hint")}</span>
+          <span className="text-xs text-muted-foreground hidden sm:inline">— {t("distribution.section3Hint")}</span>
         </div>
 
         <div className="p-4 sm:p-5 rounded-xl bg-card border border-border shadow-card flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">

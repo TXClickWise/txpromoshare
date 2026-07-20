@@ -203,7 +203,7 @@ export default function LogoUploader({
           <p className="text-xs text-muted-foreground mt-1">
             PNG, SVG, JPG of WebP • min. {MIN_DIMENSION}×{MIN_DIMENSION}px • max 5MB
           </p>
-          <p className="text-[11px] text-muted-foreground/80 mt-2">
+          <p className="text-xs text-muted-foreground/80 mt-2">
             Tip: gebruik een transparante PNG of SVG voor de beste weergave op kleur
           </p>
 
@@ -359,7 +359,7 @@ function PreviewTile({
           }}
         />
       </div>
-      <div className={cn("text-[10px] font-medium uppercase tracking-wider text-center py-1.5", textColor)}>
+      <div className={cn("text-xs font-medium uppercase tracking-wider text-center py-1.5", textColor)}>
         {label}
       </div>
     </div>

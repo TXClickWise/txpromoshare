@@ -66,14 +66,14 @@ export function WidgetPreview({ widget }: WidgetPreviewProps) {
             <button
               type="button"
               onClick={() => setVersion("1")}
-              className={`text-[10px] px-2 py-0.5 rounded ${version === "1" ? "bg-secondary text-foreground font-medium" : "text-muted-foreground"}`}
+              className={`text-xs px-2 py-0.5 rounded ${version === "1" ? "bg-secondary text-foreground font-medium" : "text-muted-foreground"}`}
             >
               v1
             </button>
             <button
               type="button"
               onClick={() => setVersion("2")}
-              className={`text-[10px] px-2 py-0.5 rounded ${version === "2" ? "bg-secondary text-foreground font-medium" : "text-muted-foreground"}`}
+              className={`text-xs px-2 py-0.5 rounded ${version === "2" ? "bg-secondary text-foreground font-medium" : "text-muted-foreground"}`}
             >
               v2
             </button>
@@ -136,7 +136,7 @@ export function WidgetPreview({ widget }: WidgetPreviewProps) {
         </MobileFrame>
       )}
 
-      <p className="text-[11px] text-muted-foreground text-center">
+      <p className="text-xs text-muted-foreground text-center">
         Preview wordt automatisch geschaald op basis van inhoud.
       </p>
     </div>
@@ -153,7 +153,7 @@ function DesktopFrame({ children }: { children: React.ReactNode }) {
           <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30" />
           <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30" />
         </div>
-        <div className="flex-1 mx-2 px-3 py-1 rounded-md bg-muted text-[11px] text-muted-foreground truncate">
+        <div className="flex-1 mx-2 px-3 py-1 rounded-md bg-muted text-xs text-muted-foreground truncate">
           jouwwebsite.nl
         </div>
       </div>

@@ -143,7 +143,7 @@ export default function IntegrationsPage() {
                   {status === "error" && <AlertCircle className="w-3 h-3 mr-1" />}
                   {isConnected ? "Verbonden" : status === "error" ? "Fout" : "Niet verbonden"}
                 </Badge>
-                <Badge variant="outline" className="text-[10px]">Pro plan</Badge>
+                <Badge variant="outline" className="text-xs">Pro plan</Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 Koppel je ClickWise subaccount om eventdata, contacten en teamleden automatisch te synchroniseren met je CRM.
@@ -192,12 +192,12 @@ export default function IntegrationsPage() {
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-foreground">API Key (sub-account)</label>
                     <Input type="password" placeholder="pit-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="h-9 font-mono text-xs" />
-                    <p className="text-[11px] text-muted-foreground">Ga naar Settings → Business Profile → API Keys in je ClickWise sub-account</p>
+                    <p className="text-xs text-muted-foreground">Ga naar Settings → Business Profile → API Keys in je ClickWise sub-account</p>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-foreground">Calendar ID</label>
                     <Input placeholder="bijv. TiR5CHmHCYXM16aZbq7g" value={calendarId} onChange={(e) => setCalendarId(e.target.value)} className="h-9 font-mono text-xs" />
-                    <p className="text-[11px] text-muted-foreground">ID van je Event Calendar in ClickWise (Calendars → klik op kalender → URL)</p>
+                    <p className="text-xs text-muted-foreground">ID van je Event Calendar in ClickWise (Calendars → klik op kalender → URL)</p>
                   </div>
                   <Button onClick={() => connect(subaccountId, apiKey, calendarId)} disabled={!subaccountId.trim() || !apiKey.trim() || syncing} className="gap-2 gradient-hero text-primary-foreground border-0 hover:opacity-90 h-9 w-fit">
                     <Link2 className="w-4 h-4" />{syncing ? "Bezig…" : "Verbinden"}
@@ -209,7 +209,7 @@ export default function IntegrationsPage() {
                     <Users className="w-3.5 h-3.5" />{syncing ? "Bezig…" : "Automatisch sub-account aanmaken"}
                   </Button>
                 </div>
-                <p className="text-[11px] text-muted-foreground/60">Je API key wordt veilig opgeslagen en is nooit zichtbaar.</p>
+                <p className="text-xs text-muted-foreground/60">Je API key wordt veilig opgeslagen en is nooit zichtbaar.</p>
               </motion.div>
             ) : (
               <motion.div key="connected" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
@@ -263,7 +263,7 @@ export default function IntegrationsPage() {
                     <div key={s.label} className="rounded-lg border border-border bg-card p-4 text-center">
                       <s.icon className={`w-4 h-4 mx-auto mb-1 ${s.color || "text-muted-foreground"}`} />
                       <p className={`text-2xl font-bold ${s.color || "text-foreground"}`}>{s.value}</p>
-                      <p className="text-[10px] text-muted-foreground">{s.label}</p>
+                      <p className="text-xs text-muted-foreground">{s.label}</p>
                     </div>
                   ))}
                 </div>
@@ -295,7 +295,7 @@ export default function IntegrationsPage() {
                     <div className="space-y-1.5 sm:col-span-2">
                       <label className="text-xs font-medium text-foreground">URL-template voor eventpagina's</label>
                       <Input value={eventPageUrlTemplate} onChange={(e) => setEventPageUrlTemplate(e.target.value)} placeholder="https://mijnsite.nl/event/{slug}" className="h-9 text-sm font-mono" />
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         Gebruik {"{slug}"} als placeholder voor de event-slug. Laat leeg om de standaard TX EventShare URL te gebruiken.
                       </p>
                     </div>
@@ -333,7 +333,7 @@ export default function IntegrationsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium text-foreground">{meta.label}</p>
-                      <code className="text-[10px] font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground">{meta.trigger}</code>
+                      <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground">{meta.trigger}</code>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">{meta.description}</p>
                   </div>
@@ -350,10 +350,10 @@ export default function IntegrationsPage() {
             <div className="flex items-center gap-2">
               <ArrowRight className="w-4 h-4 text-primary" />
               <h4 className="font-display font-semibold text-sm text-foreground">Webhook endpoint</h4>
-              <Badge variant="outline" className="text-[10px]">Automatisch</Badge>
+              <Badge variant="outline" className="text-xs">Automatisch</Badge>
             </div>
             <p className="text-xs text-muted-foreground">Inkomende webhooks van ClickWise worden automatisch verwerkt via het platform.</p>
-            <code className="block text-[11px] font-mono bg-muted/50 p-2 rounded text-muted-foreground break-all">
+            <code className="block text-xs font-mono bg-muted/50 p-2 rounded text-muted-foreground break-all">
               https://api.txeventshare.nl/webhooks/clickwise/{tenant?.id ?? "{tenant_id}"}
             </code>
           </div>
@@ -385,16 +385,16 @@ export default function IntegrationsPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-medium text-foreground truncate">{typeLabel}</p>
                         {method && <Badge variant="outline" className="text-[9px]">{method}</Badge>}
-                        <Badge variant={log.status === "success" ? "default" : "destructive"} className="text-[10px]">{log.status}</Badge>
+                        <Badge variant={log.status === "success" ? "default" : "destructive"} className="text-xs">{log.status}</Badge>
                       </div>
                       {eventTitle && (
                         <p className="text-xs text-muted-foreground truncate mt-0.5">{eventTitle}</p>
                       )}
                       {log.response_status && log.status === "failed" && (
-                        <p className="text-[11px] text-destructive mt-0.5">HTTP {log.response_status}</p>
+                        <p className="text-xs text-destructive mt-0.5">HTTP {log.response_status}</p>
                       )}
                     </div>
-                    <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
                       {formatDistanceToNow(new Date(log.attempted_at), { addSuffix: true, locale: nl })}
                     </span>
                   </div>
@@ -419,7 +419,7 @@ export default function IntegrationsPage() {
           <div className="flex-1">
             <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
               Ticketing Module
-              <Badge variant="outline" className="text-[10px]">{t("common.futureModule")}</Badge>
+              <Badge variant="outline" className="text-xs">{t("common.futureModule")}</Badge>
             </h3>
             <p className="text-sm text-muted-foreground mt-1">Mollie & Stripe betalingen, QR-codes, scannen, mobile wallet</p>
           </div>
@@ -478,7 +478,7 @@ const { events, pagination } = await res.json();`;
             <Badge variant={enabled ? "default" : "secondary"} className={enabled ? "bg-accent text-accent-foreground" : ""}>
               {enabled ? "Actief" : "Uit"}
             </Badge>
-            <Badge variant="outline" className="text-[10px]">JSON · CORS open · 5 min cache</Badge>
+            <Badge variant="outline" className="text-xs">JSON · CORS open · 5 min cache</Badge>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
             Read-only JSON-feed van je gepubliceerde events voor externe websites. Geen authenticatie nodig.
@@ -511,20 +511,20 @@ const { events, pagination } = await res.json();`;
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-medium text-foreground">curl</label>
-              <Button variant="ghost" size="sm" onClick={() => copy(curlExample, "curl voorbeeld")} className="h-6 text-[10px] gap-1">
+              <Button variant="ghost" size="sm" onClick={() => copy(curlExample, "curl voorbeeld")} className="h-6 text-xs gap-1">
                 <Copy className="w-3 h-3" />Kopieer
               </Button>
             </div>
-            <pre className="text-[11px] font-mono bg-muted/50 p-3 rounded border border-border overflow-x-auto whitespace-pre-wrap break-all">{curlExample}</pre>
+            <pre className="text-xs font-mono bg-muted/50 p-3 rounded border border-border overflow-x-auto whitespace-pre-wrap break-all">{curlExample}</pre>
           </div>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-medium text-foreground">JS fetch</label>
-              <Button variant="ghost" size="sm" onClick={() => copy(fetchExample, "JS voorbeeld")} className="h-6 text-[10px] gap-1">
+              <Button variant="ghost" size="sm" onClick={() => copy(fetchExample, "JS voorbeeld")} className="h-6 text-xs gap-1">
                 <Copy className="w-3 h-3" />Kopieer
               </Button>
             </div>
-            <pre className="text-[11px] font-mono bg-muted/50 p-3 rounded border border-border overflow-x-auto whitespace-pre">{fetchExample}</pre>
+            <pre className="text-xs font-mono bg-muted/50 p-3 rounded border border-border overflow-x-auto whitespace-pre">{fetchExample}</pre>
           </div>
         </div>
 

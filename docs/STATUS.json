@@ -1,7 +1,7 @@
 {
   "fase": "Fase 9 (ClickWise-integratie) afgerond; Fase 10 (validatie & lancering) niet gestart",
   "procent_klaar": 85,
-  "huidige_focus": "Geen actieve bouwfocus — laatste edit 06-05-2026; nulmeting documentatie gezet 20-07-2026",
+  "huidige_focus": "Onderhoud op de draaiende productie-app; laatste wijziging 20-07-2026 (unsubscribe-fix in de fan-out). Fase 10 nog niet opgepakt.",
   "blockers": [
     "Volgende fase/prioriteit moet gekozen worden voordat er verder gebouwd wordt"
   ],

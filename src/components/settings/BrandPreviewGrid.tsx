@@ -44,7 +44,7 @@ function EventCardMockup({ state, compact = false }: { state: BrandPreviewState;
       <div className="p-3 space-y-2">
         <div className="flex items-center gap-2">
           <div className="text-center rounded-md px-2 py-1" style={{ backgroundColor: state.primaryColor + "15" }}>
-            <p className="text-[10px] font-bold leading-none" style={{ color: state.primaryColor }}>25 apr</p>
+            <p className="text-xs font-bold leading-none" style={{ color: state.primaryColor }}>25 apr</p>
             <p className="text-[9px] text-gray-500 mt-0.5">20:00</p>
           </div>
           <div className="min-w-0">
@@ -83,7 +83,7 @@ function AgendaWidgetMockup({ state }: { state: BrandPreviewState }) {
             <p className="text-[9px] text-gray-500 mt-0.5">{ev.time}</p>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-semibold text-gray-900 truncate">{ev.title}</p>
+            <p className="text-xs font-semibold text-gray-900 truncate">{ev.title}</p>
           </div>
           <div className="text-[9px] font-medium text-white px-2 py-0.5 shrink-0" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
             {state.defaultCtaText}
@@ -103,8 +103,8 @@ function SingleEventWidgetMockup({ state }: { state: BrandPreviewState }) {
         <div className="absolute inset-x-0 bottom-0 h-1.5" style={{ background: `linear-gradient(90deg, ${state.primaryColor}, ${state.secondaryColor})` }} />
       </div>
       <p className="text-sm font-bold text-gray-900">Live muziek avond</p>
-      <p className="text-[11px] text-gray-500 mt-0.5">Vrijdag 25 april · 20:00</p>
-      {state.tagline && <p className="text-[10px] italic text-gray-400 mt-1 line-clamp-2">{state.tagline}</p>}
+      <p className="text-xs text-gray-500 mt-0.5">Vrijdag 25 april · 20:00</p>
+      {state.tagline && <p className="text-xs italic text-gray-400 mt-1 line-clamp-2">{state.tagline}</p>}
       <button className="w-full text-center text-xs font-semibold text-white py-2 mt-2" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
         {state.defaultCtaText}
       </button>
@@ -127,8 +127,8 @@ function PublicPageMockup({ state, mobile = false }: { state: BrandPreviewState;
       </div>
       <div className="p-3 space-y-2">
         <p className="text-sm font-bold text-gray-900">Live muziek avond</p>
-        <p className="text-[10px] text-gray-500">Vrijdag 25 april · 20:00 · {state.organizationName || "Café de Haven"}</p>
-        {state.tagline && <p className="text-[10px] italic text-gray-400 line-clamp-2">{state.tagline}</p>}
+        <p className="text-xs text-gray-500">Vrijdag 25 april · 20:00 · {state.organizationName || "Café de Haven"}</p>
+        {state.tagline && <p className="text-xs italic text-gray-400 line-clamp-2">{state.tagline}</p>}
         <div className="flex gap-1.5">
           <button className="flex-1 text-center text-xs font-semibold text-white py-2" style={{ backgroundColor: state.primaryColor, borderRadius: btnRadius }}>
             {state.defaultCtaText}
@@ -152,7 +152,7 @@ function PreviewTile({ title, children }: { title: string; children: React.React
       className="rounded-xl bg-secondary/20 border border-border p-3 space-y-2"
     >
       <div className="flex items-center justify-between">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
       </div>
       {children}
     </motion.div>

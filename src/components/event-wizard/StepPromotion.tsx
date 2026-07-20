@@ -81,7 +81,7 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
             <Input value={form.ctaLink} onChange={(e) => updateForm({ ctaLink: e.target.value })} placeholder="https://..." type="url" />
           </div>
         </div>
-        <p className="text-[11px] text-muted-foreground">Deze knop wordt prominent getoond op de evenementpagina</p>
+        <p className="text-xs text-muted-foreground">Deze knop wordt prominent getoond op de evenementpagina</p>
       </div>
 
       {/* Tags */}
@@ -96,7 +96,7 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
           )}
         </div>
         <Input value={form.tags} onChange={(e) => updateForm({ tags: e.target.value })} placeholder="bijv. live-muziek, DJ, 80s, retro" />
-        <p className="text-[11px] text-muted-foreground">Gescheiden door komma's, zonder #. Helpen bij zoeken en ontdekken.</p>
+        <p className="text-xs text-muted-foreground">Gescheiden door komma's, zonder #. Helpen bij zoeken en ontdekken.</p>
       </div>
 
       {/* Share texts */}
@@ -168,7 +168,7 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
             />
           </div>
           <Input value={form.seoTitle} onChange={(e) => updateForm({ seoTitle: e.target.value })} placeholder={form.title || "SEO titel"} maxLength={60} />
-          <p className="text-[11px] text-muted-foreground">{form.seoTitle.length}/60</p>
+          <p className="text-xs text-muted-foreground">{form.seoTitle.length}/60</p>
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -182,7 +182,7 @@ export function StepPromotion({ form, updateForm }: StepPromotionProps) {
             />
           </div>
           <Textarea value={form.seoDescription} onChange={(e) => updateForm({ seoDescription: e.target.value })} placeholder={form.shortDescription || "SEO beschrijving"} rows={2} maxLength={160} />
-          <p className="text-[11px] text-muted-foreground">{form.seoDescription.length}/160</p>
+          <p className="text-xs text-muted-foreground">{form.seoDescription.length}/160</p>
         </div>
       </div>
     </motion.div>

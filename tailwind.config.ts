@@ -22,8 +22,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["'Space Grotesk'", "sans-serif"],
-        body: ["'DM Sans'", "sans-serif"],
+        display: ["'Plus Jakarta Sans'", "sans-serif"],
+        body: ["'Plus Jakarta Sans'", "sans-serif"],
+        sans: ["'Plus Jakarta Sans'", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -62,6 +63,14 @@ export default {
         highlight: {
           DEFAULT: "hsl(var(--highlight))",
           foreground: "hsl(var(--highlight-foreground))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
         },
         "surface-warm": "hsl(var(--surface-warm))",
         "surface-cool": "hsl(var(--surface-cool))",

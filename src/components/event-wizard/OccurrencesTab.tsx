@@ -149,10 +149,10 @@ export function OccurrencesTab({ eventId, tenantId, defaultStartTime, defaultEnd
 
   const statusBadge = (status: string) => {
     switch (status) {
-      case "active": return <Badge variant="default" className="bg-accent/20 text-accent border-accent/30 text-[10px]">Actief</Badge>;
-      case "hidden": return <Badge variant="secondary" className="text-[10px]"><EyeOff className="w-3 h-3 mr-1" />Verborgen</Badge>;
-      case "cancelled": return <Badge variant="destructive" className="text-[10px]"><XCircle className="w-3 h-3 mr-1" />Geannuleerd</Badge>;
-      default: return <Badge variant="outline" className="text-[10px]">{status}</Badge>;
+      case "active": return <Badge variant="default" className="bg-accent/20 text-accent border-accent/30 text-xs">Actief</Badge>;
+      case "hidden": return <Badge variant="secondary" className="text-xs"><EyeOff className="w-3 h-3 mr-1" />Verborgen</Badge>;
+      case "cancelled": return <Badge variant="destructive" className="text-xs"><XCircle className="w-3 h-3 mr-1" />Geannuleerd</Badge>;
+      default: return <Badge variant="outline" className="text-xs">{status}</Badge>;
     }
   };
 
