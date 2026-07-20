@@ -42,7 +42,7 @@ const ROLE_KEYS = ["owner", "admin", "editor", "marketer", "viewer"] as const;
 const roleColors: Record<string, string> = {
   owner: "bg-amber-500/10 text-amber-700 border-amber-200",
   admin: "bg-primary/10 text-primary border-primary/20",
-  editor: "bg-accent/10 text-accent border-accent/20",
+  editor: "bg-primary/10 text-primary border-primary/20",
   marketer: "bg-blue-500/10 text-blue-700 border-blue-200",
   viewer: "bg-secondary text-muted-foreground border-border",
 };
