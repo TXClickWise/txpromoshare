@@ -13,6 +13,7 @@ import { useTenant } from "@/hooks/useTenant";
 import { toast } from "sonner";
 import { WidgetCard } from "@/components/widgets/WidgetCard";
 import { WidgetWizard } from "@/components/widgets/WidgetWizard";
+import { WebsiteSettingsTabs } from "@/components/WebsiteSettingsTabs";
 import type { Tables } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -124,6 +125,7 @@ export default function WidgetsPage() {
 
   return (
     <div className="space-y-6">
+      <WebsiteSettingsTabs active="widgets" />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
