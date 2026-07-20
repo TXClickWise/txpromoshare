@@ -60,12 +60,12 @@ export default function AppLayout() {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border flex flex-col transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto",
+        "fixed inset-y-0 left-0 z-50 w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="flex items-center gap-2 px-5 py-4 border-b border-border">
+        <div className="flex items-center gap-2 px-5 py-4 border-b border-sidebar-border">
           <img src={logoTxEventShare} alt="TX EventShare" className="h-[3.15rem] w-auto" />
-          <button onClick={() => setSidebarOpen(false)} className="ml-auto lg:hidden text-muted-foreground">
+          <button onClick={() => setSidebarOpen(false)} className="ml-auto lg:hidden text-sidebar-foreground hover:text-sidebar-accent-foreground">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -81,10 +81,10 @@ export default function AppLayout() {
                 to={item.to}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    ? "bg-sidebar-primary/15 text-sidebar-primary before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-1 before:rounded-r-full before:bg-sidebar-primary"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
                 <item.icon className="w-4 h-4 shrink-0" />
@@ -96,7 +96,7 @@ export default function AppLayout() {
             <Link
               to="/admin"
               onClick={() => setSidebarOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             >
               <Shield className="w-4 h-4 shrink-0" />
               {t("nav.admin")}
@@ -104,16 +104,16 @@ export default function AppLayout() {
           )}
         </nav>
 
-        <div className="px-3 py-4 border-t border-border">
+        <div className="px-3 py-4 border-t border-sidebar-border">
           <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-              <span className="text-xs font-bold text-secondary-foreground">{initials}</span>
+            <div className="w-8 h-8 rounded-full bg-sidebar-primary/20 flex items-center justify-center">
+              <span className="text-xs font-bold text-sidebar-primary">{initials}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{fullName}</p>
-              <p className="text-xs text-muted-foreground truncate">{planLabel}</p>
+              <p className="text-sm font-medium text-sidebar-accent-foreground truncate">{fullName}</p>
+              <p className="text-xs text-sidebar-foreground truncate">{planLabel}</p>
             </div>
-            <button onClick={handleSignOut} className="text-muted-foreground hover:text-foreground transition-colors" title={t("common.signOut")}>
+            <button onClick={handleSignOut} className="text-sidebar-foreground hover:text-sidebar-accent-foreground transition-colors" title={t("common.signOut")}>
               <LogOut className="w-4 h-4" />
             </button>
           </div>
