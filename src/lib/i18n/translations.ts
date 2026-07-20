@@ -59,8 +59,6 @@ export const UI_TRANSLATIONS: Record<UILanguageCode, TranslationDict> = {
     "nav.plan": "{plan} plan",
 
     // Public navigation
-    "publicNav.home": "Home",
-    "publicNav.benefits": "Voordelen",
     "publicNav.howItWorks": "Hoe het werkt",
     "publicNav.pricing": "Prijzen",
     "publicNav.demo": "Demo",
@@ -1136,8 +1134,6 @@ export const UI_TRANSLATIONS: Record<UILanguageCode, TranslationDict> = {
     "nav.plan": "{plan} plan",
 
     // Public navigation
-    "publicNav.home": "Home",
-    "publicNav.benefits": "Benefits",
     "publicNav.howItWorks": "How it works",
     "publicNav.pricing": "Pricing",
     "publicNav.demo": "Demo",
