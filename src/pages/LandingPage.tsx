@@ -62,7 +62,7 @@ export default function LandingPage() {
         <div className="container px-4 pt-16 pb-20 md:pt-24 md:pb-28 relative">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent mb-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-strong mb-5">
                 {t("landing.hero.kicker")}
               </p>
               <h1 className="font-display font-bold text-foreground leading-[1.05] mb-6 text-4xl md:text-5xl lg:text-6xl">
@@ -151,7 +151,7 @@ export default function LandingPage() {
       <section id="hoe-het-werkt" className="py-20 md:py-28">
         <div className="container px-4">
           <motion.div {...fadeUp} className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent mb-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-strong mb-3">
               {t("landing.how.kicker")}
             </p>
             <h2 className="text-2xl md:text-4xl font-display font-bold text-foreground leading-tight">
@@ -195,7 +195,7 @@ export default function LandingPage() {
       <section className="py-20 md:py-28">
         <div className="container px-4">
           <motion.div {...fadeUp} className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent mb-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-strong mb-3">
               {t("landing.results.kicker")}
             </p>
             <h2 className="text-2xl md:text-4xl font-display font-bold text-foreground leading-tight">
