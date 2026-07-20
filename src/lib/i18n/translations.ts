@@ -1642,6 +1642,7 @@ export const UI_TRANSLATIONS: Record<UILanguageCode, TranslationDict> = {
   },
 };
 
+
 export function translate(
   language: UILanguageCode,
   key: string,
