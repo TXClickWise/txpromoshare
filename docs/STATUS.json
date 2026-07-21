@@ -1,13 +1,14 @@
 {
   "project": "TX EventShare",
   "lovable_project_id": "3c0fc060-1e41-42dd-bb3a-078f4525105e",
-  "fase": "Fase 11 — UI/UX-herziening",
-  "procent_klaar": 88,
-  "huidige_focus": "UI/UX-herziening; fundament, bugronde, landingspagina, goudcorrectie en logo afgerond. Volgende stap is 11.2: navigatie van elf items naar vijf en instellingen als echte laag.",
+  "fase": "Fase 11 afgerond — volgende: fase 12",
+  "procent_klaar": 92,
+  "huidige_focus": "UI/UX-herziening afgerond: fundament, navigatie van elf naar vier items, kernschermen mobile-first en de event-wizard. Volgende stap is fase 12: omslachtige procedures wegwerken, te beginnen bij de media-upload.",
   "blockers": [
-    "Logo is een typografische tussenoplossing in code; professioneel hertekend logo in navy/goud staat nog open.",
-    "Fase 10 (validatie en lancering) blijft open: E2E-tenanttest en Stripe-betaalflow zijn nog niet gevalideerd.",
-    "De knop 'Bekijk een voorbeeld' op de landingspagina verwijst naar uitleg in plaats van naar een echte eventpagina."
+    "Landingspagina-copy is afgekeurd en moet opnieuw geschreven worden op basis van input van de eigenaar; ligt stil tot die input er is.",
+    "Logobestanden van de drie referenties ontbreken; website-URL's in de referentiestrook zijn nog niet geverifieerd.",
+    "Logo is een typografische tussenoplossing in code; professioneel hertekend logo staat nog open.",
+    "Fase 10 (validatie en lancering) blijft open: E2E-tenanttest en Stripe-betaalflow zijn nog niet gevalideerd."
   ],
   "laatst_gesynct": "2026-07-20"
 }
