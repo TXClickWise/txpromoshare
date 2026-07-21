@@ -69,7 +69,18 @@ export default function CreateEventPage() {
   const ctx = useEventForm();
   const [currentStep, setCurrentStep] = useState(1);
   const [activeTab, setActiveTab] = useState<"event" | "dates" | "translations">("event");
-  const [visitedSteps, setVisitedSteps] = useState<number[]>([1]);
+  const [visitedSteps, setVisitedSteps] = useState<number[]>([]);
+
+  // Set initial visited steps only once the event is loaded. For existing events
+  // every step counts as visited so the progress bar reflects the actual state.
+  useEffect(() => {
+    if (ctx.loading) return;
+    if (ctx.isEditing) {
+      setVisitedSteps([1, 2, 3, 4, 5]);
+    } else {
+      setVisitedSteps([1]);
+    }
+  }, [ctx.loading, ctx.isEditing]);
 
   const STEPS = [
     { id: 1, label: t("wizard.step.basics"), icon: FileText },
