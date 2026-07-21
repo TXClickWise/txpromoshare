@@ -892,6 +892,10 @@ export const UI_TRANSLATIONS: Record<UILanguageCode, TranslationDict> = {
     "wizard.step.publish": "Publiceren",
     "wizard.step.dates": "Datums",
     "wizard.step.translations": "Vertalingen",
+    "wizard.tab.event": "Evenement",
+    "wizard.tab.dates": "Datums",
+    "wizard.tab.translations": "Vertalingen",
+    "wizard.stepLocked": "Rond eerst de voorgaande stappen af",
 
     // Dashboard stats (nieuwe splitsing)
     "dashboard.stats.published": "Gepubliceerd",
