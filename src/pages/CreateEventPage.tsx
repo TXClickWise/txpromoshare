@@ -68,32 +68,28 @@ export default function CreateEventPage() {
   const { t, language } = useTranslation();
   const ctx = useEventForm();
   const [currentStep, setCurrentStep] = useState(1);
+  const [activeTab, setActiveTab] = useState<"event" | "dates" | "translations">("event");
+  const [visitedSteps, setVisitedSteps] = useState<number[]>([1]);
 
-  const BASE_STEPS = [
+  const STEPS = [
     { id: 1, label: t("wizard.step.basics"), icon: FileText },
     { id: 2, label: t("wizard.step.dateLocation"), icon: CalendarDays },
     { id: 3, label: t("wizard.step.contentMedia"), icon: Image },
     { id: 4, label: t("wizard.step.promotion"), icon: Megaphone },
     { id: 5, label: t("wizard.step.publish"), icon: SendIcon },
   ];
-  const OCCURRENCES_STEP = { id: 6, label: t("wizard.step.dates"), icon: Repeat };
-  const TRANSLATIONS_STEP = { id: 7, label: t("wizard.step.translations"), icon: Languages };
 
-  const showOccurrences = ctx.isEditing && ctx.form.isRecurring;
-  const showTranslations = ctx.isEditing && !!ctx.id && !!ctx.tenantId;
-  const STEPS = [
-    ...BASE_STEPS,
-    ...(showOccurrences ? [OCCURRENCES_STEP] : []),
-    ...(showTranslations ? [TRANSLATIONS_STEP] : []),
-  ];
+  const showDatesTab = ctx.isEditing && ctx.form.isRecurring && !!ctx.id && !!ctx.tenantId;
+  const showTranslationsTab = ctx.isEditing && !!ctx.id && !!ctx.tenantId;
+  const showTabs = showDatesTab || showTranslationsTab;
 
   const scrollToWizardTop = () => {
-    // Scroll near top; the sticky wizard header sits at the top of the viewport.
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   };
 
   const setStep = (step: number) => {
     setCurrentStep(step);
+    setVisitedSteps((prev) => (prev.includes(step) ? prev : [...prev, step]));
     scrollToWizardTop();
   };
 
@@ -108,33 +104,40 @@ export default function CreateEventPage() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [ctx.isDirty]);
 
+  // A step counts as completed only when the user has actually visited it AND
+  // it passes its own validation. No derived checkmarks.
   const completedSteps = useMemo(() => {
-    const completed: number[] = [];
-    if (ctx.form.title.trim()) completed.push(1);
-    if (ctx.form.startDate && ctx.form.startTime) completed.push(2);
-    if (completed.includes(1)) completed.push(3);
-    if (completed.includes(1)) completed.push(4);
-    if (completed.includes(1) && completed.includes(2)) completed.push(5);
-    if (showOccurrences && completed.includes(2)) completed.push(6);
-    return completed;
-  }, [ctx.form.title, ctx.form.startDate, ctx.form.startTime, showOccurrences]);
+    return STEPS
+      .filter((s) => visitedSteps.includes(s.id) && ctx.validateStep(s.id).isValid)
+      .map((s) => s.id);
+  }, [visitedSteps, ctx, STEPS]);
 
   const maxStep = STEPS[STEPS.length - 1].id;
 
   const canGoNext = () => ctx.validateStep(currentStep).isValid;
 
+  // Forward jumping requires every preceding step to be valid; backward is always allowed.
+  const isStepReachable = (target: number) => {
+    if (target <= currentStep) return true;
+    for (const s of STEPS) {
+      if (s.id >= target) break;
+      if (!ctx.validateStep(s.id).isValid) return false;
+    }
+    return true;
+  };
+
   const goNext = () => {
     if (currentStep < maxStep && canGoNext()) {
       const ids = STEPS.map(s => s.id);
       const i = ids.indexOf(currentStep);
-      if (i < ids.length - 1) { setCurrentStep(ids[i + 1]); scrollToWizardTop(); }
+      if (i < ids.length - 1) setStep(ids[i + 1]);
     }
   };
 
   const goPrev = () => {
     const ids = STEPS.map(s => s.id);
     const i = ids.indexOf(currentStep);
-    if (i > 0) { setCurrentStep(ids[i - 1]); scrollToWizardTop(); }
+    if (i > 0) setStep(ids[i - 1]);
   };
 
   if (ctx.loading) {
@@ -146,6 +149,7 @@ export default function CreateEventPage() {
   }
 
   const publicUrl = ctx.form.slug ? `${window.location.origin}/e/${ctx.form.slug}` : "";
+  const publishReady = ctx.validateStep(5).isValid;
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -154,18 +158,22 @@ export default function CreateEventPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => ctx.navigate(-1)}
-            className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors"
+            className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label={t("wizard.back")}
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-display font-bold text-foreground truncate">
+            <h1 className="text-base sm:text-lg font-display font-bold text-foreground truncate">
               {ctx.isEditing ? (ctx.form.title || t("wizard.editEvent")) : (ctx.form.title || t("wizard.newEvent"))}
             </h1>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>{t("wizard.stepXofY", { current: String(STEPS.findIndex(s => s.id === currentStep) + 1), total: String(STEPS.length) })}</span>
-              <span aria-hidden>·</span>
+              {activeTab === "event" && (
+                <>
+                  <span>{t("wizard.stepXofY", { current: String(STEPS.findIndex(s => s.id === currentStep) + 1), total: String(STEPS.length) })}</span>
+                  <span aria-hidden>·</span>
+                </>
+              )}
               <SaveIndicator
                 saving={ctx.saving}
                 autosaving={ctx.autosaving}
@@ -190,30 +198,56 @@ export default function CreateEventPage() {
               <Save className="w-4 h-4" />
               <span className="hidden sm:inline">{ctx.saving ? t("wizard.saving") : t("wizard.draft")}</span>
             </Button>
-            <Button
-              size="sm"
-              onClick={ctx.handlePublish}
-              disabled={ctx.saving || !completedSteps.includes(5)}
-              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              <Send className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("wizard.publish")}</span>
-            </Button>
           </div>
         </div>
       </div>
 
-      {/* Wizard Progress */}
-      <div className="mb-8">
-        <WizardProgress
-          steps={STEPS}
-          currentStep={currentStep}
-          onStepClick={setStep}
-          completedSteps={completedSteps}
-        />
-      </div>
+      {/* Edit-only tab strip: Event / Dates / Translations */}
+      {showTabs && (
+        <div className="mb-4 flex items-center gap-1 border-b border-border">
+          {([
+            { id: "event" as const, label: t("wizard.tab.event"), icon: FileText, show: true },
+            { id: "dates" as const, label: t("wizard.tab.dates"), icon: Repeat, show: showDatesTab },
+            { id: "translations" as const, label: t("wizard.tab.translations"), icon: Languages, show: showTranslationsTab },
+          ]).filter((t) => t.show).map((tab) => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "inline-flex items-center gap-2 px-3 py-2 -mb-px border-b-2 text-sm font-medium min-h-[44px] transition-colors",
+                  active
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Wizard Progress — only within the Event tab */}
+      {activeTab === "event" && (
+        <div className="mb-8">
+          <WizardProgress
+            steps={STEPS}
+            currentStep={currentStep}
+            onStepClick={setStep}
+            completedSteps={completedSteps}
+            isStepReachable={isStepReachable}
+            lockedReason={t("wizard.stepLocked")}
+          />
+        </div>
+      )}
 
       {/* Step Content */}
+      {activeTab === "event" && (
       <AnimatePresence mode="wait">
         {currentStep === 1 && (
           <StepBasics key="basics" form={ctx.form} updateForm={ctx.updateForm} categories={ctx.availableCategories} />
@@ -253,26 +287,27 @@ export default function CreateEventPage() {
             validation={ctx.validateStep(5)}
           />
         )}
-        {currentStep === 6 && showOccurrences && ctx.id && ctx.tenantId && (
-          <OccurrencesTab
-            key="occurrences"
-            eventId={ctx.id}
-            tenantId={ctx.tenantId}
-            defaultStartTime={ctx.form.startTime}
-            defaultEndTime={ctx.form.endTime}
-          />
-        )}
-        {currentStep === 7 && showTranslations && ctx.id && ctx.tenantId && (
-          <StepTranslations
-            key="translations"
-            eventId={ctx.id}
-            tenantId={ctx.tenantId}
-            form={ctx.form}
-          />
-        )}
       </AnimatePresence>
+      )}
 
-      {/* Navigation buttons */}
+      {activeTab === "dates" && showDatesTab && ctx.id && ctx.tenantId && (
+        <OccurrencesTab
+          eventId={ctx.id}
+          tenantId={ctx.tenantId}
+          defaultStartTime={ctx.form.startTime}
+          defaultEndTime={ctx.form.endTime}
+        />
+      )}
+      {activeTab === "translations" && showTranslationsTab && ctx.id && ctx.tenantId && (
+        <StepTranslations
+          eventId={ctx.id}
+          tenantId={ctx.tenantId}
+          form={ctx.form}
+        />
+      )}
+
+      {/* Navigation buttons — only within Event tab */}
+      {activeTab === "event" && (
       <div className="mt-8 pt-6 border-t border-border space-y-3">
         {!canGoNext() && currentStep < maxStep && (
           <div className="rounded-lg bg-warning/10 border border-warning/30 px-3 py-2">
@@ -293,25 +328,15 @@ export default function CreateEventPage() {
               {t("wizard.next")}
               <ArrowRight className="w-4 h-4" />
             </Button>
-          ) : currentStep === 5 ? (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={ctx.handleSave}
-                disabled={ctx.saving || (!ctx.isDirty && !!ctx.lastSavedAt)}
-                className="gap-2"
-              >
-                <Save className="w-4 h-4" />
-                {t("wizard.draft")}
-              </Button>
-              <Button onClick={ctx.handlePublish} disabled={ctx.saving || !ctx.validateStep(5).isValid} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
-                <Send className="w-4 h-4" />
-                {ctx.form.publishAt ? t("wizard.schedule") : t("wizard.publish")}
-              </Button>
-            </div>
-          ) : null}
+          ) : (
+            <Button onClick={ctx.handlePublish} disabled={ctx.saving || !publishReady} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+              <Send className="w-4 h-4" />
+              {ctx.form.publishAt ? t("wizard.schedule") : t("wizard.publish")}
+            </Button>
+          )}
         </div>
       </div>
+      )}
 
       {/* Recurring edit-scope dialog */}
       <RecurringEditScopeDialog
