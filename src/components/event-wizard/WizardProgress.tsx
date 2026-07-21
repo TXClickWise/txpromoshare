@@ -13,15 +13,19 @@ interface WizardProgressProps {
   currentStep: number;
   onStepClick: (step: number) => void;
   completedSteps: number[];
+  isStepReachable?: (step: number) => boolean;
+  lockedReason?: string;
 }
 
-export function WizardProgress({ steps, currentStep, onStepClick, completedSteps }: WizardProgressProps) {
+export function WizardProgress({ steps, currentStep, onStepClick, completedSteps, isStepReachable, lockedReason }: WizardProgressProps) {
   return (
     <nav className="flex items-center gap-1 w-full overflow-x-auto pb-1" aria-label="Wizard stappen">
       {steps.map((step, i) => {
         const isActive = currentStep === step.id;
         const isCompleted = completedSteps.includes(step.id);
-        const isClickable = isCompleted || step.id <= Math.max(...completedSteps, 0) + 1;
+        const isClickable = isStepReachable
+          ? isStepReachable(step.id)
+          : isCompleted || step.id <= Math.max(...completedSteps, 0) + 1;
 
         return (
           <div key={step.id} className="flex items-center flex-1 min-w-0">
@@ -29,8 +33,10 @@ export function WizardProgress({ steps, currentStep, onStepClick, completedSteps
               type="button"
               onClick={() => isClickable && onStepClick(step.id)}
               disabled={!isClickable}
+              title={!isClickable ? lockedReason : undefined}
+              aria-label={!isClickable && lockedReason ? `${step.label} — ${lockedReason}` : step.label}
               className={cn(
-                "flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all w-full min-w-0",
+                "flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all w-full min-w-0 min-h-[44px]",
                 isActive && "bg-primary/10 border border-primary/30",
                 !isActive && isCompleted && "bg-success/5 border border-success/20 hover:bg-success/10",
                 !isActive && !isCompleted && isClickable && "hover:bg-secondary border border-transparent",
