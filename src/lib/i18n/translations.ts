@@ -2063,6 +2063,10 @@ export const UI_TRANSLATIONS: Record<UILanguageCode, TranslationDict> = {
     "wizard.step.publish": "Publish",
     "wizard.step.dates": "Dates",
     "wizard.step.translations": "Translations",
+    "wizard.tab.event": "Event",
+    "wizard.tab.dates": "Dates",
+    "wizard.tab.translations": "Translations",
+    "wizard.stepLocked": "Complete the previous steps first",
 
     // Dashboard stats
     "dashboard.stats.published": "Published",
