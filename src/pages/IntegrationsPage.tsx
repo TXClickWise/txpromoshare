@@ -7,6 +7,7 @@ import { useTranslation } from "@/hooks/useUILanguage";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useClickWiseIntegration } from "@/hooks/useClickWiseIntegration";
@@ -51,6 +52,9 @@ export default function IntegrationsPage() {
   const [languageFieldKey, setLanguageFieldKey] = useState("voorkeurstaal");
   const [channelFieldKey, setChannelFieldKey] = useState("notification_channel");
   const [savingNotifications, setSavingNotifications] = useState(false);
+  const [reminderHours, setReminderHours] = useState("2");
+  const [digestDay, setDigestDay] = useState("2");
+  const [digestTime, setDigestTime] = useState("10:00");
 
   useEffect(() => {
     if (connection?.credentials_encrypted) {
@@ -61,6 +65,10 @@ export default function IntegrationsPage() {
       setEventPageUrlTemplate(creds.event_page_url_template || "");
       setLanguageFieldKey(creds.language_field_key || "voorkeurstaal");
       setChannelFieldKey(creds.channel_field_key || "notification_channel");
+      const timing = ((connection.sync_settings as any)?.timing) || {};
+      setReminderHours(String(timing.reminder_hours_before ?? 2));
+      setDigestDay(String(timing.digest_day_of_week ?? 2));
+      setDigestTime(timing.digest_time || "10:00");
     }
   }, [connection]);
 
@@ -96,8 +104,21 @@ export default function IntegrationsPage() {
       language_field_key: languageFieldKey || "voorkeurstaal",
       channel_field_key: channelFieldKey || "notification_channel",
     });
+    const { error: syncError } = await supabase
+      .from("integration_connections")
+      .update({
+        sync_settings: {
+          ...((connection.sync_settings as any) || {}),
+          timing: {
+            reminder_hours_before: Number(reminderHours) || 2,
+            digest_day_of_week: Number(digestDay) || 2,
+            digest_time: digestTime || "10:00",
+          },
+        },
+      })
+      .eq("id", connection.id);
     setSavingNotifications(false);
-    if (error) {
+    if (error || syncError) {
       toast.error("Kon instellingen niet opslaan");
       return;
     }
@@ -307,6 +328,41 @@ export default function IntegrationsPage() {
                       <label className="text-xs font-medium text-foreground">Custom field key voor kanaalvoorkeur</label>
                       <Input value={channelFieldKey} onChange={(e) => setChannelFieldKey(e.target.value)} placeholder="notification_channel" className="h-9 text-sm font-mono" />
                     </div>
+                  </div>
+
+                  <div className={`border-t border-border pt-4 space-y-3 ${fanOutEnabled ? "" : "opacity-50 pointer-events-none"}`}>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Verzendschema</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-foreground">Herinnering</label>
+                        <Select value={reminderHours} onValueChange={setReminderHours}>
+                          <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {[["1", "1 uur voor aanvang"], ["2", "2 uur voor aanvang"], ["3", "3 uur voor aanvang"], ["6", "6 uur voor aanvang"], ["12", "12 uur voor aanvang"], ["24", "24 uur voor aanvang"]].map(([v, l]) => (
+                              <SelectItem key={v} value={v}>{l}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-foreground">Weekoverzicht — dag</label>
+                        <Select value={digestDay} onValueChange={setDigestDay}>
+                          <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {[["1", "Maandag"], ["2", "Dinsdag"], ["3", "Woensdag"], ["4", "Donderdag"], ["5", "Vrijdag"], ["6", "Zaterdag"], ["7", "Zondag"]].map(([v, l]) => (
+                              <SelectItem key={v} value={v}>{l}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-foreground">Weekoverzicht — tijd</label>
+                        <Input type="time" value={digestTime} onChange={(e) => setDigestTime(e.target.value)} className="h-9 text-sm" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Tijden zijn in Nederlandse tijd. Het weekoverzicht gaat alleen uit als er events in de komende week staan.
+                    </p>
                   </div>
 
                   <div className="flex justify-end">
