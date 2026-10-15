@@ -77,7 +77,7 @@ export function useClickWiseIntegration() {
           subaccount_id: subaccountId.trim(),
           connected_by: user.id,
           last_sync_at: new Date().toISOString(),
-          sync_settings: { rules: defaultRules } as any,
+          sync_settings: { ...((connection.sync_settings as any) || {}), rules: defaultRules } as any,
           credentials_encrypted: creds,
         };
         const { error } = connection?.id
@@ -113,10 +113,10 @@ export function useClickWiseIntegration() {
     const updated = { ...syncRules, [key]: !syncRules[key] };
     const { error } = await supabase
       .from("integration_connections")
-      .update({ sync_settings: { rules: updated } })
+      .update({ sync_settings: { ...((connection.sync_settings as any) || {}), rules: updated } })
       .eq("id", connection.id);
     if (error) { toast.error("Regel bijwerken mislukt"); return; }
-    setConnection((prev) => prev ? { ...prev, sync_settings: { rules: updated } } : prev);
+    setConnection((prev) => prev ? { ...prev, sync_settings: { ...((prev.sync_settings as any) || {}), rules: updated } } : prev);
   }
 
   async function triggerSync(eventType: string, eventId?: string, data?: Record<string, unknown>) {
