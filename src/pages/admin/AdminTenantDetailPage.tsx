@@ -12,6 +12,7 @@ import { nl } from "date-fns/locale";
 import { AdminTenantUsagePanel } from "@/components/admin/AdminTenantUsagePanel";
 import { AdminTenantOverridePanel } from "@/components/admin/AdminTenantOverridePanel";
 import { AdminNotesPanel } from "@/components/admin/AdminNotesPanel";
+import { AdminTenantNotificationsPanel } from "@/components/admin/AdminTenantNotificationsPanel";
 import type { PlanId } from "@/lib/plans";
 
 export default function AdminTenantDetailPage() {
@@ -131,6 +132,9 @@ export default function AdminTenantDetailPage() {
         <AdminTenantUsagePanel tenantId={tenant.id} effectivePlanId={effectivePlan} />
         <AdminTenantOverridePanel tenantId={tenant.id} basePlan={tenant.plan_id} overrides={overrides} />
       </div>
+
+      {/* Notification timing (SMS/WhatsApp fan-out) */}
+      <AdminTenantNotificationsPanel tenantId={tenant.id} />
 
       {/* Notes panel — directly visible */}
       <AdminNotesPanel entityType="tenant" entityId={tenant.id} notes={notes} onChange={reloadNotes} />

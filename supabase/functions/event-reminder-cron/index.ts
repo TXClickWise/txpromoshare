@@ -9,6 +9,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const PUBLIC_APP_URL = Deno.env.get("PUBLIC_APP_URL") || "https://txeventshare.nl";
+const DEFAULT_LEAD_MINUTES = 120; // 2 hours before start
 
 /**
  * Format a Date as YYYY-MM-DD / HH:mm:ss in Europe/Amsterdam timezone.
@@ -31,6 +32,13 @@ function toAmsterdamParts(d: Date): { date: string; time: string } {
   };
 }
 
+/** Absolute minute value for a local (Amsterdam) wall-clock date + time. */
+function localMinutes(dateStr: string, timeStr: string): number {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const [hh, mm] = timeStr.split(":").map(Number);
+  return Date.UTC(y, (m || 1) - 1, d || 1) / 60000 + (hh || 0) * 60 + (mm || 0);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -41,13 +49,37 @@ Deno.serve(async (req) => {
 
   try {
     const now = new Date();
-    const windowStart = new Date(now.getTime() + 105 * 60 * 1000);
-    const windowEnd = new Date(now.getTime() + 135 * 60 * 1000);
+    const nowAms = toAmsterdamParts(now);
+    const nowMinutes = localMinutes(nowAms.date, nowAms.time.substring(0, 5));
+    const tomorrowAms = toAmsterdamParts(new Date(now.getTime() + 25 * 60 * 60 * 1000));
+    const dates = Array.from(new Set([nowAms.date, tomorrowAms.date]));
 
-    const ws = toAmsterdamParts(windowStart);
-    const we = toAmsterdamParts(windowEnd);
+    console.log(`[reminder-cron] Now (Amsterdam): ${nowAms.date} ${nowAms.time}; scanning ${dates.join(", ")}`);
 
-    console.log(`[reminder-cron] Window (Amsterdam): ${ws.date} ${ws.time} → ${we.date} ${we.time}`);
+    // 0. Active ClickWise connections + per-tenant lead time
+    // Lead time is configured in sync_settings.timing.reminder_hours_before (default: 2 hours).
+    const { data: connections, error: connError } = await supabase
+      .from("integration_connections")
+      .select("id, tenant_id, subaccount_id, credentials_encrypted, sync_settings")
+      .eq("provider", "clickwise")
+      .eq("status", "connected");
+
+    if (connError) console.error("[reminder-cron] connections error:", connError);
+
+    interface TenantConnection {
+      id: string;
+      credentials: any;
+      subaccountId: string;
+      leadMinutes: number;
+    }
+    const connByTenant = new Map<string, TenantConnection>();
+    for (const c of connections || []) {
+      const credentials = (c.credentials_encrypted || {}) as any;
+      if (credentials.fan_out_enabled !== true || !credentials.api_key) continue;
+      const hours = Number((c.sync_settings as any)?.timing?.reminder_hours_before);
+      const leadMinutes = Number.isFinite(hours) && hours > 0 ? Math.round(hours * 60) : DEFAULT_LEAD_MINUTES;
+      connByTenant.set(c.tenant_id, { id: c.id, credentials, subaccountId: (c.subaccount_id as string) || "", leadMinutes });
+    }
 
     interface ReminderCandidate {
       eventId: string;
@@ -63,18 +95,15 @@ Deno.serve(async (req) => {
 
     const candidates: ReminderCandidate[] = [];
 
-    const inWindow = (date: string, time: string): boolean => {
-      const t = (time || "00:00:00").substring(0, 8);
-      if (ws.date === we.date) {
-        return date === ws.date && t >= ws.time && t <= we.time;
-      }
-      if (date === ws.date) return t >= ws.time;
-      if (date === we.date) return t <= we.time;
-      return false;
+    const consider = (c: ReminderCandidate) => {
+      const conn = connByTenant.get(c.tenantId);
+      if (!conn) return; // no active fan-out connection for this tenant
+      const minutesUntil = localMinutes(c.startDate, c.startTime.substring(0, 5)) - nowMinutes;
+      if (minutesUntil <= 0 || minutesUntil > conn.leadMinutes) return;
+      candidates.push(c);
     };
 
     // 1. Single (non-recurring) events
-    const dates = ws.date === we.date ? [ws.date] : [ws.date, we.date];
     const { data: singleEvents, error: singleError } = await supabase
       .from("events")
       .select(`
@@ -90,9 +119,8 @@ Deno.serve(async (req) => {
 
     for (const ev of singleEvents || []) {
       const t = String(ev.start_time || "00:00:00").substring(0, 8).padEnd(8, "0");
-      if (!inWindow(ev.start_date, t)) continue;
       const venue = ev.venues as any;
-      candidates.push({
+      consider({
         eventId: ev.id,
         tenantId: ev.tenant_id,
         title: ev.title,
@@ -124,9 +152,8 @@ Deno.serve(async (req) => {
       const ev = (occ as any).events;
       if (!ev) continue;
       const t = String(occ.start_time || ev.start_time || "00:00:00").substring(0, 8).padEnd(8, "0");
-      if (!inWindow(occ.occurrence_date, t)) continue;
       const venue = ev.venues as any;
-      candidates.push({
+      consider({
         eventId: ev.id,
         tenantId: occ.tenant_id,
         title: ev.title,
@@ -142,6 +169,9 @@ Deno.serve(async (req) => {
     console.log(`[reminder-cron] ${candidates.length} candidate(s)`);
 
     for (const c of candidates) {
+      const conn = connByTenant.get(c.tenantId)!;
+      const credentials = conn.credentials;
+
       // Dedupe: skip if reminder already logged for this event+date
       const { data: existing } = await supabase
         .from("integration_events")
@@ -157,28 +187,6 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const { data: connection } = await supabase
-        .from("integration_connections")
-        .select("id, credentials_encrypted, subaccount_id")
-        .eq("tenant_id", c.tenantId)
-        .eq("provider", "clickwise")
-        .eq("status", "connected")
-        .maybeSingle();
-
-      if (!connection) {
-        results.push({ event_id: c.eventId, tenant_id: c.tenantId, status: "skipped", detail: "no_connection" });
-        continue;
-      }
-
-      const credentials = (connection.credentials_encrypted || {}) as any;
-      const apiKey = credentials.api_key;
-      const fanOutEnabled = credentials.fan_out_enabled === true;
-
-      if (!fanOutEnabled || !apiKey) {
-        results.push({ event_id: c.eventId, tenant_id: c.tenantId, status: "skipped", detail: "fan_out_disabled" });
-        continue;
-      }
-
       const locationStr = [c.venueName, c.venueCity].filter(Boolean).join(", ");
       const tenantEventUrlTemplate = credentials?.event_page_url_template;
       const eventUrl = tenantEventUrlTemplate
@@ -186,8 +194,8 @@ Deno.serve(async (req) => {
         : `${PUBLIC_APP_URL}/e/${c.slug}`;
 
       const fanOutConfig = {
-        apiKey,
-        locationId: connection.subaccount_id!,
+        apiKey: credentials.api_key,
+        locationId: conn.subaccountId,
         subscriberTag: credentials.subscriber_tag || "events",
         languageFieldKey: credentials.language_field_key || "voorkeurstaal",
         channelFieldKey: credentials.channel_field_key || "notification_channel",
@@ -203,20 +211,21 @@ Deno.serve(async (req) => {
         url: eventUrl,
       };
 
-      console.log(`[reminder-cron] Sending reminder for "${c.title}" (${c.eventId})`);
+      const minutesUntil = Math.round(localMinutes(c.startDate, c.startTime.substring(0, 5)) - nowMinutes);
+      console.log(`[reminder-cron] Sending reminder for "${c.title}" (${c.eventId}): ${minutesUntil} min until start, lead ${conn.leadMinutes} min`);
 
       const fanOutResult = await fanOutNotification(
         fanOutConfig,
         "reminder",
         fanOutEventData,
         supabase,
-        connection.id,
+        conn.id,
         c.eventId,
       );
 
       // Log a dedicated reminder marker (also used for dedupe)
       await supabase.from("integration_events").insert({
-        connection_id: connection.id,
+        connection_id: conn.id,
         event_id: c.eventId,
         event_type: "fan_out.reminder",
         status: fanOutResult.failed === 0 ? "success" : (fanOutResult.sms_sent + fanOutResult.whatsapp_sent > 0 ? "partial" : "failed"),
@@ -224,6 +233,7 @@ Deno.serve(async (req) => {
           action: "reminder",
           start_date: c.startDate,
           start_time: c.startTime,
+          lead_minutes: conn.leadMinutes,
           subscribers_found: fanOutResult.subscribers_found,
           sms_sent: fanOutResult.sms_sent,
           whatsapp_sent: fanOutResult.whatsapp_sent,
@@ -245,7 +255,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       checked_at: now.toISOString(),
-      window: { start_local: `${ws.date} ${ws.time}`, end_local: `${we.date} ${we.time}` },
+      checked_local: `${nowAms.date} ${nowAms.time}`,
       candidates_found: candidates.length,
       results,
     }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });

@@ -32,6 +32,20 @@ function amsterdamDate(d: Date): string {
   return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
+/** ISO weekday (1 = Monday … 7 = Sunday) in Europe/Amsterdam. */
+function amsterdamDayOfWeek(d: Date): number {
+  const s = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Amsterdam", weekday: "short" }).format(d);
+  const map: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 };
+  return map[s] ?? 2;
+}
+
+/** Minutes since midnight in Europe/Amsterdam. */
+function amsterdamMinutesOfDay(d: Date): number {
+  const s = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Amsterdam", hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+  const [h, m] = s.split(":").map(Number);
+  return (h % 24) * 60 + m;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -49,7 +63,7 @@ Deno.serve(async (req) => {
 
     const { data: connections, error: connError } = await supabase
       .from("integration_connections")
-      .select("id, tenant_id, subaccount_id, credentials_encrypted")
+      .select("id, tenant_id, subaccount_id, credentials_encrypted, sync_settings")
       .eq("provider", "clickwise")
       .eq("status", "connected");
 
@@ -72,6 +86,22 @@ Deno.serve(async (req) => {
       const credentials = connection.credentials_encrypted as any;
       const apiKey = credentials.api_key as string;
       const tenantId = connection.tenant_id as string;
+
+      // Per-tenant send window (sync_settings.timing): digest_day_of_week (1=Mon..7=Sun, default Tuesday)
+      // and digest_time ("HH:mm" Amsterdam, default 10:00). The cron runs every 15 minutes; a run
+      // matches when the current Amsterdam weekday equals the configured day and the time falls in
+      // the [configured time, configured time + 15 min) window.
+      const timing = ((connection.sync_settings as any)?.timing || {}) as any;
+      const digestDay = Number(timing.digest_day_of_week) > 0 ? Number(timing.digest_day_of_week) : 2;
+      const [digestH, digestM] = String(timing.digest_time || "10:00").split(":").map(Number);
+      const digestStartMinutes = (digestH || 10) * 60 + (digestM || 0);
+      const amsDow = amsterdamDayOfWeek(now);
+      const amsMinutes = amsterdamMinutesOfDay(now);
+      if (amsDow !== digestDay || amsMinutes < digestStartMinutes || amsMinutes >= digestStartMinutes + 15) {
+        results.push({ tenant_id: tenantId, status: "skipped", detail: "outside_send_window" });
+        continue;
+      }
+      console.log(`[weekly-digest] Tenant ${tenantId} in send window (day ${digestDay}, ${timing.digest_time || "10:00"})`);
 
       const { data: existingDigest } = await supabase
         .from("integration_events")
